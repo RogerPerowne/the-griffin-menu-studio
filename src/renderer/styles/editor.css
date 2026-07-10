@@ -24,27 +24,30 @@ svg{stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-l
 .modepill button:hover{color:var(--ink)}
 .modepill button.on{background:var(--brand-green);color:var(--brand-pink)}
 
-/* ---------- Menu bar (File / Edit / Menu / Arrange / View / Help) ---------- */
-.menubar{display:flex;align-items:center;gap:2px;height:42px;padding:0 12px;background:#fff;border-bottom:1px solid var(--line);position:relative;z-index:29}
+/* ---------- Tools bar (File / Edit / Menu / Arrange / View / Help) — editor only ---------- */
+.menubar{display:flex;align-items:center;gap:14px;height:42px;padding:0 20px;background:#fff;border-bottom:1px solid var(--line);position:relative;z-index:29}
 .topmenu{position:relative}
-.topmenu-btn{padding:8px 12px;font-size:12.5px;letter-spacing:.08em;color:var(--ink);border-radius:6px}
+.topmenu-btn{padding:9px 17px;font-size:12.5px;letter-spacing:.08em;color:var(--ink);border-radius:6px}
 .topmenu-btn:hover{background:#F7F1E7}
 .topmenu.open .topmenu-btn{background:var(--brand-green);color:var(--brand-pink)}
 .topmenu .pop{top:calc(100% + 4px)}
 .quickrow{display:flex;align-items:center;gap:2px}
+#app:not([data-workspace="editor"]) .menubar{display:none}
 
 /* ---------- Workspaces ---------- */
 .workspace{display:none;height:calc(100dvh - var(--topbar-h));overflow:auto}
 #app[data-workspace="start"] #startWorkspace{display:block}
 #app[data-workspace="export"] #exportWorkspace{display:block}
 #app:not([data-workspace="editor"]) .main{display:none}
+/* The tools bar is hidden outside the editor, so Start/Export only sit under .top (60px). */
+#app:not([data-workspace="editor"]) .workspace{height:calc(100dvh - 60px)}
 
 .start-shell{max-width:1100px;margin:0 auto;padding:36px 28px 60px}
 .start-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:28px}
 .start-head h1{font-family:'Georgia','Times New Roman',serif;font-weight:400;font-size:26px;color:var(--ink)}
 .start-actions{display:flex;gap:10px}
-.start-grid{display:grid;grid-template-columns:repeat(auto-fill,172px);justify-content:start;gap:18px}
-.start-card{display:flex;flex-direction:column;align-items:stretch;gap:6px;width:172px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:left}
+.start-grid{display:grid;grid-template-columns:repeat(auto-fill,192px);justify-content:start;gap:18px}
+.start-card{display:flex;flex-direction:column;align-items:stretch;gap:6px;width:192px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:left}
 .start-card:hover{border-color:var(--copper)}
 /* Fixed pixel box so workspace.ts's per-paper scale (A4 vs A5 have different
    physical widths) fills it exactly instead of leaving empty margin. */
