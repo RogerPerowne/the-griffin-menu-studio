@@ -61,4 +61,59 @@ or Electron APIs outside this bridge.
 
 ## Recovery
 
-Recovery API and payload details will be added here with the Phase 8 commit.
+Recovery snapshots are private application-data files, separate from every real
+`.menu` file. The process keeps at most 20 snapshots and removes ones older
+than 30 days. Corrupt snapshots are ignored individually.
+
+```ts
+interface RecoverySummary {
+  id: string;
+  createdAt: string;
+  documentPath?: string;
+  documentName: string;
+}
+
+window.griffin.recoveryStatus()
+// { previousSessionCrashed: boolean; snapshots: RecoverySummary[] }
+
+window.griffin.writeRecovery(state)
+// { ok: boolean; snapshot?: RecoverySummary; error?: string }
+
+window.griffin.listRecovery()
+// { snapshots: RecoverySummary[]; error?: string }
+
+window.griffin.readRecovery(id)
+// { found: boolean; snapshot?: RecoverySummary & { state: unknown }; error?: string }
+
+window.griffin.discardRecovery(id)       // { ok: boolean }
+window.griffin.markRecoverySessionClean() // { ok: boolean }
+```
+
+Renderer expectations:
+
+1. Call `recoveryStatus()` after renderer readiness. A previous unclean
+   session with snapshots may be presented in Home as recovery choices.
+2. Debounce `writeRecovery(currentDocumentState)` for dirty documents. Never
+   write a recovery snapshot over the current `.menu` file.
+3. Call `markRecoverySessionClean()` during orderly renderer shutdown. A
+   crash or forced process termination leaves the marker unclean.
+4. Use `readRecovery(id)` only after the user chooses a snapshot; then load
+   `snapshot.state` as a normal dirty document and let the user save it.
+
+## Canonical Export Preflight
+
+`preparePrintDOM()` in `src/renderer/views/preview.ts` is the single source
+of truth for Export and Print readiness. It renders the white production page
+at its unscaled physical size, waits for fonts and images, then returns:
+
+```ts
+{ ok: boolean; paper: 'A4' | 'A5'; reason?: 'footer' | 'overflow'; info?: ProductionInfo }
+```
+
+**Required Export workspace integration:** replace the current direct
+`productionInfo(previewPage)` status calculation with
+`await preparePrintDOM()`. The visible Export canvas is deliberately scaled
+for presentation, so measuring it independently can falsely say a menu does
+not fit even after Editor's Shrink to Fit has succeeded. Use the canonical
+result to set the status and enable Print; the Export canvas remains visual
+only.

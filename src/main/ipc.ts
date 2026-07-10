@@ -1,6 +1,7 @@
 import { dialog, ipcMain, BrowserWindow, type WebContents } from 'electron';
 import * as docs from './documents';
 import * as exp from './export-handlers';
+import * as recovery from './recovery';
 import * as templates from './templates';
 import { assertValidTemplate } from '../shared/template-format';
 
@@ -36,6 +37,11 @@ function printPayload(value: unknown): { copies: number; paper: 'A4' | 'A5'; lan
     throw new Error('Invalid print request.');
   }
   return { copies: Number(input.copies), paper: input.paper, landscape: false };
+}
+
+function recoveryId(value: unknown): string {
+  if (typeof value !== 'string' || !/^[a-f0-9-]{36}$/i.test(value)) throw new Error('Invalid recovery snapshot request.');
+  return value;
 }
 
 /** Register all IPC handlers. */
@@ -83,5 +89,26 @@ export function registerIpc(createWindow: () => BrowserWindow): void {
     requireWin(e.sender);
     createWindow();
     return { ok: true };
+  });
+  ipcMain.handle('recovery:status', (e) => {
+    requireWin(e.sender);
+    return recovery.getRecoveryStatus();
+  });
+  ipcMain.handle('recovery:write', (e, state: unknown) => recovery.writeRecovery(requireWin(e.sender), state));
+  ipcMain.handle('recovery:list', (e) => {
+    requireWin(e.sender);
+    return recovery.listRecovery();
+  });
+  ipcMain.handle('recovery:read', (e, id: unknown) => {
+    requireWin(e.sender);
+    return recovery.readRecovery(recoveryId(id));
+  });
+  ipcMain.handle('recovery:discard', (e, id: unknown) => {
+    requireWin(e.sender);
+    return recovery.discardRecovery(recoveryId(id));
+  });
+  ipcMain.handle('recovery:markCleanExit', (e) => {
+    requireWin(e.sender);
+    return recovery.markRecoverySessionClean();
   });
 }

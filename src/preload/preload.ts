@@ -21,6 +21,12 @@ const api: GriffinApi = {
   importTemplates: () => ipcRenderer.invoke('template:import'),
   revealTemplatesFolder: () => ipcRenderer.invoke('template:revealFolder'),
   chooseFolder: (defaultPath) => ipcRenderer.invoke('app:chooseFolder', defaultPath),
+  recoveryStatus: () => ipcRenderer.invoke('recovery:status'),
+  writeRecovery: (state) => ipcRenderer.invoke('recovery:write', state),
+  listRecovery: () => ipcRenderer.invoke('recovery:list'),
+  readRecovery: (id) => ipcRenderer.invoke('recovery:read', id),
+  discardRecovery: (id) => ipcRenderer.invoke('recovery:discard', id),
+  markRecoverySessionClean: () => ipcRenderer.invoke('recovery:markCleanExit'),
 };
 
 contextBridge.exposeInMainWorld('griffin', api);

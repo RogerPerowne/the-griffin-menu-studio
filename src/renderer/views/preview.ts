@@ -20,6 +20,7 @@ import {
   fitPage,
   getZoom,
   observePagewrapPage,
+  type ProductionInfo,
   productionInfo,
   scheduleOverflowCheck,
   setFollowFit,
@@ -333,6 +334,25 @@ export interface PrintPreflight {
   ok: boolean;
   paper: 'A4' | 'A5';
   reason?: string;
+  /** Canonical unscaled production measurement. Export UI must use this, never its scaled canvas. */
+  info?: ProductionInfo;
+}
+
+async function waitForImages(root: HTMLElement, timeoutMs = 2500): Promise<void> {
+  const images = Array.from(root.querySelectorAll('img'));
+  if (!images.length) return;
+  await Promise.race([
+    Promise.all(
+      images.map((img) => {
+        if (img.complete) return Promise.resolve();
+        return new Promise<void>((resolve) => {
+          img.addEventListener('load', () => resolve(), { once: true });
+          img.addEventListener('error', () => resolve(), { once: true });
+        });
+      }),
+    ).then(() => undefined),
+    new Promise<void>((resolve) => window.setTimeout(resolve, timeoutMs)),
+  ]);
 }
 
 /** Preflight the exact export DOM (#printRoot) before the shell asks Electron to print. */
@@ -346,6 +366,7 @@ export async function preparePrintDOM(): Promise<PrintPreflight> {
 
   printRoot.innerHTML = renderMenuHTML(menu, renderArgs(false));
   applyReleaseSettings();
+  await waitForImages(printRoot);
   // #printRoot is display:none in normal view, so it has no layout box to
   // measure. Lay it out off-screen (real paper size, invisible) for an accurate
   // preflight, then restore. Without this the overflow check always reads zero
@@ -357,11 +378,11 @@ export async function preparePrintDOM(): Promise<PrintPreflight> {
   printRoot.classList.remove('measuring');
   if (info.footerCollision) {
     printRoot.innerHTML = '';
-    return { ok: false, paper, reason: 'footer' };
+    return { ok: false, paper, reason: 'footer', info };
   }
   if (info.over) {
     printRoot.innerHTML = '';
-    return { ok: false, paper, reason: 'overflow' };
+    return { ok: false, paper, reason: 'overflow', info };
   }
 
   let printStyle = document.getElementById('printPage') as HTMLStyleElement | null;
@@ -372,7 +393,7 @@ export async function preparePrintDOM(): Promise<PrintPreflight> {
   }
   printStyle.textContent = `@page{size:${paper === 'A5' ? '148mm 210mm' : '210mm 297mm'};margin:0}`;
 
-  return { ok: true, paper };
+  return { ok: true, paper, info };
 }
 
 /* ================= wiring ================= */

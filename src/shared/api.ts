@@ -56,6 +56,39 @@ export interface FolderResult {
   folderPath?: string;
 }
 
+export interface RecoverySummary {
+  id: string;
+  createdAt: string;
+  documentPath?: string;
+  documentName: string;
+}
+
+export interface RecoverySnapshotResult extends RecoverySummary {
+  state: unknown;
+}
+
+export interface RecoveryStatus {
+  previousSessionCrashed: boolean;
+  snapshots: RecoverySummary[];
+}
+
+export interface RecoveryListResult {
+  snapshots: RecoverySummary[];
+  error?: string;
+}
+
+export interface RecoveryReadResult {
+  found: boolean;
+  snapshot?: RecoverySnapshotResult;
+  error?: string;
+}
+
+export interface RecoveryWriteResult {
+  ok: boolean;
+  snapshot?: RecoverySummary;
+  error?: string;
+}
+
 export interface GriffinApi {
   readonly isDesktop: true;
   readonly platform: string;
@@ -75,5 +108,11 @@ export interface GriffinApi {
   importTemplates(): Promise<TemplateListResult>;
   revealTemplatesFolder(): Promise<{ ok: boolean; folderPath: string }>;
   chooseFolder(defaultPath?: string): Promise<FolderResult>;
+  recoveryStatus(): Promise<RecoveryStatus>;
+  writeRecovery(state: unknown): Promise<RecoveryWriteResult>;
+  listRecovery(): Promise<RecoveryListResult>;
+  readRecovery(id: string): Promise<RecoveryReadResult>;
+  discardRecovery(id: string): Promise<{ ok: boolean }>;
+  markRecoverySessionClean(): Promise<{ ok: boolean }>;
 }
 import type { Template } from './types';
