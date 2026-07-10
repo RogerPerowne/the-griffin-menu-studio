@@ -1,9 +1,11 @@
-// The versioned `.griffinmenu` document format: wrapper schema, validation and
+// The versioned `.menu` document format: wrapper schema, validation and
 // migration. Pure (no Electron), shared by main + renderer + tests.
 // Ported from the original electron/document-format.js, kept behaviour-compatible.
 
 export const CURRENT_DOCUMENT_VERSION = 1;
-export const DOCUMENT_EXTENSION = '.griffinmenu';
+export const DOCUMENT_EXTENSION = '.menu';
+/** Guard against accidentally opening a huge non-menu file through the native picker. */
+export const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
 
 export interface GriffinDocument {
   app: 'Griffin Menu Studio';
@@ -90,6 +92,9 @@ export function createDocument(state: unknown, metadata: DocumentMetadata = {}):
 }
 
 export function parseDocumentText(text: string): GriffinDocument {
+  if (new TextEncoder().encode(text).byteLength > MAX_DOCUMENT_BYTES) {
+    throw new Error('This menu file is too large to open safely.');
+  }
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);

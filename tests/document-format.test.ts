@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   CURRENT_DOCUMENT_VERSION,
+  MAX_DOCUMENT_BYTES,
   createDocument,
   parseDocumentText,
   serializeDocument,
@@ -28,7 +29,7 @@ function sampleState() {
 }
 
 describe('document-format', () => {
-  it('serializes a versioned .griffinmenu document', () => {
+  it('serializes a versioned .menu document', () => {
     const text = serializeDocument(sampleState());
     const parsed = JSON.parse(text);
     expect(parsed.app).toBe('Griffin Menu Studio');
@@ -50,5 +51,9 @@ describe('document-format', () => {
 
   it('rejects malformed generated content as canonical state', () => {
     expect(() => createDocument({ menus: '<div class="page"></div>', settings: {} })).toThrow(/menus/);
+  });
+
+  it('rejects unexpectedly large input before parsing JSON', () => {
+    expect(() => parseDocumentText(' '.repeat(MAX_DOCUMENT_BYTES + 1))).toThrow(/too large/i);
   });
 });

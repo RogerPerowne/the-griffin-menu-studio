@@ -1,7 +1,7 @@
 import { app, BrowserWindow, dialog } from 'electron';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { DOCUMENT_EXTENSION, parseDocumentText, serializeDocument } from '../shared/document-format';
+import { DOCUMENT_EXTENSION, MAX_DOCUMENT_BYTES, parseDocumentText, serializeDocument } from '../shared/document-format';
 import type { DocumentConflict, OpenResult, SaveResult } from '../shared/api';
 import { atomicWriteFile, readFileRevision, revisionFor, revisionsMatch, type FileRevision, safeFileStem } from './file-storage';
 
@@ -28,7 +28,10 @@ function currentSession(win: BrowserWindow): DocumentSession {
 }
 
 async function readDocument(filePath: string): Promise<{ state: unknown; revision: FileRevision }> {
-  const [contents, stat] = await Promise.all([fs.readFile(filePath), fs.stat(filePath)]);
+  const stat = await fs.stat(filePath);
+  if (!stat.isFile()) throw new Error('The selected path is not a menu file.');
+  if (stat.size > MAX_DOCUMENT_BYTES) throw new Error('This menu file is too large to open safely.');
+  const contents = await fs.readFile(filePath);
   const document = parseDocumentText(contents.toString('utf8'));
   return { state: document.state, revision: revisionFor(contents, stat.mtimeMs) };
 }
