@@ -3,6 +3,7 @@ import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import { getActiveBrand } from '../shared/brand';
 import { registerIpc } from './ipc';
+import { beginRecoverySession, markRecoverySessionClean } from './recovery';
 
 // Handle Squirrel install/uninstall shortcut events on Windows.
 if (started) {
@@ -11,8 +12,27 @@ if (started) {
 
 const brand = getActiveBrand();
 
+// Keeps taskbar grouping, Start menu activation and Squirrel-installed
+// shortcuts stable even though the user-facing product name contains spaces.
+app.setAppUserModelId('com.squirrel.GriffinMenuStudio.GriffinMenuStudio');
+
 let mainWindow: BrowserWindow | null = null;
 let splashWindow: BrowserWindow | null = null;
+let cleanQuitInProgress = false;
+
+function hardenWindowNavigation(win: BrowserWindow): void {
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    try {
+      const target = new URL(url);
+      if (target.protocol === 'https:' || target.protocol === 'http:') void shell.openExternal(target.toString());
+    } catch {
+      // An invalid URL is simply denied.
+    }
+    return { action: 'deny' };
+  });
+  win.webContents.on('will-navigate', (event) => event.preventDefault());
+  win.webContents.on('will-redirect', (event) => event.preventDefault());
+}
 
 /** Resolve a renderer HTML page for dev (Vite server) or prod (built files). */
 function loadRendererPage(win: BrowserWindow, page: 'index' | 'splash'): void {
@@ -36,18 +56,21 @@ function createSplashWindow(): void {
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
+      sandbox: true,
     },
   });
+  hardenWindowNavigation(splashWindow);
   loadRendererPage(splashWindow, 'splash');
 }
 
-function createMainWindow(): void {
-  mainWindow = new BrowserWindow({
+function createMainWindow(): BrowserWindow {
+  const win = new BrowserWindow({
     width: 1440,
     height: 980,
     minWidth: 1120,
     minHeight: 760,
     show: false,
+    icon: path.join(__dirname, '../../build/icon.ico'),
     backgroundColor: brand.palette.cream,
     // Custom branded title bar with native Windows min/max/close via overlay.
     titleBarStyle: 'hidden',
@@ -60,32 +83,44 @@ function createMainWindow(): void {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      sandbox: true,
     },
   });
 
   // Security: block new windows and external navigation.
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('http')) shell.openExternal(url);
-    return { action: 'deny' };
-  });
+  mainWindow = win;
 
-  loadRendererPage(mainWindow, 'index');
+  hardenWindowNavigation(win);
 
-  mainWindow.once('ready-to-show', () => {
+  loadRendererPage(win, 'index');
+
+  win.once('ready-to-show', () => {
     if (splashWindow && !splashWindow.isDestroyed()) splashWindow.close();
     splashWindow = null;
-    mainWindow?.show();
+    win.show();
   });
 
-  mainWindow.on('closed', () => {
-    mainWindow = null;
+  win.on('closed', () => {
+    if (mainWindow === win) {
+      mainWindow = BrowserWindow.getAllWindows().find((candidate) => candidate !== splashWindow) ?? null;
+    }
   });
+
+  return win;
 }
 
 app.on('ready', () => {
-  registerIpc(() => mainWindow);
+  void beginRecoverySession();
+  registerIpc(createMainWindow);
   createSplashWindow();
   createMainWindow();
+});
+
+app.on('before-quit', (event) => {
+  if (cleanQuitInProgress) return;
+  event.preventDefault();
+  cleanQuitInProgress = true;
+  void markRecoverySessionClean().finally(() => app.quit());
 });
 
 app.on('window-all-closed', () => {
