@@ -1,11 +1,28 @@
 :root {
-  --copper: #b4763b;
-  --cream: #efe7da;
+  --copper: #66584a;
+  --copper-hi: #7d6d5c;
+  --accent: #66584a;
+  --cream: #f6f3ed;
   --panel: #ffffff;
-  --ink: #2b2622;
-  --muted: #8a7e6f;
-  --line: #e2d8c8;
-  --blush: #f7efe7;
+  --ink: #222222;
+  --headline: #111111;
+  --muted: #7a7266;
+  --mut: #7a7266;
+  --line: #e4ddd1;
+  --line2: #d8cebe;
+  --blush: #f5e4df;
+  --taupe: #b8aa98;
+  --gold: #c2a36b;
+  --warn: #b03a2e;
+  --brand-green: #00403d;
+  --brand-pink: #fff4f4;
+  /* Print & layout defaults (overridden at runtime by applyReleaseSettings). */
+  --section-gap-scale: 1;
+  --dish-gap-scale: 1;
+  --inner-rule-width: 34%;
+  --edge-rule-width: 94%;
+  --footer-gap-scale: 1;
+  --col-divider-length: 86%;
 }
 
 * {

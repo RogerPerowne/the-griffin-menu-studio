@@ -1,0 +1,430 @@
+/* ==========================================================================
+   Menu page / print CSS. Ported from reference/griffin-menu-studio.html
+   (the <style> block covering .page/.inner/.m-*/print). Geometry and
+   typography are kept EXACT — this is what makes preview and export match.
+
+   Depends on the brand CSS custom properties defined in app.css's :root
+   (--copper --cream --panel --ink --muted --line --blush). Load app.css
+   before (or together with) this file.
+
+   Where the mockup hardcoded a brand colour, this file uses the matching
+   app.css variable instead (see the "#1a1a1a -> var(--ink)" swaps below).
+   Where no variable is a natural match (e.g. the footer/key text tone,
+   deliberately lighter than --ink), the mockup's literal hex is kept as-is
+   — noted inline.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Fonts.
+   The mockup's menu content inherits `body { font-family: 'Brandon','GGap',
+   ui-sans-serif, system-ui, sans-serif }` — 'GGap' is a custom webfont
+   embedded as base64 @font-face data (6 faces: weights 300/400/500, normal
+   + italic) directly in reference/griffin-menu-studio.html. 'Brandon'
+   (Brandon Grotesque) is a licensed font referenced by name only — never
+   embedded, so it silently falls back to GGap even in the original mockup
+   unless the machine has it installed.
+
+   TODO: neither font file exists in this repo yet.
+     - Extract the 6 GGap woff2s from the reference HTML's @font-face rules
+       and add real @font-face declarations here (family "GGap", weights
+       300/400/500, normal + italic), OR
+     - License/install Brandon Grotesque and drop GGap from the stack.
+   Until then this falls back to the serif stack app.css already uses for
+   the app shell, per this app's convention (app.css's `body` is
+   `Georgia, 'Times New Roman', serif`, not the mockup's sans stack).
+   -------------------------------------------------------------------------- */
+.page {
+  font-family: 'Brandon', 'GGap', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ---------- Page box ---------- */
+.page {
+  background: var(--blush);
+  width: 210mm;
+  min-height: 297mm;
+  box-shadow: 0 2px 6px rgba(27, 26, 30, 0.12), 0 26px 60px -20px rgba(27, 26, 30, 0.35);
+  position: relative;
+  color: var(--ink); /* mockup: #1a1a1a */
+}
+.page.A5 {
+  width: 148mm;
+  min-height: 210mm;
+}
+
+/* ---------- Menu page typography ---------- */
+.page .inner {
+  padding: 17mm 15mm 13mm;
+  font-size: calc(10.4pt * var(--sc, 1));
+  line-height: 1.32;
+  text-align: center;
+  font-weight: 400;
+  display: flex;
+  flex-direction: column;
+  min-height: 297mm;
+}
+.page.A5 .inner {
+  padding: 11mm 9mm 8mm;
+  font-size: calc(9.3pt * var(--sc, 1));
+  min-height: 210mm;
+}
+.page .body {
+  flex: 1;
+}
+.m-crest {
+  height: 23mm;
+  margin: 0 auto 3mm;
+  display: block;
+}
+.page.A5 .m-crest {
+  height: 18mm;
+}
+.m-lockup {
+  height: 26mm;
+  margin: 0 auto 5mm;
+  display: block;
+}
+.page.A5 .m-lockup {
+  height: 20mm;
+}
+.m-title {
+  font-size: 2.15em;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  margin-bottom: calc(0.4em * var(--dn, 1));
+}
+.m-hnote {
+  font-size: 1.02em;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  margin-bottom: calc(0.6em * var(--dn, 1));
+}
+.m-sec {
+  margin-top: calc(1.55em * var(--dn, 1));
+}
+.mblk {
+  position: relative;
+}
+.m-sech {
+  font-weight: 500;
+  font-size: 1.12em;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  margin-bottom: calc(0.55em * var(--dn, 1));
+}
+.m-secnote {
+  font-style: italic;
+  font-weight: 300;
+  font-size: 0.94em;
+  margin: calc(-0.25em * var(--dn, 1)) 0 calc(0.65em * var(--dn, 1));
+  line-height: 1.4;
+  white-space: pre-line;
+}
+.m-item {
+  margin-bottom: calc(0.42em * var(--dn, 1));
+  line-height: 1.38;
+}
+.m-item.stacked {
+  margin-bottom: calc(0.85em * var(--dn, 1));
+}
+.m-nm {
+  font-weight: 500;
+}
+.m-ds {
+  font-style: italic;
+  font-weight: 300;
+}
+.m-tg {
+  font-style: italic;
+  font-weight: 500;
+  font-size: 0.86em;
+  white-space: nowrap;
+}
+.m-pr {
+  font-weight: 500;
+}
+.m-nt {
+  font-style: italic;
+  font-weight: 300;
+  font-size: 0.9em;
+}
+.m-item.stacked .m-nm {
+  display: block;
+}
+.m-item.stacked .m-ds {
+  display: block;
+  margin-top: 0.06em;
+}
+.m-dash {
+  font-weight: 300;
+}
+.m-rule {
+  width: 52%;
+  max-width: 60mm;
+  height: 1px;
+  background: var(--ink); /* mockup: #1a1a1a */
+  margin: calc(0.7em * var(--dn, 1)) auto calc(0.9em * var(--dn, 1));
+}
+.m-sec.multi .m-items {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr));
+  gap: 0 5mm;
+  align-items: stretch;
+  text-align: center;
+}
+.m-sec.multi .m-col {
+  height: 100%;
+  min-width: 0;
+  position: relative;
+}
+.m-sec.multi .m-col:not(:first-child) {
+  border-left: 1px solid var(--ink); /* mockup: #1a1a1a; superseded by the ::before divider below */
+  padding-left: 5mm;
+}
+.m-subh {
+  font-size: 0.9em;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: calc(0.55em * var(--dn, 1));
+  min-height: 1em;
+}
+.m-foot {
+  padding-top: calc(2em * var(--dn, 1));
+  font-weight: 300;
+  font-size: 0.82em;
+  line-height: 1.55;
+  letter-spacing: 0.02em;
+  color: #3a3a3a; /* deliberately lighter than --ink; no natural app.css var match */
+  white-space: pre-line;
+}
+.m-key {
+  font-weight: 300;
+  font-size: 0.82em;
+  letter-spacing: 0.02em;
+  color: #3a3a3a; /* see .m-foot note above */
+  padding-top: calc(2em * var(--dn, 1));
+}
+.m-key + .m-foot {
+  padding-top: 0.5em;
+}
+
+/* ---------- Inline-edit affordances (opts.edit === true) ---------- */
+[data-edit] {
+  border-radius: 2px;
+  transition: box-shadow 0.12s;
+}
+.page [data-edit]:hover {
+  box-shadow: 0 0 0 1px rgba(180, 118, 59, 0.55); /* == var(--copper) at 55% */
+  cursor: text;
+}
+.page [data-edit]:focus {
+  outline: none;
+  box-shadow: 0 0 0 1.5px var(--copper);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* ---------- Draggable blocks ("Arrange" / free-drag move mode) ----------
+   The caller toggles `moveMode` by adding/removing the `moveMode` class on
+   <body> and wires pointer events against `.movable[data-move]` — see the
+   contract documented at the top of render.ts. */
+.movable {
+  position: relative;
+}
+body.moveMode .movable {
+  cursor: grab;
+  box-shadow: 0 0 0 1px rgba(180, 118, 59, 0.35);
+  border-radius: 4px;
+}
+body.moveMode .movable:hover {
+  box-shadow: 0 0 0 1.5px var(--copper);
+  background: rgba(180, 118, 59, 0.06);
+}
+body.moveMode .page [data-edit]:hover {
+  box-shadow: none;
+  cursor: grab;
+}
+.movable.moving {
+  opacity: 0.85;
+  box-shadow: 0 0 0 1.5px var(--copper) !important;
+  z-index: 5;
+}
+.moveHint {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--copper);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--copper);
+  border-radius: 999px;
+  padding: 2px 10px;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 6;
+  display: none;
+}
+body.moveMode .moveHint {
+  display: block;
+}
+
+/* ---------- Print ---------- */
+#printRoot {
+  display: none;
+}
+@media print {
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+  body {
+    overflow: visible !important;
+  }
+  /* TODO: these selectors name the mockup's own app shell (top bar / main
+     grid / tab bar / modals). Update once the new editor UI's root layout
+     exists, so print correctly hides the app chrome and shows only
+     #printRoot. Harmless no-ops until then (they simply match nothing). */
+  .top,
+  .main,
+  .tabbar,
+  .overlay,
+  .menusPanel {
+    display: none !important;
+  }
+  #printRoot {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  #printRoot .page {
+    background: #fff !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+}
+
+/* ================= Release hardening — print fidelity, geometry and
+   usability. Ported verbatim from the mockup's own "Release hardening"
+   layer; rule order matters (these intentionally override the base rules
+   above via later-cascade, not merged, to mirror the source 1:1). ================= */
+
+:root {
+  --section-gap-scale: 1;
+  --dish-gap-scale: 1;
+  --inner-rule-width: 34%;
+  --edge-rule-width: 94%;
+  --footer-gap-scale: 1;
+  --col-divider-length: 86%;
+}
+.page {
+  height: 297mm;
+  min-height: 297mm;
+  max-height: 297mm;
+  overflow: hidden;
+  box-sizing: border-box;
+  contain: layout paint;
+}
+.page.A5 {
+  height: 210mm;
+  min-height: 210mm;
+  max-height: 210mm;
+}
+.page .inner {
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow: visible;
+}
+.page .body {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.page .print-footer-zone {
+  flex: 0 0 auto;
+  margin-top: auto;
+  position: relative;
+  z-index: 2;
+}
+.m-sec {
+  margin-bottom: calc(1em * var(--dn, 1) * var(--section-gap-scale));
+}
+.m-item {
+  margin-bottom: calc(0.24em * var(--dn, 1) * var(--dish-gap-scale));
+}
+.m-rule {
+  width: var(--inner-rule-width);
+  max-width: none;
+}
+.m-rule.rule-top,
+.m-rule.rule-bottom {
+  width: var(--edge-rule-width);
+  max-width: none;
+}
+.m-foot {
+  padding-top: calc(2em * var(--dn, 1) * var(--footer-gap-scale));
+}
+
+/* Equal visual column geometry. Divider lives in the gap so no column is
+   nudged right. */
+.m-sec.multi .m-items {
+  gap: 0 5mm;
+  justify-content: center;
+}
+.m-sec.multi .m-col {
+  padding-left: 0 !important;
+  border-left: 0 !important;
+  box-sizing: border-box;
+}
+.m-sec.multi .m-col:not(:first-child)::before {
+  content: '';
+  position: absolute;
+  left: -2.5mm;
+  top: calc((100% - var(--col-divider-length)) / 2);
+  height: var(--col-divider-length);
+  width: 1px;
+  background: var(--ink); /* mockup: #1a1a1a */
+}
+
+/* Print keeps exactly the same physical page box as preview. */
+#printRoot .page {
+  contain: none;
+}
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  #printRoot .page {
+    overflow: hidden !important;
+  }
+}
+
+/* ================= @page size (A4 / A5) =================
+   The mockup never declares a static @page rule — it injects one with JS
+   right before window.print() (`@page{size:...;margin:0}`), keyed off the
+   current menu's paper. CSS Paged Media's named-page mechanism lets us
+   express both sizes declaratively instead: assign the "a5" page name to
+   A5 pages via the `page` property, and give that name its own @page size.
+
+   Integration note for the Electron export path: if export instead uses
+   webContents.printToPDF() (rather than window.print()), Chromium only
+   honours these @page rules when the printToPDF call passes
+   `preferCSSPageSize: true` — otherwise it uses the pageSize option you
+   pass programmatically instead. Set that flag (or replicate the mockup's
+   JS-injected-@page-then-print approach) to keep export matching preview
+   exactly. */
+@page {
+  size: 210mm 297mm;
+  margin: 0;
+}
+@page a5 {
+  size: 148mm 210mm;
+  margin: 0;
+}
+.page.A5 {
+  page: a5;
+}

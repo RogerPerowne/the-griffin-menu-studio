@@ -22,11 +22,17 @@ export function getBrand(id: string): BrandConfig | undefined {
 export function paletteToCssVars(palette: BrandPalette): Record<string, string> {
   return {
     '--copper': palette.copper,
+    '--accent': palette.copper,
     '--cream': palette.cream,
     '--panel': palette.panel,
     '--ink': palette.ink,
+    '--headline': palette.headline,
     '--muted': palette.muted,
     '--line': palette.line,
     '--blush': palette.blush,
+    '--taupe': palette.taupe,
+    '--gold': palette.gold,
+    '--brand-green': palette.seal,
+    '--brand-pink': palette.sealInk,
   };
 }

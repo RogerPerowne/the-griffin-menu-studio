@@ -10,10 +10,130 @@
     <title>Griffin Menu Studio</title>
   </head>
   <body>
-    <header class="titlebar">
-      <span class="titlebar-brand">Griffin Menu Studio</span>
-    </header>
-    <main id="app-root"></main>
+    <div class="app" id="app" data-tab="edit">
+      <header class="top" id="appTop">
+        <button class="iconb" id="btnToggleRail" title="Show or hide the menu list"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button>
+        <img class="lg" id="brandLogo" alt="The Griffin" />
+        <span class="studio">MENU STUDIO</span>
+        <span class="sp"></span>
+        <button class="abtn primary" id="btnExport"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Export PDF</button>
+        <div class="more" id="more">
+          <button class="iconb" id="btnMore" title="More"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg></button>
+          <div class="pop right">
+            <button class="mi" id="btnUndo"><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>Undo last change</button>
+            <button class="mi" id="btnRedo"><svg viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg>Redo</button>
+            <button class="mi" id="btnDup"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Duplicate menu (today's date)</button>
+            <button class="mi" id="btnSaveTpl"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Save layout as template</button>
+            <hr>
+            <button class="mi" id="btnSettings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.82-.33 1.7 1.7 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.51 1.7 1.7 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .33-1.82 1.7 1.7 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.51-1 1.7 1.7 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.82.33h0a1.7 1.7 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.51h0a1.7 1.7 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.33 1.82v0a1.7 1.7 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1Z"/></svg>Dietary key &amp; settings</button>
+            <button class="mi" id="btnBackup"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Back up all menus</button>
+            <button class="mi" id="btnRestore"><svg viewBox="0 0 24 24"><path d="M12 21V9m0 0 4 4m-4-4-4 4"/><path d="M4 7V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2"/></svg>Restore from backup</button>
+            <hr>
+            <button class="mi danger" id="btnDelMenu"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-11 0 1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg>Delete this menu</button>
+          </div>
+        </div>
+      </header>
+
+      <div class="main" id="mainGrid">
+        <aside class="rail" id="rail">
+          <div class="cap">MENUS</div>
+          <div class="rail-scroll" id="railScroll"></div>
+          <button class="railnew" id="btnNewMenuRail">+ NEW MENU</button>
+        </aside>
+        <div class="railHandle" id="railHandle" title="Drag to resize"></div>
+        <section class="editor">
+          <div class="ed-head">
+            <div class="cap">EDIT MENU</div>
+            <input class="mname" id="edName" placeholder="Menu name" />
+            <div class="ed-meta">
+              <span class="pill">Date <input type="date" id="edDate" /></span>
+              <span class="pill">Paper <select id="edPaper"><option>A4</option><option>A5</option></select></span>
+              <span class="pill">Header <select id="edHeader"><option value="title">Title only</option><option value="crest">Crest + title</option><option value="lockup">Full lockup</option></select></span>
+            </div>
+          </div>
+          <div class="ed-scroll" id="edScroll"></div>
+        </section>
+        <div class="editorHandle" id="editorHandle" title="Drag to resize Edit Menu"></div>
+
+        <section class="stage">
+          <div class="tipbar" id="tipbar" style="display:none">
+            <span>Tip — click any text on the menu to edit it right there, or use the panel. Drag the dots to move dishes.</span>
+            <span class="sp"></span>
+            <button class="iconb" id="tipClose"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+          </div>
+          <div class="stage-bar">
+            <span class="lbl" id="stPaper"></span>
+            <span class="warnchip" id="warnChip"><strong id="warnText">Doesn't fit on one page</strong><button id="btnAutoFit">Shrink to fit</button></span>
+            <button class="chiplink" id="btnResetFit" style="display:none">Reset sizing</button>
+            <span class="sp"></span>
+            <button class="abtn" id="btnMove" title="Drag titles, logos, lines and text freely on the page"><svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20M12 2 9 5m3-3 3 3M12 22l-3-3m3 3 3-3M2 12l3-3m-3 3 3 3M22 12l-3-3m3 3-3 3"/></svg>Arrange</button>
+            <span class="zoomctl" title="Zoom the preview (view only — doesn't change print size)">
+              <button id="scDown">−</button><button id="scReset">100%</button><button id="scUp">+</button>
+            </span>
+          </div>
+          <div class="stage-scroll" id="stageScroll"><div class="pagewrap" id="pagewrap"></div></div>
+        </section>
+      </div>
+
+      <div class="menusPanel" id="menusPanel"></div>
+    </div>
+
+    <div class="tabbar" id="tabbar">
+      <button data-t="menus"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>MENUS</button>
+      <button data-t="edit" class="on"><svg viewBox="0 0 24 24"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>EDIT</button>
+      <button data-t="view"><svg viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>PREVIEW</button>
+    </div>
+
+    <div class="overlay" id="ovTpl">
+      <div class="modal">
+        <div class="mo-h"><h2>NEW MENU — CHOOSE A LAYOUT</h2><button class="iconb" data-close><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+        <div class="mo-b"><div class="tpl-grid" id="tplGrid"></div></div>
+        <div class="mo-f">
+          <input class="newname" id="newMenuName" placeholder="Menu name, e.g. Valentine's Menu" />
+          <button class="abtn primary" id="btnCreateMenu">Create menu</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" id="ovDish">
+      <div class="modal" style="max-width:560px">
+        <div class="mo-h"><h2>COPY A DISH</h2><button class="iconb" data-close><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+        <div class="mo-b">
+          <input class="searchin" id="dishSearch" placeholder="Search every dish on every menu…" />
+          <div class="dishpick" id="dishPick"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" id="ovSettings">
+      <div class="modal" style="max-width:520px">
+        <div class="mo-h"><h2>SETTINGS</h2><button class="iconb" data-close><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+        <div class="mo-b">
+          <div class="field"><label>DIETARY KEY</label><div id="keyRows"></div>
+            <button class="abtn" id="btnAddKey" style="margin-top:4px">+ Add code</button></div>
+          <div class="field"><label>PREVIEW PAPER COLOUR (blush — exports are always white)</label>
+            <input type="color" id="blushIn" />
+          </div>
+          <details class="field advanced">
+            <summary>PRINT &amp; LAYOUT (advanced)</summary>
+            <div class="release-settings-grid">
+              <label class="release-setting"><span>Section spacing</span><input type="range" id="setSectionGap" min="60" max="150" step="5" /><output id="outSectionGap"></output></label>
+              <label class="release-setting"><span>Dish line spacing</span><input type="range" id="setDishGap" min="70" max="145" step="5" /><output id="outDishGap"></output></label>
+              <label class="release-setting"><span>Between-section line</span><input type="range" id="setInnerRule" min="15" max="75" step="1" /><output id="outInnerRule"></output></label>
+              <label class="release-setting"><span>Top / bottom line</span><input type="range" id="setEdgeRule" min="60" max="98" step="1" /><output id="outEdgeRule"></output></label>
+              <label class="release-setting"><span>Footer breathing room</span><input type="range" id="setFooterGap" min="50" max="180" step="5" /><output id="outFooterGap"></output></label>
+              <label class="release-setting"><span>Column divider length</span><input type="range" id="setColDivider" min="40" max="100" step="2" /><output id="outColDivider"></output></label>
+            </div>
+            <button class="abtn" id="btnResetLayoutSettings" style="margin-top:10px">Reset layout defaults</button>
+          </details>
+          <div class="field settnote">Everything saves automatically. Use <b>Back up all menus</b> (in the ⋯ menu) to download a file you can move to another device, and <b>Restore</b> to load it there.</div>
+        </div>
+      </div>
+    </div>
+
+    <input type="file" id="fileRestore" accept=".json" style="display:none" />
+    <div id="printRoot"></div>
+
     <script type="module" src="/src/renderer/app.ts"></script>
   </body>
 </html>

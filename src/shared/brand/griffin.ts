@@ -9,13 +9,18 @@ export const griffin: BrandConfig = {
     lockup: 'griffin/lockup',
   },
   palette: {
-    copper: '#B4763B',
-    cream: '#EFE7DA',
-    panel: '#FFFFFF',
-    ink: '#2B2622',
-    muted: '#8A7E6F',
-    line: '#E2D8C8',
-    blush: '#F7EFE7',
+    copper: '#66584A', // deep bronze — accent
+    cream: '#F6F3ED', // warm ivory — backgrounds
+    panel: '#FFFFFF', // white — space & contrast
+    ink: '#222222', // charcoal — body text
+    headline: '#111111', // soft black — headlines
+    muted: '#7A7266', // muted secondary text (readable on ivory)
+    line: '#E4DDD1', // warm hairlines
+    blush: '#F5E4DF', // preview paper tint (matches the original), exports stay white
+    taupe: '#B8AA98', // warm taupe — secondary backgrounds
+    gold: '#C2A36B', // antique gold — occasional highlight
+    seal: '#00403D', // brand green — app icon circle, strong accents
+    sealInk: '#FFF4F4', // brand pink — app icon crest, text on the seal accent
   },
   defaults: {
     paper: 'A4',

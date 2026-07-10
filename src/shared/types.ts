@@ -132,12 +132,27 @@ export interface Template {
   leadRule?: boolean;
 }
 
+/** Print & layout fine-tuning (the mockup's six sliders). Defaults live in code. */
+export interface ReleaseSettings {
+  sectionGap: number;
+  dishGap: number;
+  innerRule: number;
+  edgeRule: number;
+  footerGap: number;
+  colDivider: number;
+}
+
 export interface Settings {
   dietKey: DietKey[];
   /** Preview-only paper tint (exports stay white). */
   blush?: string;
-  /** Print & layout slider values (release defaults live in code). */
-  release?: Record<string, number>;
+  /** Print & layout slider values. */
+  layout?: ReleaseSettings;
+  // UI preferences persisted with the document/library.
+  railWidth?: number;
+  railHidden?: boolean;
+  editorWidth?: number;
+  tipSeen?: boolean;
 }
 
 export interface AppState {

@@ -2,6 +2,7 @@ import { app, BrowserWindow, shell } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import { getActiveBrand } from '../shared/brand';
+import { registerIpc } from './ipc';
 
 // Handle Squirrel install/uninstall shortcut events on Windows.
 if (started) {
@@ -82,6 +83,7 @@ function createMainWindow(): void {
 }
 
 app.on('ready', () => {
+  registerIpc(() => mainWindow);
   createSplashWindow();
   createMainWindow();
 });
