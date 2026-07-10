@@ -1,0 +1,92 @@
+:root {
+  --copper: #b4763b;
+  --cream: #efe7da;
+  --panel: #ffffff;
+  --ink: #2b2622;
+  --muted: #8a7e6f;
+  --line: #e2d8c8;
+  --blush: #f7efe7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+/* Custom draggable title bar; native window buttons sit in the overlay on the
+   right, so leave room for them. */
+.titlebar {
+  height: 40px;
+  flex: 0 0 40px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 140px 0 16px;
+  background: var(--cream);
+  border-bottom: 1px solid var(--line);
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.titlebar button,
+.titlebar input,
+.titlebar a,
+.titlebar [role='button'] {
+  -webkit-app-region: no-drag;
+}
+
+.titlebar-brand {
+  font-size: 13px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--copper);
+  font-weight: 700;
+}
+
+#app-root {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* Phase 0 scaffold placeholder — replaced by the editor in Phase 1. */
+.scaffold {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  text-align: center;
+  padding: 40px;
+}
+
+.scaffold img {
+  width: min(320px, 60%);
+  height: auto;
+}
+
+.scaffold h1 {
+  margin: 0;
+  font-size: 22px;
+  color: var(--ink);
+}
+
+.scaffold p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}

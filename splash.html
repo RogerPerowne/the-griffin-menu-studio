@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' ws: wss:; object-src 'none'; base-uri 'none'"
+    />
+    <title>Griffin Menu Studio</title>
+  </head>
+  <body>
+    <div class="splash">
+      <img id="splash-logo" alt="The Griffin" />
+      <div class="splash-title">Menu Studio</div>
+      <div class="splash-status" id="splash-status">Starting…</div>
+    </div>
+    <script type="module" src="/src/renderer/splash.ts"></script>
+  </body>
+</html>
