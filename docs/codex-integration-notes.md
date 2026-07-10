@@ -107,7 +107,7 @@ of truth for Export and Print readiness. It renders the white production page
 at its unscaled physical size, waits for fonts and images, then returns:
 
 ```ts
-{ ok: boolean; paper: 'A4' | 'A5'; reason?: 'footer' | 'overflow'; info?: ProductionInfo }
+{ ok: boolean; paper: 'A4' | 'A5'; reason?: 'fonts' | 'images' | 'footer' | 'overflow'; info?: ProductionInfo }
 ```
 
 **Required Export workspace integration:** replace the current direct
@@ -117,3 +117,7 @@ for presentation, so measuring it independently can falsely say a menu does
 not fit even after Editor's Shrink to Fit has succeeded. Use the canonical
 result to set the status and enable Print; the Export canvas remains visual
 only.
+
+Surface `fonts` and `images` as asset-loading failures, not a "does not fit"
+warning. The preflight waits for both with a bounded timeout and treats a
+broken image as unresolved.

@@ -333,26 +333,37 @@ export function autoFitOnePage(): boolean {
 export interface PrintPreflight {
   ok: boolean;
   paper: 'A4' | 'A5';
-  reason?: string;
+  reason?: 'missing-print-root' | 'fonts' | 'images' | 'footer' | 'overflow';
   /** Canonical unscaled production measurement. Export UI must use this, never its scaled canvas. */
   info?: ProductionInfo;
 }
 
-async function waitForImages(root: HTMLElement, timeoutMs = 2500): Promise<void> {
+async function waitForFonts(timeoutMs = 2500): Promise<boolean> {
+  if (!document.fonts) return true;
+  if (document.fonts.status === 'loaded') return true;
+  const settled = await Promise.race([
+    document.fonts.ready.then(() => document.fonts.status === 'loaded'),
+    new Promise<false>((resolve) => window.setTimeout(() => resolve(false), timeoutMs)),
+  ]);
+  return settled;
+}
+
+async function waitForImages(root: HTMLElement, timeoutMs = 2500): Promise<boolean> {
   const images = Array.from(root.querySelectorAll('img'));
-  if (!images.length) return;
-  await Promise.race([
+  if (!images.length) return true;
+  const settled = await Promise.race([
     Promise.all(
       images.map((img) => {
-        if (img.complete) return Promise.resolve();
-        return new Promise<void>((resolve) => {
-          img.addEventListener('load', () => resolve(), { once: true });
-          img.addEventListener('error', () => resolve(), { once: true });
+        if (img.complete) return Promise.resolve(img.naturalWidth > 0);
+        return new Promise<boolean>((resolve) => {
+          img.addEventListener('load', () => resolve(img.naturalWidth > 0), { once: true });
+          img.addEventListener('error', () => resolve(false), { once: true });
         });
       }),
-    ).then(() => undefined),
-    new Promise<void>((resolve) => window.setTimeout(resolve, timeoutMs)),
+    ).then((result) => result.every(Boolean)),
+    new Promise<false>((resolve) => window.setTimeout(() => resolve(false), timeoutMs)),
   ]);
+  return settled;
 }
 
 /** Preflight the exact export DOM (#printRoot) before the shell asks Electron to print. */
@@ -362,11 +373,14 @@ export async function preparePrintDOM(): Promise<PrintPreflight> {
   const printRoot = document.getElementById('printRoot');
   if (!printRoot) return { ok: false, paper, reason: 'missing-print-root' };
 
-  if (document.fonts?.ready) await document.fonts.ready;
+  if (!(await waitForFonts())) return { ok: false, paper, reason: 'fonts' };
 
   printRoot.innerHTML = renderMenuHTML(menu, renderArgs(false));
   applyReleaseSettings();
-  await waitForImages(printRoot);
+  if (!(await waitForImages(printRoot))) {
+    printRoot.innerHTML = '';
+    return { ok: false, paper, reason: 'images' };
+  }
   // #printRoot is display:none in normal view, so it has no layout box to
   // measure. Lay it out off-screen (real paper size, invisible) for an accurate
   // preflight, then restore. Without this the overflow check always reads zero
