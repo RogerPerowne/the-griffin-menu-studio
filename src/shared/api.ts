@@ -100,6 +100,7 @@ export interface GriffinApi {
   saveDocumentCopy(state: unknown): Promise<SaveResult>;
   overwriteDocument(state: unknown): Promise<SaveResult>;
   openDocument(): Promise<OpenResult>;
+  consumeLaunchDocument(): Promise<OpenResult>;
   reloadDocument(): Promise<OpenResult>;
   newDocument(): Promise<{ ok: boolean }>;
   newWindow(): Promise<{ ok: boolean }>;

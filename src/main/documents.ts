@@ -11,6 +11,7 @@ interface DocumentSession {
 }
 
 const sessions = new WeakMap<BrowserWindow, DocumentSession>();
+const pendingLaunchDocuments = new WeakMap<BrowserWindow, Promise<OpenResult>>();
 
 interface MinimalState {
   currentMenuId?: string | null;
@@ -135,7 +136,14 @@ export async function openDocument(win: BrowserWindow): Promise<OpenResult> {
     filters: [{ name: 'Griffin Menu', extensions: ['menu'] }],
   });
   if (res.canceled || !res.filePaths[0]) return { canceled: true };
-  const filePath = res.filePaths[0];
+  return openDocumentPath(win, res.filePaths[0]);
+}
+
+/** Open a `.menu` path supplied by the OS (for example a file association). */
+export async function openDocumentPath(win: BrowserWindow, filePath: string): Promise<OpenResult> {
+  if (path.extname(filePath).toLowerCase() !== DOCUMENT_EXTENSION) {
+    return { canceled: true, filePath, error: 'This file is not a Griffin Menu Studio menu.' };
+  }
   try {
     const document = await readDocument(filePath);
     sessions.set(win, { filePath, revision: document.revision });
@@ -148,6 +156,18 @@ export async function openDocument(win: BrowserWindow): Promise<OpenResult> {
       error: error instanceof Error ? error.message : 'The selected menu could not be opened.',
     };
   }
+}
+
+/** Queue a trusted command-line document until the renderer asks for it once. */
+export function stageLaunchDocument(win: BrowserWindow, filePath: string): void {
+  pendingLaunchDocuments.set(win, openDocumentPath(win, filePath));
+}
+
+export async function consumeLaunchDocument(win: BrowserWindow): Promise<OpenResult> {
+  const pending = pendingLaunchDocuments.get(win);
+  if (!pending) return { canceled: true };
+  pendingLaunchDocuments.delete(win);
+  return pending;
 }
 
 export async function reloadDocument(win: BrowserWindow): Promise<OpenResult> {

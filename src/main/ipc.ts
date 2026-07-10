@@ -57,6 +57,7 @@ export function registerIpc(createWindow: () => BrowserWindow): void {
   ipcMain.handle('document:saveCopy', (e, state: unknown) => docs.saveDocumentCopy(requireWin(e.sender), state));
   ipcMain.handle('document:overwrite', (e, state: unknown) => docs.overwriteDocument(requireWin(e.sender), state));
   ipcMain.handle('document:open', (e) => docs.openDocument(requireWin(e.sender)));
+  ipcMain.handle('document:consumeLaunch', (e) => docs.consumeLaunchDocument(requireWin(e.sender)));
   ipcMain.handle('document:reload', (e) => docs.reloadDocument(requireWin(e.sender)));
   ipcMain.handle('document:new', (e) => docs.newDocument(requireWin(e.sender)));
 

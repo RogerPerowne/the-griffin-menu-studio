@@ -52,6 +52,12 @@ The main process fingerprints each opened/saved file using a SHA-256 revision.
 It also calls `app.addRecentDocument()` after a successful Windows `.menu`
 open.
 
+`window.griffin.consumeLaunchDocument()` returns one staged `OpenResult` when
+Windows launched the packaged app through a `.menu` file association; otherwise
+it returns `{ canceled: true }`. Call it once during renderer boot before
+choosing the default Home/editor state. The path is supplied only by the main
+process command line and is never renderer-provided.
+
 ## IPC Validation
 
 Main-process IPC now derives every privileged call from `event.sender` and

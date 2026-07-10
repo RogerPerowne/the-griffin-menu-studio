@@ -13,6 +13,7 @@ const api: GriffinApi = {
   saveDocumentCopy: (state) => ipcRenderer.invoke('document:saveCopy', state),
   overwriteDocument: (state) => ipcRenderer.invoke('document:overwrite', state),
   openDocument: () => ipcRenderer.invoke('document:open'),
+  consumeLaunchDocument: () => ipcRenderer.invoke('document:consumeLaunch'),
   reloadDocument: () => ipcRenderer.invoke('document:reload'),
   newDocument: () => ipcRenderer.invoke('document:new'),
   newWindow: () => ipcRenderer.invoke('app:newWindow'),

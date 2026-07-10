@@ -2,12 +2,18 @@ import { app, BrowserWindow, shell } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import { getActiveBrand } from '../shared/brand';
+import { ensureMenuFileAssociation, removeMenuFileAssociation } from './file-association';
 import { registerIpc } from './ipc';
 import { beginRecoverySession, markRecoverySessionClean } from './recovery';
+import { stageLaunchDocument } from './documents';
 
 // Handle Squirrel install/uninstall shortcut events on Windows.
 if (started) {
-  app.quit();
+  if (process.argv.includes('--squirrel-uninstall')) {
+    void removeMenuFileAssociation().finally(() => app.quit());
+  } else {
+    app.quit();
+  }
 }
 
 const brand = getActiveBrand();
@@ -43,6 +49,11 @@ function loadRendererPage(win: BrowserWindow, page: 'index' | 'splash'): void {
     const file = page === 'index' ? 'index.html' : `${page}.html`;
     win.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/${file}`));
   }
+}
+
+function launchMenuPath(argv: string[]): string | null {
+  const candidate = argv.find((arg) => arg.toLowerCase().endsWith('.menu') && path.isAbsolute(arg));
+  return candidate ? path.normalize(candidate) : null;
 }
 
 function createSplashWindow(): void {
@@ -111,9 +122,12 @@ function createMainWindow(): BrowserWindow {
 
 app.on('ready', () => {
   void beginRecoverySession();
+  void ensureMenuFileAssociation();
   registerIpc(createMainWindow);
   createSplashWindow();
-  createMainWindow();
+  const win = createMainWindow();
+  const launchPath = launchMenuPath(process.argv);
+  if (launchPath) stageLaunchDocument(win, launchPath);
 });
 
 app.on('before-quit', (event) => {
