@@ -41,7 +41,8 @@ export type CommandName =
   | 'reset-all-positions'
   | 'go-start'
   | 'go-editor'
-  | 'go-export';
+  | 'go-export'
+  | 'about';
 
 async function exportPdf(): Promise<void> {
   const preflight = await preparePrintDOM();
@@ -172,6 +173,9 @@ export function runCommand(name: CommandName): void {
       return;
     case 'go-export':
       setWorkspace('export');
+      return;
+    case 'about':
+      window.alert('Griffin Menu Studio\nA bespoke menu editor for The Griffin, Amersham.');
       return;
   }
 }

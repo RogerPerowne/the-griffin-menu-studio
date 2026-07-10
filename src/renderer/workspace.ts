@@ -26,6 +26,20 @@ function assets() {
 
 /* ================= Start workspace: the menu library ================= */
 
+// .start-card-thumb is a fixed-width box (see editor.css) so the scale below
+// is exact, not approximate — A4 and A5 pages are different physical widths
+// (210mm vs 148mm) and must each be scaled to fill the SAME box, or the
+// narrower A5 menus render tiny with empty margin around them.
+const THUMB_BOX_PX = 172;
+const THUMB_BOX_HEIGHT_PX = (THUMB_BOX_PX * 297) / 210; // matches .start-card-thumb's aspect-ratio:210/297
+const MM_TO_PX = 3.7795;
+
+function paperScale(paper: string | undefined): number {
+  const widthMm = paper === 'A5' ? 148 : 210;
+  const heightMm = paper === 'A5' ? 210 : 297;
+  return Math.min(THUMB_BOX_PX / (widthMm * MM_TO_PX), THUMB_BOX_HEIGHT_PX / (heightMm * MM_TO_PX));
+}
+
 function renderStartWorkspace(): void {
   const root = document.getElementById('startWorkspace');
   if (!root) return;
@@ -35,8 +49,9 @@ function renderStartWorkspace(): void {
   const cards = state.menus
     .map((menu) => {
       const thumbHtml = renderMenuHTML(menu, { edit: false, dietKey, assets: assets() });
+      const scale = paperScale(menu.style?.paper);
       return `<button class="start-card" data-open-menu="${menu.id}">
-        <div class="start-card-thumb"><div class="start-card-scale">${thumbHtml}</div></div>
+        <div class="start-card-thumb"><div class="start-card-scale" style="transform:translate(-50%,-50%) scale(${scale})">${thumbHtml}</div></div>
         <span class="start-card-name">${esc(menu.name)}</span>
         <span class="start-card-date">${esc(fmtDate(menu.date))}</span>
       </button>`;

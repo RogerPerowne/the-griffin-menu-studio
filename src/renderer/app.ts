@@ -6,14 +6,16 @@ import './styles/menu.css';
 import { getActiveBrand, paletteToCssVars } from '@shared/brand';
 import { griffinSeed } from '@shared/brand/griffin-seed';
 import { assetUrl } from './brand-assets';
-import { currentMenu, getState, loadFromStorage, on, redo, replaceState, undo } from './store';
-import { fmtDate, initRail, renderRail } from './views/rail';
+import { getState, loadFromStorage, on } from './store';
+import { initRail, renderRail } from './views/rail';
 import { initEditor, renderEditor } from './views/editor';
 import { initGallery } from './views/gallery';
 import { initDishPicker } from './views/dishpicker';
 import { initSettings } from './views/settings';
 import { initBackup } from './views/backup';
-import { initPreview, preparePrintDOM, renderPreview } from './views/preview';
+import { initPreview, renderPreview } from './views/preview';
+import { initCommandDispatch, runCommand } from './commands';
+import { initWorkspaces } from './workspace';
 
 const brand = getActiveBrand();
 
@@ -24,7 +26,7 @@ function applyBrand(): void {
     root.style.setProperty(key, value);
   }
   const logo = document.getElementById('brandLogo') as HTMLImageElement | null;
-  if (logo) logo.src = assetUrl(brand.assetKeys.lockup);
+  if (logo) logo.src = assetUrl(brand.assetKeys.crest);
   document.title = `Griffin Menu Studio — ${brand.displayName}`;
 }
 
@@ -50,37 +52,28 @@ function initTipbar(): void {
   });
 }
 
-/** Export the current menu to PDF via the desktop bridge (guarded for browser preview). */
-async function exportPdf(): Promise<void> {
-  const preflight = await preparePrintDOM();
-  if (!preflight.ok) {
-    const msg =
-      preflight.reason === 'footer'
-        ? 'Export stopped: text would overlap the footer. Use “Shrink to fit” or shorten the menu first.'
-        : 'Export stopped: this menu does not fit safely on one page. Use “Shrink to fit” or shorten the menu first.';
-    window.alert(msg);
-    return;
-  }
-  const menu = currentMenu();
-  const defaultName = `${menu.name} ${fmtDate(menu.date)}`.trim() + '.pdf';
-  await window.griffin?.exportPdf({ paper: preflight.paper, defaultName });
+/** Toggle any top-bar dropdown (File/Edit/Menu/Arrange/View/Help) — one popover open at a time. */
+function initTopMenus(): void {
+  document.getElementById('menubar')?.addEventListener('click', (e) => {
+    const target = e.target;
+    if (!(target instanceof Element)) return;
+    const trigger = target.closest<HTMLElement>('[data-act="topmenu"]');
+    if (!trigger) return;
+    e.stopPropagation();
+    const wrap = trigger.closest<HTMLElement>('.more');
+    const wasOpen = wrap?.classList.contains('open') ?? false;
+    document.querySelectorAll('.more.open').forEach((el) => el.classList.remove('open'));
+    if (wrap && !wasOpen) wrap.classList.add('open');
+  });
+  document.addEventListener('click', (e) => {
+    const target = e.target;
+    if (!(target instanceof Element) || !target.closest('.more')) {
+      document.querySelectorAll('.more.open').forEach((el) => el.classList.remove('open'));
+    }
+  });
 }
 
-async function saveDocument(as = false): Promise<void> {
-  const api = window.griffin;
-  if (!api) return;
-  const res = as ? await api.saveDocumentAs(getState()) : await api.saveDocument(getState());
-  if (!res.canceled) window.dispatchEvent(new Event('griffin:saved'));
-}
-
-async function openDocument(): Promise<void> {
-  const api = window.griffin;
-  if (!api) return;
-  const res = await api.openDocument();
-  if (res && !res.canceled && res.state) replaceState(res.state as ReturnType<typeof getState>);
-}
-
-/** App-wide keyboard shortcuts (a minimal set; a full command layer lands in Phase 2). */
+/** App-wide keyboard shortcuts, routed through the same command layer as every button. */
 function initKeyboard(): void {
   document.addEventListener('keydown', (e) => {
     const mod = e.ctrlKey || e.metaKey;
@@ -89,22 +82,22 @@ function initKeyboard(): void {
     const key = e.key.toLowerCase();
     if (key === 'z' && !inField) {
       e.preventDefault();
-      e.shiftKey ? redo() : undo();
+      runCommand(e.shiftKey ? 'redo' : 'undo');
     } else if (key === 'y' && !inField) {
       e.preventDefault();
-      redo();
+      runCommand('redo');
     } else if (key === 's') {
       e.preventDefault();
-      void saveDocument(e.shiftKey);
+      runCommand(e.shiftKey ? 'save-as' : 'save');
     } else if (key === 'o') {
       e.preventDefault();
-      void openDocument();
+      runCommand('open');
     } else if (key === 'e') {
       e.preventDefault();
-      void exportPdf();
+      runCommand('export-pdf');
     } else if (key === 'p') {
       e.preventDefault();
-      void window.griffin?.print();
+      runCommand('print');
     }
   });
 }
@@ -128,8 +121,9 @@ function boot(): void {
   initPreview();
   initTipbar();
   initKeyboard();
-
-  document.getElementById('btnExport')?.addEventListener('click', () => void exportPdf());
+  initTopMenus();
+  initCommandDispatch();
+  initWorkspaces();
 
   renderRail();
   renderEditor();

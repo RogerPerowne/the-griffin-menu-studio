@@ -14,25 +14,82 @@
       <header class="top" id="appTop">
         <button class="iconb" id="btnToggleRail" title="Show or hide the menu list"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button>
         <img class="lg" id="brandLogo" alt="The Griffin" />
-        <span class="studio">MENU STUDIO</span>
+        <div class="modepill">
+          <button data-cmd="go-start" data-mode="start">Start</button>
+          <button data-cmd="go-editor" data-mode="editor" class="on">Editor</button>
+          <button data-cmd="go-export" data-mode="export">Export</button>
+        </div>
         <span class="sp"></span>
-        <button class="abtn primary" id="btnExport"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Export PDF</button>
-        <div class="more" id="more">
-          <button class="iconb" id="btnMore" title="More"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg></button>
-          <div class="pop right">
-            <button class="mi" id="btnUndo"><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>Undo last change</button>
-            <button class="mi" id="btnRedo"><svg viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg>Redo</button>
-            <button class="mi" id="btnDup"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Duplicate menu (today's date)</button>
-            <button class="mi" id="btnSaveTpl"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Save layout as template</button>
+        <button class="abtn primary" data-cmd="export-pdf"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Export PDF</button>
+      </header>
+
+      <nav class="menubar" id="menubar">
+        <div class="more topmenu">
+          <button class="topmenu-btn" data-act="topmenu">File</button>
+          <div class="pop">
+            <button class="mi" data-cmd="new-template">+ New Menu</button>
+            <button class="mi" data-cmd="open">Open…</button>
             <hr>
-            <button class="mi" id="btnSettings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.82-.33 1.7 1.7 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.51 1.7 1.7 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .33-1.82 1.7 1.7 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.51-1 1.7 1.7 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.82.33h0a1.7 1.7 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.51h0a1.7 1.7 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.33 1.82v0a1.7 1.7 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1Z"/></svg>Dietary key &amp; settings</button>
-            <button class="mi" id="btnBackup"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Back up all menus</button>
-            <button class="mi" id="btnRestore"><svg viewBox="0 0 24 24"><path d="M12 21V9m0 0 4 4m-4-4-4 4"/><path d="M4 7V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2"/></svg>Restore from backup</button>
+            <button class="mi" data-cmd="save">Save</button>
+            <button class="mi" data-cmd="save-as">Save As…</button>
+            <button class="mi" data-cmd="save-template">Save Layout as Template…</button>
             <hr>
-            <button class="mi danger" id="btnDelMenu"><svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-11 0 1 14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-14"/></svg>Delete this menu</button>
+            <button class="mi" data-cmd="duplicate">Duplicate Menu</button>
+            <button class="mi danger" data-cmd="delete-menu">Delete Menu</button>
+            <hr>
+            <button class="mi" data-cmd="backup">Back up all menus</button>
+            <button class="mi" data-cmd="restore">Restore from backup…</button>
+            <hr>
+            <button class="mi" data-cmd="export-pdf">Export PDF…</button>
+            <button class="mi" data-cmd="export-png">Export PNG…</button>
+            <button class="mi" data-cmd="print">Print…</button>
           </div>
         </div>
-      </header>
+        <div class="more topmenu">
+          <button class="topmenu-btn" data-act="topmenu">Edit</button>
+          <div class="pop">
+            <button class="mi" data-cmd="undo">Undo</button>
+            <button class="mi" data-cmd="redo">Redo</button>
+            <hr>
+            <button class="mi" data-cmd="copy-dish">Copy a Dish…</button>
+          </div>
+        </div>
+        <div class="more topmenu">
+          <button class="topmenu-btn" data-act="topmenu">Menu</button>
+          <div class="pop">
+            <button class="mi" data-cmd="settings">Dietary Key &amp; Settings…</button>
+          </div>
+        </div>
+        <div class="more topmenu">
+          <button class="topmenu-btn" data-act="topmenu">Arrange</button>
+          <div class="pop">
+            <button class="mi" data-cmd="arrange-toggle">Toggle Arrange Mode</button>
+            <button class="mi" data-cmd="reset-all-positions">Reset All Positions</button>
+          </div>
+        </div>
+        <div class="more topmenu">
+          <button class="topmenu-btn" data-act="topmenu">View</button>
+          <div class="pop">
+            <button class="mi" data-cmd="zoom-in">Zoom In</button>
+            <button class="mi" data-cmd="zoom-out">Zoom Out</button>
+            <button class="mi" data-cmd="fit-width">Fit to Width</button>
+            <button class="mi" data-cmd="actual-size">Actual Size</button>
+          </div>
+        </div>
+        <div class="more topmenu">
+          <button class="topmenu-btn" data-act="topmenu">Help</button>
+          <div class="pop">
+            <button class="mi" data-cmd="about">About Griffin Menu Studio</button>
+          </div>
+        </div>
+        <span class="sp"></span>
+        <div class="quickrow">
+          <button class="iconb" data-cmd="undo" title="Undo"><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
+          <button class="iconb" data-cmd="redo" title="Redo"><svg viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
+          <button class="iconb" data-cmd="save" title="Save"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg></button>
+          <button class="iconb" data-cmd="print" title="Print"><svg viewBox="0 0 24 24"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></svg></button>
+        </div>
+      </nav>
 
       <div class="main" id="mainGrid">
         <aside class="rail" id="rail">
@@ -76,6 +133,9 @@
       </div>
 
       <div class="menusPanel" id="menusPanel"></div>
+
+      <div id="startWorkspace" class="workspace"></div>
+      <div id="exportWorkspace" class="workspace"></div>
     </div>
 
     <div class="tabbar" id="tabbar">

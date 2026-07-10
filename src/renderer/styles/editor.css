@@ -12,10 +12,57 @@ input,textarea,select{font:inherit;color:inherit}
 svg{stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 
 /* ---------- Top bar ---------- */
+:root{--topbar-h:102px}
 .top{display:flex;align-items:center;gap:10px;height:60px;padding:0 16px;background:#FBF8F2;border-bottom:1px solid var(--line);position:relative;z-index:30}
 .top .lg{height:40px;display:block}
 .top .studio{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-family:'Georgia','Times New Roman',serif;font-size:20px;font-weight:400;letter-spacing:.24em;color:var(--ink);text-indent:.24em;white-space:nowrap;pointer-events:none}
 .sp{flex:1}
+
+/* ---------- Workspace mode pill (Start / Editor / Export) ---------- */
+.modepill{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:2px;background:#fff;border:1px solid var(--line2);border-radius:999px;padding:3px}
+.modepill button{padding:7px 18px;border-radius:999px;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.modepill button:hover{color:var(--ink)}
+.modepill button.on{background:var(--brand-green);color:var(--brand-pink)}
+
+/* ---------- Menu bar (File / Edit / Menu / Arrange / View / Help) ---------- */
+.menubar{display:flex;align-items:center;gap:2px;height:42px;padding:0 12px;background:#fff;border-bottom:1px solid var(--line);position:relative;z-index:29}
+.topmenu{position:relative}
+.topmenu-btn{padding:8px 12px;font-size:12.5px;letter-spacing:.08em;color:var(--ink);border-radius:6px}
+.topmenu-btn:hover{background:#F7F1E7}
+.topmenu.open .topmenu-btn{background:var(--brand-green);color:var(--brand-pink)}
+.topmenu .pop{top:calc(100% + 4px)}
+.quickrow{display:flex;align-items:center;gap:2px}
+
+/* ---------- Workspaces ---------- */
+.workspace{display:none;height:calc(100dvh - var(--topbar-h));overflow:auto}
+#app[data-workspace="start"] #startWorkspace{display:block}
+#app[data-workspace="export"] #exportWorkspace{display:block}
+#app:not([data-workspace="editor"]) .main{display:none}
+
+.start-shell{max-width:1100px;margin:0 auto;padding:36px 28px 60px}
+.start-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:28px}
+.start-head h1{font-family:'Georgia','Times New Roman',serif;font-weight:400;font-size:26px;color:var(--ink)}
+.start-actions{display:flex;gap:10px}
+.start-grid{display:grid;grid-template-columns:repeat(auto-fill,172px);justify-content:start;gap:18px}
+.start-card{display:flex;flex-direction:column;align-items:stretch;gap:6px;width:172px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;text-align:left}
+.start-card:hover{border-color:var(--copper)}
+/* Fixed pixel box so workspace.ts's per-paper scale (A4 vs A5 have different
+   physical widths) fills it exactly instead of leaving empty margin. */
+.start-card-thumb{width:172px;aspect-ratio:210/297;overflow:hidden;border-radius:7px;background:var(--blush);position:relative}
+.start-card-scale{position:absolute;top:50%;left:50%;transform-origin:center}
+.start-card-name{font-size:13px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.start-card-date{font-size:11px;color:var(--mut)}
+.start-empty{color:var(--mut);font-style:italic;padding:40px 0}
+
+.export-shell{display:flex;gap:0;height:100%}
+.export-preview{flex:1;display:flex;align-items:center;justify-content:center;overflow:auto;background:var(--cream);padding:40px}
+.export-preview-page{transform:scale(.62);transform-origin:center}
+.export-panel{width:300px;flex:none;background:#fff;border-left:1px solid var(--line);padding:26px 22px;display:flex;flex-direction:column;gap:10px}
+.export-panel h2{font-family:'Georgia','Times New Roman',serif;font-weight:400;font-size:18px;color:var(--ink)}
+.export-meta{font-size:11.5px;color:var(--mut);line-height:1.5}
+.export-status{font-size:12.5px;color:#3E7A5C;background:#EEF6F0;border-radius:8px;padding:9px 11px}
+.export-status.warn{color:var(--warn);background:#FBEDEA}
+.export-buttons{display:flex;flex-direction:column;gap:8px;margin-top:8px}
 .switch{position:relative;margin-left:14px}
 .switchbtn{display:inline-flex;align-items:center;gap:9px;border:1px solid var(--line2);background:#fff;border-radius:9px;padding:9px 14px;max-width:300px}
 .switchbtn:hover{border-color:var(--copper)}
@@ -54,7 +101,7 @@ svg{stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-l
 .more{position:relative}
 
 /* ---------- Main ---------- */
-.main{display:grid;grid-template-columns:var(--railw,230px) 6px var(--edw,380px) 6px minmax(0,1fr);height:calc(100dvh - 60px);min-height:0}
+.main{display:grid;grid-template-columns:var(--railw,230px) 6px var(--edw,380px) 6px minmax(0,1fr);height:calc(100dvh - var(--topbar-h));min-height:0}
 .main.noRail{grid-template-columns:var(--edw,380px) 6px minmax(0,1fr)}
 
 /* ---------- Rail (menu list) ---------- */
@@ -120,8 +167,8 @@ input.idesc:focus{outline:none;box-shadow:0 1px 0 var(--copper)}
 .itools .iconb{width:27px;height:25px}
 .itools .iconb svg{width:14px;height:14px}
 @media (hover:hover){
-  .itools .iconb,.sec-h .iconb{opacity:0;transition:opacity .12s}
-  .item:hover .itools .iconb,.sec-h:hover .iconb{opacity:1}
+  .itools .iconb{opacity:0;transition:opacity .12s}
+  .item:hover .itools .iconb{opacity:1}
 }
 .addrow{display:flex;gap:8px;padding:4px 10px 12px;flex-wrap:wrap}
 .ruleitem{align-items:center}
@@ -288,9 +335,10 @@ body.moveMode .moveHint{display:block}
 
 .tabbar{display:none}
 @media (max-width:940px){
+  :root{--topbar-h:54px}
   .top{height:54px;padding:0 12px}
   .top .lg{height:32px}
-  .top .studio,.switch{display:none}
+  .top .studio,.switch,.modepill,.menubar{display:none}
   .zoomctl.topz{display:none}
   .main{display:block;height:auto}
   .rail,.railHandle,.editorHandle{display:none !important}
