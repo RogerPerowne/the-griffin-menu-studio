@@ -8,7 +8,7 @@ import { fmtDate } from './views/rail';
 import { canRedo, canUndo, commit, currentMenu, getState, persist, redo, snapshot, undo } from './store';
 import { openDishPicker } from './views/dishpicker';
 import { downloadBackup, openRestoreDialog } from './views/backup';
-import { deleteCurrentMenu, duplicateMenu, saveLayoutAsTemplate } from './views/editor';
+import { deleteCurrentMenu, duplicateMenu, getSelectedSectionId, saveLayoutAsTemplate } from './views/editor';
 import {
   autoFitOnePage,
   focusHeaderNote,
@@ -281,8 +281,16 @@ function insertSubtitle(): void {
 }
 
 function insertSection(): void {
+  const menu = currentMenu();
   snapshot();
-  currentMenu().sections.push(newSection('New Section', []));
+  const selectedId = getSelectedSectionId();
+  const idx = selectedId ? menu.sections.findIndex((s) => s.id === selectedId) : -1;
+  const section = newSection('New Section', []);
+  if (idx === -1) {
+    menu.sections.push(section);
+  } else {
+    menu.sections.splice(idx + 1, 0, section);
+  }
   commit(['all']);
 }
 
@@ -290,7 +298,9 @@ function insertDish(): void {
   const menu = currentMenu();
   snapshot();
   if (!menu.sections.length) menu.sections.push(newSection('New Section', []));
-  menu.sections[menu.sections.length - 1].items.push(newDish());
+  const selectedId = getSelectedSectionId();
+  const target = menu.sections.find((s) => s.id === selectedId) ?? menu.sections[menu.sections.length - 1];
+  target.items.push(newDish());
   commit(['all']);
 }
 
