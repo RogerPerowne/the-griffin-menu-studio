@@ -838,95 +838,6 @@ export async function saveLayoutAsTemplate(): Promise<void> {
   toast(`Saved. "${name}" now appears in the New Menu gallery.`, { kind: 'success' });
 }
 
-/* ================= rail show/hide + resize handles ================= */
-
-function mainGridEl(): HTMLElement | null {
-  return document.getElementById('mainGrid');
-}
-
-function applyRailWidth(): void {
-  mainGridEl()?.style.setProperty('--railw', `${getState().settings.railWidth ?? 230}px`);
-}
-
-function applyEditorWidth(): void {
-  mainGridEl()?.style.setProperty('--edw', `${getState().settings.editorWidth ?? 380}px`);
-}
-
-function applyRailHidden(): void {
-  mainGridEl()?.classList.toggle('noRail', !!getState().settings.railHidden);
-  requestAnimationFrame(() => fitPage());
-}
-
-function wireRailToggle(): void {
-  el<HTMLElement>('btnToggleRail')?.addEventListener('click', () => {
-    const settings = getState().settings;
-    settings.railHidden = !settings.railHidden;
-    persist();
-    applyRailHidden();
-  });
-}
-
-function wireRailResize(): void {
-  const handle = document.getElementById('railHandle');
-  const grid = mainGridEl();
-  if (!handle || !grid) return;
-  let dragging = false;
-  const move = (e: PointerEvent): void => {
-    if (!dragging) return;
-    const rect = grid.getBoundingClientRect();
-    const w = Math.max(160, Math.min(420, e.clientX - rect.left));
-    grid.style.setProperty('--railw', `${w}px`);
-  };
-  const end = (): void => {
-    dragging = false;
-    handle.classList.remove('drag');
-    window.removeEventListener('pointermove', move);
-    const w = parseInt(getComputedStyle(grid).getPropertyValue('--railw'), 10) || 230;
-    getState().settings.railWidth = w;
-    persist();
-    fitPage();
-  };
-  handle.addEventListener('pointerdown', (e) => {
-    dragging = true;
-    handle.classList.add('drag');
-    e.preventDefault();
-    window.addEventListener('pointermove', move);
-    window.addEventListener('pointerup', end, { once: true });
-  });
-}
-
-function wireEditorResize(): void {
-  const handle = document.getElementById('editorHandle');
-  const grid = mainGridEl();
-  if (!handle || !grid) return;
-  let dragging = false;
-  const move = (e: PointerEvent): void => {
-    if (!dragging) return;
-    const rect = grid.getBoundingClientRect();
-    const settings = getState().settings;
-    const railOffset = settings.railHidden ? 0 : (settings.railWidth ?? 230) + 6;
-    const w = Math.max(300, Math.min(720, e.clientX - rect.left - railOffset));
-    grid.style.setProperty('--edw', `${w}px`);
-    requestAnimationFrame(() => fitPage());
-  };
-  const end = (): void => {
-    dragging = false;
-    handle.classList.remove('drag');
-    window.removeEventListener('pointermove', move);
-    const w = parseInt(getComputedStyle(grid).getPropertyValue('--edw'), 10) || 380;
-    getState().settings.editorWidth = w;
-    persist();
-    fitPage();
-  };
-  handle.addEventListener('pointerdown', (e) => {
-    dragging = true;
-    handle.classList.add('drag');
-    e.preventDefault();
-    window.addEventListener('pointermove', move);
-    window.addEventListener('pointerup', end, { once: true });
-  });
-}
-
 /* ================= mobile tabs ================= */
 
 export function setTab(t: string): void {
@@ -963,14 +874,7 @@ export function initEditor(): void {
   }
 
   wireHeadControls();
-  wireRailToggle();
-  wireRailResize();
-  wireEditorResize();
   wireTabbar();
-
-  applyRailWidth();
-  applyEditorWidth();
-  applyRailHidden();
 
   renderEditor();
 }

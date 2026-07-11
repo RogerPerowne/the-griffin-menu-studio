@@ -3,9 +3,10 @@
 // is the live `<section class="editor">` built by render.ts and wired by
 // views/editor.ts. There is no HTML-string body to wrap, so — matching the reuse
 // strategy of page.ts and preview-controls.ts — render() reparents that real,
-// already-wired node into the dock host and moves it back to its baked-in grid
-// slot (before #editorHandle) when the dock tears the panel down. Every existing
-// listener and the #edScroll render target survive the reparent untouched.
+// already-wired node into the dock host and returns it to its hidden parking home
+// (#panelHome in the shell) when the dock tears the panel down. Every existing
+// listener and the #edScroll render target survive the reparent untouched. This
+// panel is docked LEFT by the default preset (layout-tree.ts · defaultLayout).
 // Min size follows the panel spec table (Edit Menu — 320×400).
 
 import type { Panel } from '../registry';
@@ -24,11 +25,14 @@ export const editMenuPanel: Panel = {
       host.innerHTML = '<p class="dock-empty">The editor is unavailable.</p>';
       return;
     }
-    const parent = editor.parentElement;
-    const next = editor.nextSibling;
     host.appendChild(editor);
+    // Always return the live editor to the FIXED parking home (#panelHome), never
+    // to a captured previous parent. A captured parent can be an area that is
+    // itself being torn down in the same pass, which would orphan the editor;
+    // a stable home makes teardown idempotent so two-phase re-renders are safe.
     return () => {
-      if (parent) parent.insertBefore(editor, next);
+      const home = document.getElementById('panelHome');
+      if (home) home.appendChild(editor);
     };
   },
 };

@@ -374,13 +374,13 @@ function registerAll(): void {
  * call so the def bindings are resolved at runtime — sidestepping any evaluation
  * ordering concern from the def ⇄ window-panels import cycle.
  *
- * The default layout (layout-tree.ts · defaultLayout) fills the RIGHT dock with
- * Colour & Spacing / Typography / Page (tabs) · Dietary Key · Arrange. The LEFT
- * dock stays empty so the Menus rail and Edit-Menu column keep their familiar
- * centre positions (today's arrangement); Menus, Edit Menu, Dishes, Find &
- * Replace, Reuse and Preview Controls are registered but open on demand from the
- * Window menu (activatePanel below). dock-render silently skips any unregistered
- * id, so a panel simply doesn't appear until its def is registered here.
+ * The default layout (layout-tree.ts · defaultLayout) docks only the Edit Menu on
+ * the LEFT; the Preview fills the rest and the right dock is empty — a deliberately
+ * minimal, clutter-free default. Every other panel (Menus, Dishes, Colour & Spacing,
+ * Typography, Dietary Key, Arrange, Find & Replace, Reuse, Page, Preview Controls)
+ * is registered but opens on demand from the Window menu (activatePanel below).
+ * Any panel — including Edit Menu — can be closed (e.g. for a preview-only layout).
+ * dock-render silently skips any unregistered id.
  * ======================================================================== */
 function registerDockPanels(): void {
   const defs: Panel[] = [
@@ -474,6 +474,8 @@ export function activatePanel(id: string): void {
   const hit = findPanelGroup(dockLayout, id);
   if (hit) {
     if (hit.group.activeTab === id) {
+      // Every panel is closable — closing the Edit Menu maximises the preview,
+      // which is a useful layout. The Window menu (+ Reset) reopens it.
       removePanelFromLayout(dockLayout, id);
     } else {
       hit.group.activeTab = id;

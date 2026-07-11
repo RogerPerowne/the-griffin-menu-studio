@@ -91,7 +91,6 @@ const appShellMarkup = String.raw`
         <hr>
         <button class="mi" data-cmd="auto-size">Auto Size to Fit One Page</button>
         <hr>
-        <button class="mi" data-cmd="toggle-rail">Menus Column</button>
         <button class="mi" data-cmd="toggle-tipbar">Tips Bar</button>
       </div>
     </div>
@@ -142,17 +141,18 @@ const appShellMarkup = String.raw`
   </nav>
 
   <div class="main" id="mainGrid">
-    <!-- Left DockArea (System 3): filled by dock-render from the WorkspaceLayout;
-         an auto grid track that collapses to zero width while empty. -->
+    <!-- Left DockArea (System 3): filled by dock-render from the WorkspaceLayout.
+         A flex child sized to its content; it collapses to zero width while empty.
+         The Edit Menu panel docks here by default. -->
     <div class="dockarea dock-left" id="dockLeft" hidden></div>
-    <aside class="rail" id="rail">
-      <div class="cap">MENUS</div>
-      <div class="rail-scroll" id="railScroll"></div>
-      <button class="railnew" id="btnNewMenuRail">+ NEW MENU</button>
-    </aside>
-    <div class="railHandle" id="railHandle" title="Drag to resize"></div>
-    <section class="editor">
-      <div class="ed-head">
+
+    <!-- Parking home for reparentable panel bodies. The Edit Menu panel
+         (defs/edit-menu.ts) moves this live <section class="editor"> node into a
+         dock cell on render and returns it here (hidden) when the panel closes.
+         Every listener and the #edScroll render target survive the reparent. -->
+    <div class="panel-home" id="panelHome" hidden>
+      <section class="editor">
+        <div class="ed-head">
         <div class="cap">EDIT MENU<button class="iconb" data-cmd="settings" title="Settings" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg></button></div>
         <input class="mname" id="edName" placeholder="Menu name" />
         <div class="ed-meta">
@@ -163,8 +163,8 @@ const appShellMarkup = String.raw`
         </div>
       </div>
       <div class="ed-scroll" id="edScroll"></div>
-    </section>
-    <div class="editorHandle" id="editorHandle" title="Drag to resize Edit Menu"></div>
+      </section>
+    </div>
 
     <section class="stage">
       <div class="tipbar" id="tipbar" style="display:none">
@@ -195,8 +195,8 @@ const appShellMarkup = String.raw`
         <button class="zoomb zoompct" id="zoomPct" data-cmd="actual-size" title="Current zoom — click for 100%">100%</button>
       </div>
     </section>
-    <!-- Right DockArea (System 3): the default tool column (Colour & Spacing /
-         Typography / Page · Dietary Key · Arrange) renders here. -->
+    <!-- Right DockArea (System 3): empty by default; tool panels opened from the
+         Window menu dock here. A flex child that collapses to zero width empty. -->
     <div class="dockarea dock-right" id="dockRight" hidden></div>
   </div>
 

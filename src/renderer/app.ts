@@ -39,14 +39,11 @@ function applyBrand(): void {
   document.title = `Griffin Menu Studio — ${brand.displayName}`;
 }
 
-/** Restore persisted rail/editor sizing so layout is correct before first paint. */
+/** The rail/editor columns are retired — the dockable workspace (mounted by
+ * initWindowPanels) now owns column sizing, so no pre-paint grid sizing is
+ * needed. Kept as a no-op seam in case first-paint layout prefs return. */
 function applyLayoutPrefs(): void {
-  const grid = document.getElementById('mainGrid');
-  if (!grid) return;
-  const s = getState().settings;
-  grid.style.setProperty('--railw', `${s.railWidth ?? 230}px`);
-  grid.style.setProperty('--edw', `${s.editorWidth ?? 380}px`);
-  grid.classList.toggle('noRail', !!s.railHidden);
+  /* dockable workspace owns layout — nothing to pre-apply */
 }
 
 function initTipbar(): void {

@@ -61,7 +61,7 @@ export type CommandName =
   | 'align-left' | 'align-center' | 'align-right' | 'align-top' | 'align-middle' | 'align-bottom'
   | 'center-page-h' | 'center-page-v' | 'reset-selected-position' | 'reset-all-positions'
   | 'zoom-in' | 'zoom-out' | 'fit-width' | 'fit-page' | 'actual-size' | 'auto-size'
-  | 'toggle-rail' | 'toggle-tipbar'
+  | 'toggle-tipbar'
   | 'toggle-menus-panel' | 'toggle-editmenu-panel' | 'toggle-dishes-panel'
   | 'toggle-find-replace-panel' | 'toggle-reuse-panel'
   | 'toggle-colour-panel' | 'toggle-typography-panel' | 'toggle-page-panel'
@@ -89,7 +89,6 @@ export interface Command {
 /* ------------------------------ helpers ------------------------------ */
 
 const hasMenu = (): boolean => getState().menus.length > 0;
-const railShown = (): boolean => !getState().settings.railHidden;
 const tipShown = (): boolean => !getState().settings.tipbarHidden;
 
 /** Consistent, non-blocking message when preflight blocks output. */
@@ -278,14 +277,6 @@ async function openDocumentFromDisk(): Promise<void> {
 
 setDocumentSaveHandler(() => saveDocument(false));
 
-function toggleRail(): void {
-  const settings = getState().settings;
-  settings.railHidden = !settings.railHidden;
-  persist();
-  document.getElementById('mainGrid')?.classList.toggle('noRail', !!settings.railHidden);
-  requestAnimationFrame(() => fitPage());
-}
-
 function toggleTipbar(): void {
   const settings = getState().settings;
   settings.tipbarHidden = !settings.tipbarHidden;
@@ -396,7 +387,6 @@ export const COMMANDS: Command[] = [
   { id: 'fit-page', label: 'Fit Page', group: 'View', hint: 'Ctrl+0', keywords: 'zoom fit whole page height landscape booklet', run: () => fitWholePage() },
   { id: 'actual-size', label: 'Actual Size (100%)', group: 'View', keywords: 'zoom 100 reset', run: () => setZoom(1) },
   { id: 'auto-size', label: 'Auto Size to Fit One Page', group: 'View', keywords: 'fit overflow shrink grow fill size auto', enabled: hasMenu, run: runAutoSize },
-  { id: 'toggle-rail', label: 'Menus Column', group: 'View', keywords: 'sidebar rail list', checked: railShown, run: toggleRail },
   { id: 'toggle-tipbar', label: 'Tips Bar', group: 'View', keywords: 'hint help', checked: tipShown, run: toggleTipbar },
 
   // Window — every tool is a dockable panel; selecting one docks/activates it

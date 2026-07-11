@@ -8,8 +8,13 @@
 
 import type { DockArea, DockColumn, PanelGroup, Settings, WorkspaceLayout } from '@shared/types';
 
-/** localStorage key holding the current (auto-saved) workspace layout. */
-export const WORKSPACE_STORAGE_KEY = 'griffinMenuStudio.workspace';
+/** localStorage key holding the current (auto-saved) workspace layout.
+ * Bumped to v2 when the fixed rail/editor grid columns were retired in favour of
+ * a default preset that docks the Edit Menu panel on the left — old persisted
+ * layouts (which pre-date that preset and never docked edit-menu) would otherwise
+ * leave the editor node parked/hidden with no visible home. A new key discards
+ * them so every session lands on the current default. */
+export const WORKSPACE_STORAGE_KEY = 'griffinMenuStudio.workspace.v2';
 
 /** A renderer-only view of Settings that may carry a mirrored layout copy. */
 type SettingsWithWorkspace = Settings & { workspace?: unknown };
@@ -19,31 +24,25 @@ function group(panels: string[], activeTab: string = panels[0] ?? ''): PanelGrou
 }
 
 /**
- * The default Editor arrangement. It reproduces today's tool set: the tool panels
- * that float today become a single right-hand dock column, stacked as Colour &
- * Spacing (with Typography + Page as tabs) · Dietary Key · Arrange. The left dock
- * is empty for now — the Menus rail and Edit-Menu column stay in the centre until
- * per-panel agents promote them into Panels. dock-render silently skips any panel
- * id that is not yet registered, so the view stays close to today until the real
- * panels are plugged into the registration seam.
+ * The default Editor arrangement — deliberately minimal (keep the app SIMPLE +
+ * friendly): the Edit Menu panel docked on the LEFT, and the Preview document
+ * area flex-filling the rest. Nothing else is docked; every other tool (Menus,
+ * Dishes, Colour & Spacing, Typography, Page, Dietary Key, Arrange, Find &
+ * Replace, Reuse, Preview Controls) opens on demand from the Window menu.
  */
 export function defaultLayout(): WorkspaceLayout {
   return {
-    left: { columns: [] },
-    right: {
+    left: {
       columns: [
         {
-          widthPct: 22,
+          widthPct: 30,
           stack: {
-            cells: [
-              { heightPct: 42, group: group(['colour', 'typography', 'page'], 'colour') },
-              { heightPct: 32, group: group(['dietkey']) },
-              { heightPct: 26, group: group(['arrange']) },
-            ],
+            cells: [{ heightPct: 100, group: group(['edit-menu']) }],
           },
         },
       ],
     },
+    right: { columns: [] },
     floating: [],
   };
 }
@@ -102,6 +101,9 @@ function normaliseArea(area: DockArea): DockArea {
 }
 
 function normalise(layout: WorkspaceLayout): WorkspaceLayout {
+  // Any panel (including Edit Menu) may be absent — a preview-only layout is a
+  // valid, useful arrangement. The Window menu + Reset Window Layout are the
+  // always-available way back, so we never force a panel back in.
   return {
     left: normaliseArea(layout.left),
     right: normaliseArea(layout.right),

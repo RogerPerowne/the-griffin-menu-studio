@@ -316,14 +316,18 @@ svg{stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-l
 .help-empty{color:var(--mut);font-style:italic}
 
 /* ---------- Main ---------- */
-/* Leading + trailing `auto` tracks host the left/right DockAreas (System 3); they
-   collapse to zero width while their dock host is empty, so the stage (1fr) still
-   flex-fills exactly as before. */
-.main{display:grid;grid-template-columns:auto var(--railw,230px) 6px var(--edw,380px) 6px minmax(0,1fr) auto;height:calc(100dvh - var(--topbar-h));min-height:0}
-.main.noRail{grid-template-columns:auto var(--edw,380px) 6px minmax(0,1fr) auto}
+/* The fixed rail/editor grid columns are retired (System 3): .main is now a flex
+   row of [left DockArea | Preview stage | right DockArea]. The dock areas are
+   sized to their content and collapse to zero width while empty; the stage
+   flex-fills the remaining space as the document area. The Menus rail and Edit
+   Menu column are now real dockable Panels, not baked-in tracks. */
+.main{display:flex;align-items:stretch;height:calc(100dvh - var(--topbar-h));min-height:0}
+/* Hidden home for reparentable panel bodies (the Edit Menu <section>). */
+.panel-home{display:none}
 
 /* ---------- Dockable panel workspace (System 3) ---------- */
-.dockarea{display:flex;align-items:stretch;min-width:0;min-height:0;background:#FBF8F2}
+.dockarea{flex:0 0 auto;display:flex;align-items:stretch;min-width:0;min-height:0;background:#FBF8F2}
+.stage{flex:1 1 0}
 /* A hidden/empty dock must still occupy its positional grid track (collapsed to
    zero width) — dropping it with display:none shifts every other child into the
    wrong track and starves the stage. */
@@ -335,12 +339,17 @@ svg{stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-l
 .dock-cell{flex:1 1 0;display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}
 .dock-group{flex:1 1 0;display:flex;flex-direction:column;min-width:0;min-height:0;background:#fff;overflow:hidden}
 .dock-tabs{display:flex;align-items:stretch;gap:2px;padding:5px 6px 0;background:#FBF8F2;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
-.dock-tab{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);border:1px solid transparent;border-bottom:none;border-radius:8px 8px 0 0;white-space:nowrap;cursor:pointer}
+.dock-tab{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);border:1px solid transparent;border-bottom:none;border-radius:8px 8px 0 0;white-space:nowrap;cursor:grab;touch-action:none;user-select:none}
+.dock-tab:active{cursor:grabbing}
 .dock-tab-ic{display:inline-flex;color:var(--copper)}
 .dock-tab-ic svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7}
 .dock-tab:hover{color:var(--ink);background:#F3ECDF}
 .dock-tab.on{color:var(--ink);background:#fff;border-color:var(--line);border-bottom-color:#fff;font-weight:600}
 .dock-body{flex:1 1 0;min-height:0;overflow:auto;padding:11px 12px}
+/* When a reparented full-height panel body (the Edit Menu <section>) is docked,
+   the body host becomes a padding-free flex column so the editor's own header
+   stays put and #edScroll keeps its internal scroll — matching its old column. */
+.dock-body:has(> .editor){display:flex;flex-direction:column;padding:0;overflow:hidden}
 .dock-vdivider{position:absolute;top:0;bottom:0;width:6px;z-index:3;cursor:col-resize;touch-action:none}
 .dock-right .dock-vdivider{left:-3px}
 .dock-left .dock-vdivider{right:-3px}
@@ -349,25 +358,23 @@ svg{stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-l
 .dock-hdivider{position:relative;height:6px;flex:none;cursor:row-resize;touch-action:none}
 .dock-hdivider::after{content:'';position:absolute;left:0;right:0;top:2px;height:1px;background:var(--line)}
 .dock-hdivider:hover::after,.dock-hdivider.drag::after{background:var(--copper);height:2px}
+/* Panel drag & drop: a live placeholder shows exactly where the panel will land,
+   and a small pill follows the cursor. Both ignore pointer events so
+   elementFromPoint keeps resolving the dock underneath. */
+body.dock-dragging{cursor:grabbing;user-select:none}
+.dock-drop-indicator{position:fixed;z-index:120;pointer-events:none;background:rgba(180,118,59,.16);border:2px solid var(--copper);border-radius:8px;box-shadow:0 0 0 1px rgba(255,255,255,.5) inset;transition:left .06s ease,top .06s ease,width .06s ease,height .06s ease}
+.dock-drag-ghost{position:fixed;z-index:121;pointer-events:none;background:#fff;border:1px solid var(--copper);border-radius:8px;box-shadow:0 10px 26px rgba(27,26,30,.24);padding:6px 11px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
 
-/* ---------- Rail (menu list) ---------- */
-.rail{background:#FBF8F2;border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}
-.main.noRail .rail{display:none}
+/* ---------- Rail (menu list) — now a dockable Panel body (defs/menus.ts) ---------- */
+.rail{background:#FBF8F2;display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}
 .rail-scroll{flex:1 1 0;overflow-y:auto;min-height:0;padding:10px 8px}
 .rail .cap{font-size:10px;letter-spacing:.3em;color:var(--mut);padding:8px 8px 8px}
 .rail .mrow{padding:10px 10px}
 .railnew{margin:8px;padding:11px;border:1px dashed var(--line2);border-radius:9px;letter-spacing:.14em;font-size:11.5px;color:var(--copper);text-align:center;flex:none}
 .railnew:hover{background:#F7F1E7;border-color:var(--copper)}
-.railHandle{width:6px;cursor:col-resize;background:transparent;position:relative}
-.railHandle::after{content:'';position:absolute;top:0;bottom:0;left:2px;width:1px;background:var(--line)}
-.railHandle:hover::after,.railHandle.drag::after{background:var(--copper);width:2px;left:2px}
-.main.noRail .railHandle{display:none}
-.editorHandle{width:6px;cursor:col-resize;background:transparent;position:relative}
-.editorHandle::after{content:'';position:absolute;top:0;bottom:0;left:2px;width:1px;background:var(--line)}
-.editorHandle:hover::after,.editorHandle.drag::after{background:var(--copper);width:2px;left:2px}
 
-/* ---------- Editor ---------- */
-.editor{background:transparent;border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0;min-height:0}
+/* ---------- Editor — now a dockable Panel body (defs/edit-menu.ts) ---------- */
+.editor{background:transparent;display:flex;flex-direction:column;min-width:0;min-height:0;flex:1 1 0}
 .ed-head{padding:16px 18px 12px}
 .ed-head .cap{display:flex;align-items:center;font-size:10px;letter-spacing:.3em;color:var(--mut);margin-bottom:6px}
 .ed-head .cap .iconb{width:22px;height:22px;margin-left:auto}
@@ -616,10 +623,14 @@ body.moveMode .moveHint{display:block}
   .modepill,.menubar{display:none}
   .zoomctl.topz{display:none}
   .main{display:block;height:auto}
-  .rail,.railHandle,.editorHandle,.dockarea{display:none !important}
-  .editor,.stage{display:none;border-right:none}
-  .app[data-tab=menus] .menusPanel{display:block;height:calc(100dvh - 54px - 62px)}
-  .app[data-tab=edit] .editor{display:flex;height:calc(100dvh - 54px - 62px)}
+  .dockarea,.stage{display:none}
+  /* On phones the dock collapses to a single per-tab pane. The Edit tab shows the
+     left dock (the Edit Menu panel's default home); the Preview tab shows the
+     stage. Dock chrome (dividers, fixed column widths) is neutralised so the pane
+     fills the screen. */
+  .app[data-tab=edit] .dockarea:not([hidden]){display:flex;width:100%!important;height:calc(100dvh - 54px - 62px)}
+  .app[data-tab=edit] .dock-col{width:100%!important}
+  .app[data-tab=edit] .dock-vdivider,.app[data-tab=edit] .dock-hdivider{display:none}
   .app[data-tab=view] .stage{display:flex;height:calc(100dvh - 54px - 62px)}
   .tabbar{display:flex;position:fixed;bottom:0;left:0;right:0;height:62px;background:#FBF8F2;border-top:1px solid var(--line);z-index:40;padding-bottom:env(safe-area-inset-bottom)}
   .tabbar button{flex:1;color:#8A8074;font-size:10px;letter-spacing:.22em;display:flex;flex-direction:column;gap:4px;align-items:center;justify-content:center}
