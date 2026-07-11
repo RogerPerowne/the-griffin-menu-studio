@@ -668,7 +668,7 @@ export async function saveLayoutAsTemplate(): Promise<void> {
     return;
   }
   persist();
-  window.alert(`Saved. “${name}” now appears in the New Menu gallery.`);
+  toast(`Saved. "${name}" now appears in the New Menu gallery.`, { kind: 'success' });
 }
 
 /* ================= rail show/hide + resize handles ================= */

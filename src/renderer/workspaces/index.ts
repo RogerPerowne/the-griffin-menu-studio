@@ -301,8 +301,6 @@ function renderHomeMain(): string {
           <label>Default menu folder <span class="path-row"><input data-setting-storage="defaultMenuFolder" value="${esc(storage.defaultMenuFolder || '')}" placeholder="System default"><button type="button" data-browse-storage="defaultMenuFolder">Browse</button></span></label>
           <label>Templates folder <span class="path-row"><input data-setting-storage="templatesFolder" value="${esc(storage.templatesFolder || '')}" placeholder="App templates folder"><button type="button" data-browse-storage="templatesFolder">Browse</button></span></label>
           <label>Recovery folder <span class="path-row"><input data-setting-storage="recoveryFolder" value="${esc(storage.recoveryFolder || '')}" placeholder="App recovery folder"><button type="button" data-browse-storage="recoveryFolder">Browse</button></span></label>
-          <label>Thumbnail cache <span class="path-row"><input data-setting-storage="thumbnailFolder" value="${esc(storage.thumbnailFolder || '')}" placeholder="App thumbnail cache"><button type="button" data-browse-storage="thumbnailFolder">Browse</button></span></label>
-          <label>Backup folder <span class="path-row"><input data-setting-storage="backupFolder" value="${esc(storage.backupFolder || '')}" placeholder="System default"><button type="button" data-browse-storage="backupFolder">Browse</button></span></label>
           <p class="settings-note">These paths are preferences for file prompts and app-owned data. Changing them never deletes existing files.</p>
         </section>
         <section class="settings-card"><h2>Getting started</h2>
@@ -423,7 +421,7 @@ function initHomeWorkspace(): void {
     }
     const browse = target.closest<HTMLElement>('[data-browse-storage]');
     if (browse?.dataset.browseStorage) {
-      const key = browse.dataset.browseStorage as 'defaultMenuFolder' | 'templatesFolder' | 'recoveryFolder' | 'thumbnailFolder' | 'backupFolder';
+      const key = browse.dataset.browseStorage as 'defaultMenuFolder' | 'templatesFolder' | 'recoveryFolder';
       const currentPath = getState().settings.storage?.[key];
       void window.griffin?.chooseFolder(currentPath).then((res) => {
         if (res?.canceled || !res.folderPath) return;
@@ -443,8 +441,6 @@ function initHomeWorkspace(): void {
         | 'defaultMenuFolder'
         | 'templatesFolder'
         | 'recoveryFolder'
-        | 'thumbnailFolder'
-        | 'backupFolder'
         | undefined;
       if (defaultKey) {
         const defaults = (getState().settings.defaults = getState().settings.defaults ?? {});

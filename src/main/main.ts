@@ -25,7 +25,6 @@ app.setAppUserModelId('com.squirrel.GriffinMenuStudio.GriffinMenuStudio');
 let mainWindow: BrowserWindow | null = null;
 let splashWindow: BrowserWindow | null = null;
 let cleanQuitInProgress = false;
-const closeApproved = new WeakSet<BrowserWindow>();
 
 function hardenWindowNavigation(win: BrowserWindow): void {
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -105,8 +104,7 @@ function createMainWindow(): BrowserWindow {
   hardenWindowNavigation(win);
 
   win.on('close', (event) => {
-    if (cleanQuitInProgress || closeApproved.has(win)) {
-      closeApproved.delete(win);
+    if (cleanQuitInProgress) {
       return;
     }
     event.preventDefault();

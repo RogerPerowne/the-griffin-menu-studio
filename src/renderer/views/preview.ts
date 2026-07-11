@@ -14,6 +14,7 @@ import { normaliseSectionColumns } from '@shared/menu/normalize';
 import { getActiveBrand } from '@shared/brand';
 import { assetUrl } from '../brand-assets';
 import { commit, currentMenu, findDish, getState, persist, snapshot, undo } from '../store';
+import { toast } from '../ui/toast';
 import {
   applyReleaseSettings,
   bindReleaseSettings,
@@ -455,8 +456,9 @@ export function initPreview(): void {
   document.getElementById('btnAutoFit')?.addEventListener('click', () => {
     const ok = autoFitOnePage();
     if (!ok) {
-      window.alert(
+      toast(
         'This menu still needs a little editing to print cleanly on one page. Shorten a description, reduce a section, or move content to another menu.',
+        { kind: 'warn' },
       );
     }
   });

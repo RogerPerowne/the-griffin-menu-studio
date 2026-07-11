@@ -270,43 +270,6 @@ body.moveMode .moveHint {
   display: block;
 }
 
-/* ---------- Print ---------- */
-#printRoot {
-  display: none;
-}
-@media print {
-  html,
-  body {
-    margin: 0 !important;
-    padding: 0 !important;
-    background: #fff !important;
-  }
-  body {
-    overflow: visible !important;
-  }
-  /* TODO: these selectors name the mockup's own app shell (top bar / main
-     grid / tab bar / modals). Update once the new editor UI's root layout
-     exists, so print correctly hides the app chrome and shows only
-     #printRoot. Harmless no-ops until then (they simply match nothing). */
-  .top,
-  .main,
-  .tabbar,
-  .overlay,
-  .menusPanel {
-    display: none !important;
-  }
-  #printRoot {
-    display: block !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-  #printRoot .page {
-    background: #fff !important;
-    box-shadow: none !important;
-    margin: 0 !important;
-  }
-}
-
 /* ================= Release hardening — print fidelity, geometry and
    usability. Ported verbatim from the mockup's own "Release hardening"
    layer; rule order matters (these intentionally override the base rules

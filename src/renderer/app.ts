@@ -210,9 +210,18 @@ function initSaveState(): void {
 }
 
 async function loadDesktopTemplates(): Promise<void> {
-  const result = await window.griffin?.listTemplates(getState().settings.storage);
-  if (!result?.templates?.length) return;
-  getState().userTemplates = result.templates;
+  try {
+    const result = await window.griffin?.listTemplates(getState().settings.storage);
+    if (result?.errors?.length) {
+      const { toast } = await import('./ui/toast');
+      toast(`Some saved templates could not be loaded: ${result.errors[0]}`, { kind: 'warn' });
+    }
+    if (!result?.templates?.length) return;
+    getState().userTemplates = result.templates;
+  } catch {
+    const { toast } = await import('./ui/toast');
+    toast('Some saved templates could not be loaded.', { kind: 'warn' });
+  }
 }
 
 /** If Windows launched us by double-clicking a .menu file, open it in the Editor. */
