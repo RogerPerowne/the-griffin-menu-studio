@@ -49,7 +49,7 @@ export type CommandName =
   | 'zoom-in' | 'zoom-out' | 'fit-width' | 'actual-size' | 'auto-fit'
   | 'toggle-rail' | 'toggle-tipbar'
   | 'toggle-menus-panel' | 'toggle-dishes-panel' | 'toggle-finder-panel'
-  | 'toggle-colour-panel' | 'toggle-spacing-panel' | 'toggle-typography-panel'
+  | 'toggle-colour-panel' | 'toggle-typography-panel'
   | 'toggle-dietkey-panel' | 'toggle-arrange-panel' | 'reset-window-layout'
   | 'go-home' | 'go-editor' | 'go-export'
   | 'help-tutorial' | 'help-tips' | 'help-shortcuts' | 'help-saving' | 'help-tools' | 'tool-search' | 'about';
@@ -375,8 +375,7 @@ export const COMMANDS: Command[] = [
   { id: 'toggle-menus-panel', label: 'Menus', group: 'Window', keywords: 'library switch', checked: () => isPanelOpen('menus'), run: () => toggleWindowPanel('menus') },
   { id: 'toggle-dishes-panel', label: 'Dishes', group: 'Window', keywords: 'items current', checked: () => isPanelOpen('dishes'), run: () => toggleWindowPanel('dishes') },
   { id: 'toggle-finder-panel', label: 'Find & Reuse', group: 'Window', hint: 'Ctrl+F', keywords: 'find replace search reuse across menus', checked: () => isPanelOpen('finder'), run: () => toggleWindowPanel('finder') },
-  { id: 'toggle-colour-panel', label: 'Colour', group: 'Window', keywords: 'paper blush tint', checked: () => isPanelOpen('colour'), run: () => toggleWindowPanel('colour') },
-  { id: 'toggle-spacing-panel', label: 'Spacing & Layout', group: 'Window', keywords: 'gap layout print sliders lines', checked: () => isPanelOpen('spacing'), run: () => toggleWindowPanel('spacing') },
+  { id: 'toggle-colour-panel', label: 'Colour & Spacing', group: 'Window', keywords: 'paper blush tint gap layout print sliders lines', checked: () => isPanelOpen('colour'), run: () => toggleWindowPanel('colour') },
   { id: 'toggle-typography-panel', label: 'Typography', group: 'Window', keywords: 'font text size header', checked: () => isPanelOpen('typography'), run: () => toggleWindowPanel('typography') },
   { id: 'toggle-dietkey-panel', label: 'Dietary Key', group: 'Window', keywords: 'allergen vegetarian codes', checked: () => isPanelOpen('dietkey'), run: () => toggleWindowPanel('dietkey') },
   { id: 'toggle-arrange-panel', label: 'Arrange', group: 'Window', keywords: 'align position move', checked: () => isPanelOpen('arrange'), run: () => toggleWindowPanel('arrange') },

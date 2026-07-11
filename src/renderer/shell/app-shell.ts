@@ -98,8 +98,7 @@ const appShellMarkup = String.raw`
         <button class="mi" data-cmd="toggle-menus-panel">Menus</button>
         <button class="mi" data-cmd="toggle-dishes-panel">Dishes</button>
         <button class="mi" data-cmd="toggle-finder-panel">Find &amp; Reuse</button>
-        <button class="mi" data-cmd="toggle-colour-panel">Colour</button>
-        <button class="mi" data-cmd="toggle-spacing-panel">Spacing &amp; Layout</button>
+        <button class="mi" data-cmd="toggle-colour-panel">Colour &amp; Spacing</button>
         <button class="mi" data-cmd="toggle-typography-panel">Typography</button>
         <button class="mi" data-cmd="toggle-dietkey-panel">Dietary Key</button>
         <button class="mi" data-cmd="toggle-arrange-panel">Arrange</button>

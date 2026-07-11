@@ -1,6 +1,6 @@
 // The app's floating tool windows, built on the Photoshop-style window manager
-// in float-windows.ts. Eight intelligently-separated windows:
-//   Menus · Dishes · Find & Reuse · Colour · Spacing · Typography · Dietary Key · Arrange
+// in float-windows.ts. Seven intelligently-separated windows:
+//   Menus · Dishes · Find & Reuse · Colour & Spacing · Typography · Dietary Key · Arrange
 // Each window's body is plain HTML; all interaction is delegated on #floatLayer
 // so re-rendering a body never drops a handler.
 
@@ -37,7 +37,6 @@ export type WindowPanel =
   | 'dishes'
   | 'finder'
   | 'colour'
-  | 'spacing'
   | 'typography'
   | 'dietkey'
   | 'arrange';
@@ -212,18 +211,6 @@ function finderBody(): string {
 
 /* ======================= colour / spacing / type ======================= */
 
-function colourBody(): string {
-  const s = getState().settings;
-  return `<div class="tool-form">
-      <label class="tool-colour">
-        <span>Preview paper</span>
-        <input type="color" data-blush value="${esc(s.blush || '#F5E4DF')}">
-      </label>
-      <p class="dock-note">The blush tint is preview only — printed, PDF and PNG output always use a white page, because you print onto pre-printed stock.</p>
-      <button class="dock-action" data-blush-reset>Reset to Griffin blush</button>
-    </div>`;
-}
-
 interface SliderRow {
   key: keyof typeof RELEASE_DEFAULTS;
   label: string;
@@ -242,7 +229,8 @@ const SPACING_ROWS: SliderRow[] = [
   { key: 'colDivider', label: 'Column divider length', hint: 'Length of vertical column rules', min: 40, max: 100, step: 2 },
 ];
 
-function spacingBody(): string {
+function colourSpacingBody(): string {
+  const s = getState().settings;
   const x = releaseSettings();
   const rows = SPACING_ROWS.map(
     (r) => `<label class="tool-slider">
@@ -251,8 +239,17 @@ function spacingBody(): string {
       <small>${r.hint}</small>
     </label>`,
   ).join('');
-  return `<div class="tool-form">${rows}<button class="dock-action" data-spacing-reset>Reset layout defaults</button>
-    <p class="dock-note">These affect print and export geometry. Watch the fit warning in the editor as you adjust.</p></div>`;
+  return `<div class="tool-form">
+      <label class="tool-colour">
+        <span>Preview paper</span>
+        <input type="color" data-blush value="${esc(s.blush || '#F5E4DF')}">
+      </label>
+      <p class="dock-note">The blush tint is preview only — printed, PDF and PNG output always use a white page, because you print onto pre-printed stock.</p>
+      <button class="dock-action" data-blush-reset>Reset to Griffin blush</button>
+      ${rows}
+      <button class="dock-action" data-spacing-reset>Reset layout defaults</button>
+      <p class="dock-note">These affect print and export geometry. Watch the fit warning in the editor as you adjust.</p>
+    </div>`;
 }
 
 function typographyBody(): string {
@@ -325,7 +322,6 @@ const I = {
   dishes: '<svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>',
   finder: '<svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><path d="m14.5 14.5 5 5"/></svg>',
   colour: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="9" r="1.4"/><circle cx="15" cy="9" r="1.4"/><circle cx="9.5" cy="15" r="1.4"/></svg>',
-  spacing: '<svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><path d="M2 4v4M2 16v4"/></svg>',
   typography: '<svg viewBox="0 0 24 24"><path d="M4 7V5h16v2M9 5v14M7 19h4"/></svg>',
   dietkey: '<svg viewBox="0 0 24 24"><path d="M12 2s6 3 6 9-6 11-6 11-6-5-6-11 6-9 6-9Z"/></svg>',
   arrange: '<svg viewBox="0 0 24 24"><path d="M4 7h16M7 4v6M17 4v6M8 17h8M12 14v6"/></svg>',
@@ -335,8 +331,7 @@ function registerAll(): void {
   registerFloatWindow({ id: 'menus', title: 'Menus', icon: I.menus, defaultW: 260, defaultH: 320, body: menuList });
   registerFloatWindow({ id: 'dishes', title: 'Dishes', icon: I.dishes, defaultW: 280, defaultH: 360, body: () => currentDishList(currentMenu()) });
   registerFloatWindow({ id: 'finder', title: 'Find & Reuse', icon: I.finder, defaultW: 340, defaultH: 460, minW: 300, body: finderBody });
-  registerFloatWindow({ id: 'colour', title: 'Colour', icon: I.colour, defaultW: 260, defaultH: 220, body: colourBody });
-  registerFloatWindow({ id: 'spacing', title: 'Spacing & Layout', icon: I.spacing, defaultW: 290, defaultH: 420, body: spacingBody });
+  registerFloatWindow({ id: 'colour', title: 'Colour & Spacing', icon: I.colour, defaultW: 290, defaultH: 460, body: colourSpacingBody });
   registerFloatWindow({ id: 'typography', title: 'Typography', icon: I.typography, defaultW: 280, defaultH: 340, body: typographyBody });
   registerFloatWindow({ id: 'dietkey', title: 'Dietary Key', icon: I.dietkey, defaultW: 300, defaultH: 320, body: dietkeyBody });
   registerFloatWindow({ id: 'arrange', title: 'Arrange', icon: I.arrange, defaultW: 250, defaultH: 300, body: arrangeBody });
@@ -529,7 +524,7 @@ function onLayerClick(e: MouseEvent): void {
     getState().settings.layout = { ...RELEASE_DEFAULTS };
     applyReleaseSettings();
     persist();
-    refreshWindow('spacing');
+    refreshWindow('colour');
     renderPreview();
     return;
   }
