@@ -166,20 +166,19 @@ const appShellMarkup = String.raw`
         <button class="abtn" id="btnMove" title="Drag titles, logos, lines and text freely on the page"><svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20M12 2 9 5m3-3 3 3M12 22l-3-3m3 3 3-3M2 12l3-3m-3 3 3 3M22 12l-3-3m3 3-3 3"/></svg>Arrange</button>
       </div>
       <div class="stage-body">
-        <div class="ruler ruler-top" id="rulerTop" aria-hidden="true"></div>
+        <canvas class="ruler ruler-top" id="rulerTop" aria-hidden="true"></canvas>
         <div class="ruler-corner" aria-hidden="true"></div>
         <div class="stage-scroll" id="stageScroll"><div class="pagewrap" id="pagewrap"></div></div>
-        <div class="ruler ruler-right" id="rulerRight" aria-hidden="true"></div>
+        <canvas class="ruler ruler-right" id="rulerRight" aria-hidden="true"></canvas>
       </div>
       <div class="stage-zoombar" role="toolbar" aria-label="Preview zoom">
-        <span class="sp"></span>
-        <button class="zoomb" data-cmd="zoom-out" title="Zoom out" aria-label="Zoom out"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
-        <button class="zoomb zoompct" id="zoomPct" data-cmd="actual-size" title="Current zoom — click for 100%">100%</button>
-        <button class="zoomb" data-cmd="zoom-in" title="Zoom in" aria-label="Zoom in"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
-        <span class="zoom-sep"></span>
         <button class="zoomb wide" data-cmd="fit-width" title="Fit the page to the window width">Fit width</button>
         <button class="zoomb wide" data-cmd="actual-size" title="Show the page at 100%">Actual size</button>
         <span class="sp"></span>
+        <button class="zoomb icon" data-cmd="zoom-out" title="Zoom out" aria-label="Zoom out"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+        <input type="range" class="zoom-slider" id="zoomSlider" min="20" max="300" step="1" value="100" title="Zoom" aria-label="Zoom level">
+        <button class="zoomb icon" data-cmd="zoom-in" title="Zoom in" aria-label="Zoom in"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button class="zoomb zoompct" id="zoomPct" data-cmd="actual-size" title="Current zoom — click for 100%">100%</button>
       </div>
     </section>
   </div>

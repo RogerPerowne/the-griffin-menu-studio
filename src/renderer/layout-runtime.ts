@@ -47,31 +47,71 @@ export function applyZoom(): void {
   wrap.style.height = `${ph * zoom}px`;
   const label = document.getElementById('zoomPct');
   if (label) label.textContent = `${Math.round(zoom * 100)}%`;
+  const slider = document.getElementById('zoomSlider') as HTMLInputElement | null;
+  if (slider && document.activeElement !== slider) slider.value = String(Math.round(zoom * 100));
   renderRulers();
 }
 
 /**
- * Draw the top + right preview rulers. Tick spacing is derived from the ACTUAL
- * rendered page rect (so it is correct at any zoom/DPI), and the origin (0 mark)
- * is pinned to the page's top-left edge and tracks scrolling — Word/Acrobat style.
+ * Draw the top + right preview rulers on their canvases, Word/Acrobat style:
+ * cm ticks with numbers every 2 cm, spanning ONLY the page extent, with the 0
+ * mark pinned to the page's top-left edge (so they track zoom + scroll). Tick
+ * spacing is derived from the ACTUAL rendered page rect, correct at any zoom/DPI.
  */
 export function renderRulers(): void {
   const scroll = document.getElementById('stageScroll');
   const page = document.querySelector<HTMLElement>('#pagewrap .page');
-  const top = document.getElementById('rulerTop');
-  const right = document.getElementById('rulerRight');
+  const top = document.getElementById('rulerTop') as HTMLCanvasElement | null;
+  const right = document.getElementById('rulerRight') as HTMLCanvasElement | null;
   if (!scroll || !page || !top || !right) return;
   const sr = scroll.getBoundingClientRect();
   const pr = page.getBoundingClientRect();
   if (pr.width < 1) return;
-  const paperWcm = page.classList.contains('A5') ? 14.8 : 21;
-  const paperHcm = page.classList.contains('A5') ? 21 : 29.7;
-  const pxPerCmX = pr.width / paperWcm;
-  const pxPerCmY = pr.height / paperHcm;
-  top.style.setProperty('--px-cm', `${pxPerCmX}px`);
-  top.style.setProperty('--origin', `${pr.left - sr.left}px`);
-  right.style.setProperty('--px-cm', `${pxPerCmY}px`);
-  right.style.setProperty('--origin', `${pr.top - sr.top}px`);
+  const a5 = page.classList.contains('A5');
+  drawRuler(top, 'x', pr.width, pr.left - sr.left, a5 ? 14.8 : 21);
+  drawRuler(right, 'y', pr.height, pr.top - sr.top, a5 ? 21 : 29.7);
+}
+
+function drawRuler(canvas: HTMLCanvasElement, axis: 'x' | 'y', pageLenPx: number, pageStartPx: number, lenCm: number): void {
+  const cssW = canvas.clientWidth;
+  const cssH = canvas.clientHeight;
+  if (cssW < 1 || cssH < 1) return;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(cssW * dpr);
+  canvas.height = Math.round(cssH * dpr);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, cssW, cssH);
+  const thickness = axis === 'x' ? cssH : cssW;
+  const along = axis === 'x' ? cssW : cssH;
+  const pxPerCm = pageLenPx / lenCm;
+  ctx.strokeStyle = 'rgba(60,54,46,.5)';
+  ctx.fillStyle = 'rgba(60,54,46,.85)';
+  ctx.lineWidth = 1;
+  ctx.font = '9px system-ui, -apple-system, sans-serif';
+  ctx.textBaseline = 'middle';
+  for (let cm = 0; cm <= Math.round(lenCm); cm += 1) {
+    const pos = Math.round(pageStartPx + cm * pxPerCm) + 0.5; // crisp 1px line
+    if (pos < -1 || pos > along + 1) continue; // only where the page is + on-screen
+    const major = cm % 2 === 0;
+    const tick = major ? thickness * 0.6 : thickness * 0.34;
+    ctx.beginPath();
+    if (axis === 'x') { ctx.moveTo(pos, cssH); ctx.lineTo(pos, cssH - tick); }
+    else { ctx.moveTo(cssW, pos); ctx.lineTo(cssW - tick, pos); }
+    ctx.stroke();
+    if (major && cm > 0 && cm < lenCm) {
+      if (axis === 'x') { ctx.textAlign = 'center'; ctx.fillText(String(cm), pos, cssH * 0.34); }
+      else {
+        ctx.save();
+        ctx.translate(cssW * 0.36, pos);
+        ctx.rotate(-Math.PI / 2);
+        ctx.textAlign = 'center';
+        ctx.fillText(String(cm), 0, 0);
+        ctx.restore();
+      }
+    }
+  }
 }
 
 export function fitPage(): void {

@@ -25,6 +25,7 @@ import {
   renderRulers,
   scheduleOverflowCheck,
   setFollowFit,
+  setZoom,
 } from '../layout-runtime';
 
 const brand = getActiveBrand();
@@ -429,6 +430,18 @@ export function initPreview(): void {
   // (data-cmd="zoom-in|zoom-out|fit-width|actual-size"). Keep the rulers in sync
   // as the preview is scrolled.
   document.getElementById('stageScroll')?.addEventListener('scroll', renderRulers, { passive: true });
+  const zoomSlider = document.getElementById('zoomSlider') as HTMLInputElement | null;
+  zoomSlider?.addEventListener('input', () => setZoom(Number(zoomSlider.value) / 100));
+  // Ctrl/Cmd + wheel zooms the preview (Acrobat-style); plain wheel scrolls.
+  document.getElementById('stageScroll')?.addEventListener(
+    'wheel',
+    (e) => {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      e.preventDefault();
+      setZoom(getZoom() * (e.deltaY < 0 ? 1.1 : 1 / 1.1));
+    },
+    { passive: false },
+  );
   window.addEventListener('resize', () => fitPage());
   if (document.fonts?.ready) {
     document.fonts.ready.then(() => {
