@@ -91,6 +91,11 @@ export function renderPreview(): void {
   if (resetBtn) resetBtn.style.display = shrunk ? 'inline-block' : 'none';
 }
 
+/** Focuses the (possibly empty) subtitle span so the user can type straight into it. */
+export function focusHeaderNote(): void {
+  pagewrapEl().querySelector<HTMLElement>('[data-edit="menu.headerNote"]')?.focus();
+}
+
 /* ================= inline editing ================= */
 // Paths: menu.name / menu.headerNote / menu.footer / menu.dietKeyText /
 // sec:<id>.<field> / item:<id>.<field> / col:<sid>.<index> — ported exactly from the mockup's

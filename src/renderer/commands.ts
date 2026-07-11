@@ -9,7 +9,14 @@ import { canRedo, canUndo, commit, currentMenu, getState, persist, redo, snapsho
 import { openDishPicker } from './views/dishpicker';
 import { downloadBackup, openRestoreDialog } from './views/backup';
 import { deleteCurrentMenu, duplicateMenu, saveLayoutAsTemplate } from './views/editor';
-import { autoFitOnePage, isArrangeMode, preparePrintDOM, resetAllPositions, toggleMoveMode } from './views/preview';
+import {
+  autoFitOnePage,
+  focusHeaderNote,
+  isArrangeMode,
+  preparePrintDOM,
+  resetAllPositions,
+  toggleMoveMode,
+} from './views/preview';
 import { fitPage, getZoom, setFollowFit, setZoom } from './layout-runtime';
 import { createBlankMenu, getWorkspace, goHomePane, setWorkspace } from './workspaces';
 import {
@@ -35,7 +42,7 @@ export type CommandName =
   | 'duplicate' | 'delete-menu' | 'backup' | 'restore'
   | 'print' | 'export-pdf' | 'export-png' | 'settings'
   | 'undo' | 'redo'
-  | 'insert-section' | 'insert-dish' | 'insert-rule' | 'bulk-add-dishes' | 'copy-dish'
+  | 'insert-subtitle' | 'insert-section' | 'insert-dish' | 'insert-rule' | 'bulk-add-dishes' | 'copy-dish'
   | 'arrange-toggle'
   | 'align-left' | 'align-center' | 'align-right' | 'align-top' | 'align-middle' | 'align-bottom'
   | 'center-page-h' | 'center-page-v' | 'reset-selected-position' | 'reset-all-positions'
@@ -269,6 +276,10 @@ function toggleTipbar(): void {
   window.dispatchEvent(new Event('resize'));
 }
 
+function insertSubtitle(): void {
+  focusHeaderNote();
+}
+
 function insertSection(): void {
   snapshot();
   currentMenu().sections.push(newSection('New Section', []));
@@ -321,6 +332,7 @@ export const COMMANDS: Command[] = [
   { id: 'redo', label: 'Redo', group: 'Edit', hint: 'Ctrl+Y', enabled: canRedo, run: () => redo() },
 
   // Insert
+  { id: 'insert-subtitle', label: 'Add Subtitle', group: 'Insert', keywords: 'headernote header note tagline', enabled: hasMenu, run: insertSubtitle },
   { id: 'insert-section', label: 'Add Section', group: 'Insert', keywords: 'new course heading', enabled: hasMenu, run: insertSection },
   { id: 'insert-dish', label: 'Add Dish', group: 'Insert', keywords: 'new item food', enabled: hasMenu, run: insertDish },
   { id: 'insert-rule', label: 'Add Divider Rule', group: 'Insert', keywords: 'line separator', enabled: hasMenu, run: insertRule },

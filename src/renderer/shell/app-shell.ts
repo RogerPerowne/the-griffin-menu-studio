@@ -49,6 +49,7 @@ const appShellMarkup = String.raw`
     <div class="more topmenu">
       <button class="topmenu-btn" data-act="topmenu"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Insert</span></button>
       <div class="pop">
+        <button class="mi" data-cmd="insert-subtitle">Add Subtitle</button>
         <button class="mi" data-cmd="insert-section">Add Section</button>
         <button class="mi" data-cmd="insert-dish">Add Dish</button>
         <button class="mi" data-cmd="bulk-add-dishes">Add Dishes in Bulk…</button>
@@ -146,6 +147,7 @@ const appShellMarkup = String.raw`
           <span class="pill">Date <input type="date" id="edDate" /></span>
           <span class="pill">Paper <select id="edPaper"><option>A4</option><option>A5</option></select></span>
           <span class="pill">Header <select id="edHeader"><option value="title">Title only</option><option value="crest">Crest + title</option><option value="lockup">Full lockup</option></select></span>
+          <button class="chiplink" id="btnAddSubtitle" style="display:none">+ Add subtitle</button>
         </div>
       </div>
       <div class="ed-scroll" id="edScroll"></div>

@@ -23,6 +23,7 @@ import { usedCodes } from '@shared/menu/tags';
 import { commit, currentMenu, findDish, getState, persist, snapshot } from '../store';
 import type { Scope } from '../store';
 import { fitPage } from '../layout-runtime';
+import { focusHeaderNote } from './preview';
 import { openDishPicker } from './dishpicker';
 import { toast } from '../ui/toast';
 
@@ -127,6 +128,8 @@ export function renderEditor(): void {
   if (paperSel) paperSel.value = m.style.paper || 'A4';
   const headerSel = el<HTMLSelectElement>('edHeader');
   if (headerSel) headerSel.value = m.style.header || 'title';
+  const addSubtitleBtn = el<HTMLButtonElement>('btnAddSubtitle');
+  if (addSubtitleBtn) addSubtitleBtn.style.display = m.headerNote ? 'none' : 'inline-block';
 
   const sc = el<HTMLElement>('edScroll');
   if (!sc) return;
@@ -646,6 +649,7 @@ function wireHeadControls(): void {
     currentMenu().style.header = (e.target as HTMLSelectElement).value as HeaderStyle;
     commit(SCOPES_ALL);
   });
+  el<HTMLButtonElement>('btnAddSubtitle')?.addEventListener('click', () => focusHeaderNote());
 }
 
 /* ================= ⋯ More popover ================= */

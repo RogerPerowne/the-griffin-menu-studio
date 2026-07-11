@@ -223,6 +223,12 @@
   box-shadow: 0 0 0 1.5px var(--copper);
   background: rgba(255, 255, 255, 0.5);
 }
+/* Empty subtitle: still-invisible text needs an on-canvas affordance so
+   templates without a headerNote don't look like the field doesn't exist. */
+.m-hnote [data-edit]:empty::before {
+  content: 'Add a subtitle…';
+  opacity: 0.4;
+}
 
 /* ---------- Draggable blocks ("Arrange" / free-drag move mode) ----------
    The caller toggles `moveMode` by adding/removing the `moveMode` class on
