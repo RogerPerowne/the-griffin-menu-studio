@@ -1,4 +1,4 @@
-import type { Dish, Menu, MenuStyle, Rule, RulePosition, Section, Tag } from '@shared/types';
+import type { Dish, Menu, MenuStyle, RootNote, Rule, RulePosition, Section, Tag } from '@shared/types';
 
 export const uid = (): string => Math.random().toString(36).slice(2, 9);
 export const todayISO = (): string => new Date().toISOString().slice(0, 10);
@@ -27,6 +27,10 @@ export function newSection(name: string, items: Dish[] = [], opts: Partial<Secti
 
 export function newRule(position: RulePosition = 'between', afterSectionId: string | null = null): Rule {
   return { id: uid(), rule: true, position, afterSectionId };
+}
+
+export function newRootNote(text = '', position: RulePosition = 'top', afterSectionId: string | null = null): RootNote {
+  return { id: uid(), note: true, text, position, afterSectionId };
 }
 
 const DEFAULT_STYLE: MenuStyle = { paper: 'A4', header: 'title', showKey: true, showPrices: true, sc: 1, dn: 1 };

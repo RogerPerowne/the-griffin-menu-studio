@@ -16,14 +16,13 @@
 // is never re-rendered mid-keystroke. Structural actions snapshot() first and
 // commit(['editor','preview','rail']).
 
-import type { Dish, HeaderStyle, Menu, Paper, Rule, SectionItem, Template } from '@shared/types';
-import { newDish, newRule, newSection, T, todayISO, uid, newMenu } from '@shared/menu/factories';
+import type { Dish, HeaderStyle, Menu, Paper, RootNote, Rule, SectionItem, Template } from '@shared/types';
+import { newDish, newRootNote, newRule, newSection, T, todayISO, uid, newMenu } from '@shared/menu/factories';
 import { normaliseMenuColumns, normaliseRootRules, normaliseSectionColumns } from '@shared/menu/normalize';
 import { usedCodes } from '@shared/menu/tags';
 import { commit, currentMenu, findDish, getState, persist, snapshot } from '../store';
 import type { Scope } from '../store';
 import { fitPage } from '../layout-runtime';
-import { focusHeaderNote } from './preview';
 import { openDishPicker } from './dishpicker';
 import { toast } from '../ui/toast';
 
@@ -43,20 +42,25 @@ export function setSelectedSectionId(id: string | null): void {
   selectedSectionId = id;
 }
 
-// Transient "a subtitle exists / is being added" flag. The subtitle (menu
-// headerNote) shows as a removable row in the column while this is true or the
-// text is non-empty; removing it clears both, so an empty subtitle disappears.
-let addingSubtitle = false;
-
+/** Add a subtitle (a positioned note) and focus it. Defaults to the top. */
 export function startAddSubtitle(): void {
-  addingSubtitle = true;
-  renderEditor();
-  document.querySelector<HTMLInputElement>('#edScroll .subtitle-in')?.focus();
+  addNoteAt('top', null);
 }
 
-/** A subtitle row for the Edit Menu column, styled like a menu-line row. */
-function subtitleRow(m: Menu): string {
-  return `<div class="rootrule subtitlerow"><span class="handle" title="Subtitle — shown under the menu title">${ICONS.grip}</span><input class="subtitle-in" data-f="subtitle" value="${esc(m.headerNote || '')}" placeholder="Subtitle — under the menu title"><button class="iconb danger" data-act="subtitledel" title="Remove subtitle">${ICONS.x}</button></div>`;
+function addNoteAt(pos: 'top' | 'between' | 'bottom', after: string | null): void {
+  const m = currentMenu();
+  if (!m) return;
+  m.rootNotes = m.rootNotes ?? [];
+  const note = newRootNote('', pos, after);
+  snapshot();
+  m.rootNotes.push(note);
+  commit(SCOPES_ALL);
+  setTimeout(() => document.querySelector<HTMLInputElement>(`#edScroll [data-note-id="${note.id}"]`)?.focus(), 0);
+}
+
+/** A subtitle/note row for the Edit Menu column — draggable + removable like a line. */
+function rootNoteRow(n: RootNote): string {
+  return `<div class="rootrule subtitlerow" data-nid="${esc(n.id)}"><span class="handle" title="Drag subtitle above, between or below sections">${ICONS.grip}</span><input class="subtitle-in" data-note-id="${esc(n.id)}" value="${esc(n.text)}" placeholder="Subtitle text"><button class="iconb danger" data-act="delnote" title="Remove subtitle">${ICONS.x}</button></div>`;
 }
 
 /* ================= helpers ================= */
@@ -145,14 +149,14 @@ export function renderEditor(): void {
   const headerSel = el<HTMLSelectElement>('edHeader');
   if (headerSel) headerSel.value = m.style.header || 'title';
   const addSubtitleBtn = el<HTMLButtonElement>('btnAddSubtitle');
-  if (addSubtitleBtn) addSubtitleBtn.style.display = (m.headerNote || addingSubtitle) ? 'none' : 'inline-block';
+  if (addSubtitleBtn) addSubtitleBtn.style.display = 'inline-block';
 
   const sc = el<HTMLElement>('edScroll');
   if (!sc) return;
 
   let h = '';
-  if (addingSubtitle || m.headerNote) h += subtitleRow(m);
-  h += `<button class="addrootline" data-act="addrootrule" data-pos="top">+ ADD LINE AT TOP</button><div class="rootdropzone edge" data-rootpos="top"></div>`;
+  h += `<div class="root-add-row"><button class="addrootline" data-act="addrootrule" data-pos="top">+ Line at top</button><button class="addrootline" data-act="addsubtitle" data-pos="top">+ Subtitle at top</button></div><div class="rootdropzone edge" data-rootpos="top"></div>`;
+  (m.rootNotes ?? []).filter((n) => n.position === 'top').forEach((n) => (h += rootNoteRow(n)));
   (m.rootRules ?? []).filter((r) => r.position === 'top').forEach((r) => (h += rootRuleRow(r)));
 
   const selSecId = selectedSectionId ?? m.sections[0]?.id ?? null;
@@ -188,17 +192,19 @@ export function renderEditor(): void {
     }
     h += `</div>`;
     h += `<div class="rootdropzone" data-rootpos="after" data-after="${s.id}"></div>`;
+    (m.rootNotes ?? []).filter((n) => n.afterSectionId === s.id && n.position !== 'top').forEach((n) => (h += rootNoteRow(n)));
     (m.rootRules ?? [])
       .filter((r) => r.afterSectionId === s.id && r.position !== 'top')
       .forEach((r) => (h += rootRuleRow(r)));
-    h += `<button class="addrootline" data-act="addrootrule" data-after="${s.id}">+ ADD LINE BELOW SECTION</button>`;
+    h += `<div class="root-add-row"><button class="addrootline" data-act="addrootrule" data-after="${s.id}">+ Line below</button><button class="addrootline" data-act="addsubtitle" data-after="${s.id}">+ Subtitle below</button></div>`;
   }
 
   h += `<div class="rootdropzone edge" data-rootpos="bottom"></div>`;
+  (m.rootNotes ?? []).filter((n) => !n.afterSectionId && n.position !== 'top').forEach((n) => (h += rootNoteRow(n)));
   (m.rootRules ?? [])
     .filter((r) => !r.afterSectionId && r.position !== 'top')
     .forEach((r) => (h += rootRuleRow(r)));
-  h += `<div class="root-actions"><button class="addsec" id="btnAddSec">+ ADD SECTION</button><button class="addrootline" data-act="addrootrule">+ ADD LINE AT END</button></div><div class="foot-ed"><div class="cap">FOOTER - PRINTED AT THE BOTTOM OF THE PAGE</div><textarea id="edFooter" placeholder="Footer lines…">${esc(m.footer || '')}</textarea><label class="chkline"><input type="checkbox" id="edShowPrices" ${m.style.showPrices !== false ? 'checked' : ''}> Show prices on the menu</label><label class="chkline"><input type="checkbox" id="edShowKey" ${m.style.showKey ? 'checked' : ''}> Print the dietary key automatically (only the codes used on this menu) — turn off to write the key yourself</label></div>`;
+  h += `<div class="root-actions"><button class="addsec" id="btnAddSec">+ ADD SECTION</button><button class="addrootline" data-act="addrootrule">+ Line at end</button><button class="addrootline" data-act="addsubtitle">+ Subtitle at end</button></div><div class="foot-ed"><div class="cap">FOOTER - PRINTED AT THE BOTTOM OF THE PAGE</div><textarea id="edFooter" placeholder="Footer lines…">${esc(m.footer || '')}</textarea><label class="chkline"><input type="checkbox" id="edShowPrices" ${m.style.showPrices !== false ? 'checked' : ''}> Show prices on the menu</label><label class="chkline"><input type="checkbox" id="edShowKey" ${m.style.showKey ? 'checked' : ''}> Print the dietary key automatically (only the codes used on this menu) — turn off to write the key yourself</label></div>`;
 
   sc.innerHTML = h;
 }
@@ -223,9 +229,12 @@ function onEdScrollInput(e: Event): void {
     return;
   }
   const input = target as HTMLInputElement;
-  if (input.dataset.f === 'subtitle') {
-    m.headerNote = input.value;
-    debPreview();
+  if (input.dataset.noteId) {
+    const note = (m.rootNotes ?? []).find((n) => n.id === input.dataset.noteId);
+    if (note) {
+      note.text = input.value;
+      debPreview();
+    }
     return;
   }
   const secEl = target.closest<HTMLElement>('.sec');
@@ -403,10 +412,16 @@ function onEdScrollClick(e: Event): void {
     commit(SCOPES_ALL);
     return;
   }
-  if (act === 'subtitledel') {
+  if (act === 'addsubtitle') {
+    const pos = b.dataset.pos === 'top' ? 'top' : b.dataset.after ? 'between' : 'bottom';
+    addNoteAt(pos, b.dataset.after || null);
+    return;
+  }
+  if (act === 'delnote') {
+    const rr = b.closest<HTMLElement>('[data-nid]');
+    if (!rr) return;
     snapshot();
-    m.headerNote = '';
-    addingSubtitle = false;
+    m.rootNotes = (m.rootNotes ?? []).filter((n) => n.id !== rr.dataset.nid);
     commit(SCOPES_ALL);
     return;
   }
@@ -485,6 +500,7 @@ interface DragCtx {
   kind: 'dish' | 'rule';
   iid: string;
   rid: string;
+  nid: string;
   row: HTMLElement;
   ghost: HTMLElement;
   line: HTMLElement;
@@ -528,7 +544,7 @@ function onEdScrollPointerDown(e: PointerEvent): void {
 
   const ghost = document.createElement('div');
   ghost.className = 'ghost';
-  ghost.textContent = isRule ? '── horizontal line ──' : label;
+  ghost.textContent = row.dataset.nid ? '── subtitle ──' : isRule ? '── horizontal line ──' : label;
   document.body.appendChild(ghost);
   const line = document.createElement('div');
   line.className = 'drop-line';
@@ -537,6 +553,7 @@ function onEdScrollPointerDown(e: PointerEvent): void {
     kind: isRule ? 'rule' : 'dish',
     iid: row.dataset.iid ?? '',
     rid: row.dataset.rid ?? '',
+    nid: row.dataset.nid ?? '',
     row,
     ghost,
     line,
@@ -605,17 +622,20 @@ function onDragMove(e: PointerEvent): void {
 
 function applyDrop(m: Menu, d: DragCtx, target: DishTarget | RuleTarget): void {
   if (target.kind === 'rule') {
-    const r = (m.rootRules ?? []).find((x) => x.id === d.rid);
-    if (!r) return;
+    // Notes and rules share the same top/between/bottom positioning + drop zones.
+    const positioned = d.nid
+      ? (m.rootNotes ?? []).find((x) => x.id === d.nid)
+      : (m.rootRules ?? []).find((x) => x.id === d.rid);
+    if (!positioned) return;
     if (target.pos === 'top') {
-      r.position = 'top';
-      r.afterSectionId = null;
+      positioned.position = 'top';
+      positioned.afterSectionId = null;
     } else if (target.pos === 'bottom') {
-      r.position = 'bottom';
-      r.afterSectionId = null;
+      positioned.position = 'bottom';
+      positioned.afterSectionId = null;
     } else {
-      r.position = 'between';
-      r.afterSectionId = target.after || null;
+      positioned.position = 'between';
+      positioned.afterSectionId = target.after || null;
     }
     return;
   }
@@ -709,6 +729,13 @@ export function duplicateMenu(): void {
     r.id = nid;
     if (r.afterSectionId) r.afterSectionId = sectionIdMap.get(r.afterSectionId) ?? null;
   });
+  const noteIdMap = new Map<string, string>();
+  (copy.rootNotes ?? []).forEach((n) => {
+    const nid = uid();
+    noteIdMap.set(n.id, nid);
+    n.id = nid;
+    if (n.afterSectionId) n.afterSectionId = sectionIdMap.get(n.afterSectionId) ?? null;
+  });
   const pos: Menu['pos'] = {};
   Object.entries(copy.pos ?? {}).forEach(([key, value]) => {
     let nk = key;
@@ -718,6 +745,9 @@ export function duplicateMenu(): void {
     } else if (key.startsWith('rule:')) {
       const mapped = ruleIdMap.get(key.slice(5));
       nk = mapped ? `rule:${mapped}` : key;
+    } else if (key.startsWith('note:')) {
+      const mapped = noteIdMap.get(key.slice(5));
+      nk = mapped ? `note:${mapped}` : key;
     }
     pos[nk] = value;
   });
@@ -751,7 +781,8 @@ export async function saveLayoutAsTemplate(): Promise<void> {
     id: uid(),
     name,
     style: JSON.parse(JSON.stringify(m.style)) as Template['style'],
-    headerNote: m.headerNote,
+    // Preserve a top subtitle into the template's headerNote (round-trips back to a note).
+    headerNote: (m.rootNotes ?? []).find((n) => n.position === 'top')?.text || m.headerNote || '',
     footer: m.footer,
     sections: m.sections.map((s) => ({
       name: s.name,

@@ -117,6 +117,11 @@ function applyEdit(path: string, rawVal: string): void {
     menu.headerNote = val;
     return;
   }
+  if (path.startsWith('note:')) {
+    const note = (menu.rootNotes ?? []).find((n) => n.id === path.slice(5));
+    if (note) note.text = val;
+    return;
+  }
   if (path === 'menu.footer') {
     menu.footer = val;
     return;

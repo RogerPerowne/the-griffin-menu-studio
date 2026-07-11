@@ -292,14 +292,13 @@ export function renderMenuHTML(menu: Menu, opts: RenderOptions): string {
   }
   let h = block('header', head, edit, pos);
 
-  if (menu.headerNote && menu.headerNote.trim()) {
-    h += block(
-      'hnote',
-      `<div class="m-hnote">${editableSpan(edit, 'menu.headerNote', menu.headerNote)}</div>`,
-      edit,
-      pos,
-    );
-  }
+  const notes = menu.rootNotes ?? [];
+  const noteBlock = (n: { id: string; text: string }): string =>
+    !edit && !n.text.trim()
+      ? ''
+      : block(`note:${n.id}`, `<div class="m-hnote">${editableSpan(edit, `note:${n.id}`, n.text)}</div>`, edit, pos);
+
+  for (const n of notes.filter((note) => note.position === 'top')) h += noteBlock(n);
 
   h += '<div class="body">';
 
@@ -313,6 +312,7 @@ export function renderMenuHTML(menu: Menu, opts: RenderOptions): string {
 
     h += block(`sec:${section.id}`, sectionHTML(section, list, edit, dietKey, showPricesGlobal), edit, pos);
 
+    for (const n of notes.filter((note) => note.afterSectionId === section.id && note.position !== 'top')) h += noteBlock(n);
     for (const r of menu.rootRules.filter(
       (rule) => rule.afterSectionId === section.id && rule.position !== 'top',
     )) {
@@ -320,6 +320,7 @@ export function renderMenuHTML(menu: Menu, opts: RenderOptions): string {
     }
   }
 
+  for (const n of notes.filter((note) => !note.afterSectionId && note.position !== 'top')) h += noteBlock(n);
   for (const r of menu.rootRules.filter((rule) => !rule.afterSectionId && rule.position !== 'top')) {
     h += block(`rule:${r.id}`, renderRule(r), edit, pos);
   }

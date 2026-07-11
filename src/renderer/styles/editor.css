@@ -403,6 +403,7 @@ input.idesc:focus{outline:none;box-shadow:0 1px 0 var(--copper)}
 .descmode.on{background:#F7F2E9;border-color:#CDB58D;color:#5D5144}
 .warnchip strong{font-weight:500}
 .rootrule .rulebody{flex:1}.rootrule .iconb{width:28px;height:28px}
+.root-add-row{display:flex;flex-wrap:wrap;gap:6px}
 .subtitlerow{border-style:solid;background:#fff}
 .subtitlerow .subtitle-in{flex:1;min-width:0;border:1px solid var(--line2);border-radius:7px;padding:7px 10px;font-size:13px;font-style:italic;color:var(--ink)}
 .subtitlerow .subtitle-in:focus{outline:none;border-color:var(--brand-green)}

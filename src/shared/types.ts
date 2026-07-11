@@ -58,6 +58,16 @@ export interface Rule {
   afterSectionId?: string | null;
 }
 
+/** A free subtitle / note line positioned relative to the menu body — like a
+ *  rule, but carrying editable text. There can be several, anywhere in the flow. */
+export interface RootNote {
+  id: string;
+  note: true;
+  text: string;
+  position: RulePosition;
+  afterSectionId?: string | null;
+}
+
 export interface MenuStyle {
   paper: Paper;
   header: HeaderStyle;
@@ -84,6 +94,8 @@ export interface Menu {
   dietKeyText?: string;
   sections: Section[];
   rootRules: Rule[];
+  /** Positioned subtitle/note lines (headerNote migrates into a top note). */
+  rootNotes?: RootNote[];
   /** Free-drag "Arrange" positions, keyed by element id. */
   pos: Record<string, { x: number; y: number }>;
 }

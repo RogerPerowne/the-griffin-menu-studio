@@ -1,5 +1,5 @@
 import type { Menu, Section } from '@shared/types';
-import { uid } from './factories';
+import { newRootNote, uid } from './factories';
 
 // Ported from the mockup's normaliseSectionColumns / ensureRootRules / normaliseMenuColumns.
 // In the current model dishes live in section.items and divider rules live in menu.rootRules;
@@ -116,7 +116,19 @@ export function normaliseRootRules(m: Menu, priorSectionIds?: string[]): Menu {
   return m;
 }
 
+/** Migrate a legacy single headerNote into a positioned top note (idempotent:
+ *  clearing headerNote afterwards means it never runs twice). */
+export function migrateHeaderNote(m: Menu): Menu {
+  if (!m.rootNotes) m.rootNotes = [];
+  if (m.headerNote && m.headerNote.trim()) {
+    m.rootNotes.unshift(newRootNote(m.headerNote, 'top', null));
+    m.headerNote = '';
+  }
+  return m;
+}
+
 export function normaliseMenuColumns(m: Menu): Menu {
+  migrateHeaderNote(m);
   ensureRootRules(m);
   (m.sections || []).forEach(normaliseSectionColumns);
   normaliseRootRules(m);
