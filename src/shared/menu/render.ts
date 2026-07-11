@@ -291,9 +291,7 @@ export function renderMenuHTML(menu: Menu, opts: RenderOptions): string {
   }
 
   for (const section of menu.sections) {
-    const list: SectionItem[] = edit
-      ? section.items
-      : section.items.filter((it) => !isDish(it) || !it.hidden);
+    const list: SectionItem[] = section.items.filter((it) => !isDish(it) || !it.hidden);
     if (list.length === 0 && !edit) continue;
 
     h += block(`sec:${section.id}`, sectionHTML(section, list, edit, dietKey), edit, pos);
