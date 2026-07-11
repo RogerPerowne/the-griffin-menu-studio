@@ -8,7 +8,7 @@
 // emits scopes; other views subscribe themselves the same way). It never
 // imports the editor/rail view modules.
 
-import type { DietKey } from '@shared/types';
+import type { DietKey, Menu } from '@shared/types';
 import { renderMenuHTML } from '@shared/menu/render';
 import { normaliseSectionColumns } from '@shared/menu/normalize';
 import { getActiveBrand } from '@shared/brand';
@@ -25,6 +25,7 @@ import {
   productionInfo,
   scheduleOverflowCheck,
   scheduleRulers,
+  setFitMeasurer,
   setFollowFit,
   setZoom,
 } from '../layout-runtime';
@@ -317,7 +318,12 @@ export function resetAllPositions(): void {
 
 const round2 = (n: number): number => Number(n.toFixed(2));
 
-/** Gentle one-page fitting: spacing first, typography only as a last resort. */
+/**
+ * Gentle one-page fitting: spacing first, typography only as a last resort.
+ * Calibrates sc/dn against measureFit() — the canonical print-mode (edit:false)
+ * measurement — not the edit-mode #pagewrap, so a shrink that "fits" here also
+ * fits the export preflight below (see #6 / P2).
+ */
 export function autoFitOnePage(): boolean {
   const menu = currentMenu();
   if (!menu) return false;
@@ -325,24 +331,51 @@ export function autoFitOnePage(): boolean {
   const style = menu.style;
   style.sc = Number(style.sc) || 1;
   style.dn = Number(style.dn) || 1;
-  const wrap = pagewrapEl();
 
-  const test = (): ReturnType<typeof productionInfo> => {
-    wrap.innerHTML = renderMenuHTML(menu, renderArgs(true));
-    return productionInfo(wrap);
-  };
-
-  let info = test();
+  let info = measureFit(menu);
   let guard = 0;
   while ((info.over || info.footerCollision) && guard++ < 80) {
     if (style.dn > 0.78) style.dn = round2(style.dn - 0.02);
     else if (style.sc > 0.86) style.sc = round2(style.sc - 0.01);
     else break;
-    info = test();
+    info = measureFit(menu);
   }
 
   commit(['editor', 'preview', 'rail']);
   return !(info.over || info.footerCollision);
+}
+
+/* ================= canonical fit measurement ================= */
+// A single "does it fit" measurement shared by autoFitOnePage() above, the
+// editor's live overflow chip (checkOverflow, registered via setFitMeasurer
+// below), and the export preflight (preparePrintDOM) just under it — all
+// three now measure the same print-mode (edit:false, unscaled) DOM shape, so
+// the editor and export can no longer disagree about whether a menu fits
+// (see #6 / P2). Rendered into a permanently off-screen scratch node — never
+// the live, zoom-scaled #pagewrap — which also keeps the result zoom-invariant.
+
+let fitScratch: HTMLElement | null = null;
+
+function fitScratchEl(): HTMLElement {
+  if (!fitScratch) {
+    fitScratch = document.createElement('div');
+    fitScratch.id = 'fitScratch';
+    fitScratch.style.cssText = 'position:fixed;left:-10000px;top:0;visibility:hidden;pointer-events:none;z-index:-1';
+    document.body.appendChild(fitScratch);
+  }
+  return fitScratch;
+}
+
+/** Canonical print-mode measurement: same DOM shape (edit:false) preparePrintDOM measures for export. */
+export function measureFit(menu: Menu): ProductionInfo {
+  const scratch = fitScratchEl();
+  scratch.innerHTML = renderMenuHTML(menu, renderArgs(false));
+  applyReleaseSettings();
+  // Match #printRoot's page box exactly (editor.css `#printRoot .page{contain:none}`) —
+  // this scratch node isn't #printRoot, so the id-scoped override doesn't reach it.
+  const page = scratch.querySelector<HTMLElement>('.page');
+  if (page) page.style.contain = 'none';
+  return productionInfo(scratch);
 }
 
 /* ================= print / export DOM preflight ================= */
@@ -432,6 +465,7 @@ export async function preparePrintDOM(): Promise<PrintPreflight> {
 /* ================= wiring ================= */
 
 export function initPreview(): void {
+  setFitMeasurer(measureFit);
   applyReleaseSettings();
   bindReleaseSettings(() => renderPreview());
 

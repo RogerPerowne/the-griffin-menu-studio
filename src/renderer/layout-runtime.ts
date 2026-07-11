@@ -11,9 +11,9 @@
 // circular dependency) — callers that need a re-render after a settings
 // change pass one in (see bindReleaseSettings).
 
-import type { ReleaseSettings } from '@shared/types';
+import type { Menu, ReleaseSettings } from '@shared/types';
 import { footerCollision, pageOverflow } from '@shared/layout-math';
-import { getState, persist } from './store';
+import { currentMenu, getState, persist } from './store';
 
 /* ================= zoom ================= */
 // Mirrors the mockup's `baseZoom`, `zoom`, `followFit` module-level state.
@@ -232,8 +232,23 @@ export function overflowInfo(): ProductionInfo {
   return productionInfo(document.getElementById('pagewrap'));
 }
 
+// checkOverflow() needs the canonical print-mode "does it fit" measurement
+// (measureFit, views/preview.ts) so the editor chip can never disagree with
+// the export preflight (see #6 / P2) — but this module intentionally doesn't
+// import from views/preview.ts (see header comment). preview.ts registers its
+// measureFit here instead, mirroring the callback pattern bindReleaseSettings
+// already uses to stay decoupled.
+type FitMeasurer = (menu: Menu) => ProductionInfo;
+let fitMeasurer: FitMeasurer | null = null;
+
+/** Registered once by views/preview.ts (initPreview) with its canonical measureFit(). */
+export function setFitMeasurer(fn: FitMeasurer): void {
+  fitMeasurer = fn;
+}
+
 export function checkOverflow(): boolean {
-  const info = productionInfo(document.getElementById('pagewrap'));
+  const menu = currentMenu();
+  const info = fitMeasurer && menu ? fitMeasurer(menu) : productionInfo(document.getElementById('pagewrap'));
   const chip = document.getElementById('warnChip');
   const warnText = document.getElementById('warnText');
   chip?.classList.toggle('show', info.over || info.footerCollision);
