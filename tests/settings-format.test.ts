@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { CURRENT_SETTINGS_VERSION, migrateSettings, serializeSettings } from '../src/shared/settings-format';
+import {
+  CURRENT_SETTINGS_VERSION,
+  DEFAULT_TYPOGRAPHY,
+  migrateSettings,
+  serializeSettings,
+  TYPOGRAPHY_DEFAULTS_VERSION,
+} from '../src/shared/settings-format';
 
 describe('settings-format', () => {
   it('falls back safely for corrupt input', () => {
@@ -33,5 +39,28 @@ describe('settings-format', () => {
     const parsed = JSON.parse(serializeSettings(migrateSettings({})));
     expect(parsed.version).toBe(CURRENT_SETTINGS_VERSION);
     expect(parsed.settings.recovery.intervalSeconds).toBe(30);
+  });
+
+  describe('typography-default refresh gate (update safety)', () => {
+    const customTypo = { fontSet: 'modern', scale: 1.2, density: 'spacious', roles: { title: { size: 40 } } };
+
+    it('grandfathers existing users: keeps their typography and stamps the current version', () => {
+      // No stamped version yet (every pre-mechanism user) → never wiped.
+      const settings = migrateSettings({ typography: customTypo });
+      expect(settings.typography).toMatchObject({ fontSet: 'modern', scale: 1.2, density: 'spacious' });
+      expect(settings.typography?.roles?.title).toMatchObject({ size: 40 });
+      expect(settings.typographyDefaultsVersion).toBe(TYPOGRAPHY_DEFAULTS_VERSION);
+    });
+
+    it('keeps typography when the stamped version already matches', () => {
+      const settings = migrateSettings({ typography: customTypo, typographyDefaultsVersion: TYPOGRAPHY_DEFAULTS_VERSION });
+      expect(settings.typography).toMatchObject({ fontSet: 'modern', scale: 1.2 });
+    });
+
+    it('adopts the new default design only when the stamped version is older', () => {
+      const settings = migrateSettings({ typography: customTypo, typographyDefaultsVersion: TYPOGRAPHY_DEFAULTS_VERSION - 1 });
+      expect(settings.typography).toEqual({ ...DEFAULT_TYPOGRAPHY, roles: {} });
+      expect(settings.typographyDefaultsVersion).toBe(TYPOGRAPHY_DEFAULTS_VERSION);
+    });
   });
 });

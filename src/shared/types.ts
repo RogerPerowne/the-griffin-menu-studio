@@ -103,6 +103,26 @@ export interface Menu {
   rootNotes?: RootNote[];
   /** Free-drag "Arrange" positions, keyed by element id. */
   pos: Record<string, { x: number; y: number }>;
+  /** Per-menu typography (the Typography Master edits this; travels with the
+   *  document). Seeded from settings.typography defaults on new menus. */
+  typography?: MenuTypography;
+}
+
+/** Per-document typography — the source of truth the Typography Master applies to
+ *  the live page and exports. `settings.typography` only supplies the defaults. */
+export interface MenuTypography {
+  fontSet?: 'griffin' | 'classic' | 'modern';
+  /** Per-role overrides (extends the shared TypoRoleStyle with advanced fields). */
+  roles?: Partial<Record<TypoRole, MenuTypoRoleStyle>>;
+}
+
+/** TypoRoleStyle plus the Typography Master's Advanced-section fields. */
+export interface MenuTypoRoleStyle extends TypoRoleStyle {
+  font?: string;
+  lineHeight?: number;
+  letterSpacing?: number;
+  minSize?: number;
+  maxSize?: number;
 }
 
 /** Reusable boilerplate text (footer, allergy notice, service charge, etc.). */
@@ -190,6 +210,11 @@ export interface Settings {
   floatWindows?: Record<string, FloatWindowBounds>;
   recovery?: RecoverySettings;
   typography?: TypographySettings;
+  /** Which bundled default-typography design this settings blob was last aligned
+   *  to. An app update only ever refreshes a user's typography when it ships a
+   *  newer default design (a bump of TYPOGRAPHY_DEFAULTS_VERSION); every other
+   *  update leaves saved settings and menus completely untouched. */
+  typographyDefaultsVersion?: number;
 }
 
 /** The seven typographic roles on a menu. */
@@ -234,4 +259,70 @@ export interface AppState {
   userTemplates: Template[];
   boilerplate: Snippet[];
   settings: Settings;
+}
+
+/* ============================ Booklet (System 5) ============================ */
+// A single landscape-A4 sheet folded once to an A5 booklet: cover + back panels,
+// and an inside that is an A5 menu (may overflow to two inside pages) OR two
+// separate menus. See docs/plan-booklet-system.md.
+
+export interface BookletPanel {
+  title?: string;
+  subtitle?: string;
+  note?: string;
+  header: HeaderStyle;
+  /** Brand-asset id for a cover/back image (resolved at render time). */
+  image?: string;
+}
+
+export type BookletInside =
+  | { mode: 'single'; menu: Menu; allowTwoPages: boolean }
+  | { mode: 'two'; left: Menu; right: Menu };
+
+export interface Booklet {
+  id: string;
+  name: string;
+  date: string;
+  cover: BookletPanel;
+  back: BookletPanel;
+  inside: BookletInside;
+  style: { paper: 'A5'; sc: number; dn: number };
+}
+
+/* =================== Dockable panel workspace (System 3) =================== */
+// A persisted layout tree (replaces settings.floatWindows): the document area
+// fills the centre; tool panels dock in left/right areas or float. `Panel` is an
+// id into the panel registry. See docs/plan-photoshop-panels.md.
+
+export interface PanelGroup {
+  panels: string[];
+  activeTab: string;
+  collapsed?: boolean;
+}
+
+export interface PanelStack {
+  cells: { heightPct: number; group: PanelGroup }[];
+}
+
+export interface DockColumn {
+  widthPct: number;
+  stack: PanelStack;
+}
+
+export interface DockArea {
+  columns: DockColumn[];
+}
+
+export interface FloatingGroup {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  group: PanelGroup;
+}
+
+export interface WorkspaceLayout {
+  left: DockArea;
+  right: DockArea;
+  floating: FloatingGroup[];
 }

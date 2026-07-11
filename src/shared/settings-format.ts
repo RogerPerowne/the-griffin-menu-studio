@@ -2,6 +2,20 @@ import type { AppDefaults, DietKey, FloatWindowBounds, ReleaseSettings, Settings
 
 export const CURRENT_SETTINGS_VERSION = 1;
 
+// The bundled default typography design. Updates never touch a user's saved
+// settings or menus — with ONE deliberate exception: when a release ships a new
+// default typography design it bumps TYPOGRAPHY_DEFAULTS_VERSION, and installed
+// apps adopt that new default on their next launch (see migrateSettings). Bump
+// this number whenever DEFAULT_TYPOGRAPHY below changes in a way users should get.
+export const TYPOGRAPHY_DEFAULTS_VERSION = 1;
+
+export const DEFAULT_TYPOGRAPHY: NonNullable<Settings['typography']> = {
+  fontSet: 'griffin',
+  scale: 1,
+  density: 'balanced',
+  roles: {},
+};
+
 const DEFAULT_DIET_KEY: DietKey[] = [
   { c: 'v', l: 'vegetarian' },
   { c: 've', l: 'vegan' },
@@ -131,6 +145,14 @@ function floatWindows(value: unknown): Record<string, FloatWindowBounds> {
 export function migrateSettings(raw: unknown): Settings {
   const outer = record(raw);
   const input = outer && record(outer.settings) ? record(outer.settings)! : outer || {};
+  // Typography-default refresh gate. A user is "aligned" to a default design once
+  // they carry its version. We only overwrite their typography when they carry an
+  // OLDER stamped version than the bundled one (a genuine design bump). Settings
+  // with no stamp yet (every pre-1.x user + brand-new users) are grandfathered:
+  // we keep whatever typography they have and simply stamp the current version, so
+  // introducing this mechanism never wipes anyone's existing choices.
+  const stampedVersion = typeof input.typographyDefaultsVersion === 'number' ? input.typographyDefaultsVersion : null;
+  const adoptNewDefault = stampedVersion !== null && stampedVersion < TYPOGRAPHY_DEFAULTS_VERSION;
   return {
     dietKey: dietKey(input.dietKey),
     blush: /^#[0-9a-f]{6}$/i.test(String(input.blush || '')) ? String(input.blush) : DEFAULT_SETTINGS.blush,
@@ -147,7 +169,8 @@ export function migrateSettings(raw: unknown): Settings {
       enabled: bool(record(input.recovery)?.enabled) ?? true,
       intervalSeconds: Math.round(number(record(input.recovery)?.intervalSeconds, 30, 10, 300)),
     },
-    typography: typography(input.typography),
+    typography: adoptNewDefault ? { ...DEFAULT_TYPOGRAPHY, roles: {} } : typography(input.typography),
+    typographyDefaultsVersion: TYPOGRAPHY_DEFAULTS_VERSION,
   };
 }
 
