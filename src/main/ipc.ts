@@ -1,10 +1,13 @@
-import { dialog, ipcMain, BrowserWindow, type WebContents } from 'electron';
+import { dialog, ipcMain, shell, BrowserWindow, type WebContents } from 'electron';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import * as docs from './documents';
 import * as exp from './export-handlers';
 import * as recovery from './recovery';
 import * as templates from './templates';
 import { assertValidTemplate } from '../shared/template-format';
 import { quitAndInstallUpdate } from './updater';
+import { griffinDocumentsRoot } from './app-paths';
 import type { StorageLocations } from '../shared/types';
 
 function record(value: unknown): Record<string, unknown> | null {
@@ -134,5 +137,16 @@ export function registerIpc(createWindow: () => BrowserWindow): void {
     requireWin(e.sender);
     quitAndInstallUpdate();
     return { ok: true };
+  });
+  ipcMain.handle('app:revealLibrary', async (e) => {
+    requireWin(e.sender);
+    const root = griffinDocumentsRoot();
+    await Promise.all([
+      fs.mkdir(path.join(root, 'Menus'), { recursive: true }),
+      fs.mkdir(path.join(root, 'Templates'), { recursive: true }),
+      fs.mkdir(path.join(root, 'Exports'), { recursive: true }),
+    ]).catch(() => undefined);
+    const error = await shell.openPath(root);
+    return { ok: !error, folderPath: root };
   });
 }

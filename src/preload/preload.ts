@@ -39,6 +39,7 @@ const api: GriffinApi = {
     return () => ipcRenderer.removeListener('update:downloaded', listener);
   },
   installUpdate: () => ipcRenderer.invoke('update:install'),
+  revealLibraryFolder: () => ipcRenderer.invoke('app:revealLibrary'),
   confirmClose: () => ipcRenderer.invoke('window:confirmClose'),
   newWindow: () => ipcRenderer.invoke('app:newWindow'),
   listTemplates: (storage) => ipcRenderer.invoke('template:list', storage),

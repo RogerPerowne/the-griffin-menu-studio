@@ -112,6 +112,8 @@ export interface GriffinApi {
   onUpdateDownloaded(handler: (info: { releaseName: string }) => void): () => void;
   /** Apply the downloaded update and relaunch. */
   installUpdate(): Promise<{ ok: boolean }>;
+  /** Open the Documents/Griffin Menu Studio library folder in the file explorer. */
+  revealLibraryFolder(): Promise<{ ok: boolean; folderPath: string }>;
   confirmClose(): Promise<{ ok: boolean }>;
   newWindow(): Promise<{ ok: boolean }>;
   listTemplates(storage?: StorageLocations): Promise<TemplateListResult>;

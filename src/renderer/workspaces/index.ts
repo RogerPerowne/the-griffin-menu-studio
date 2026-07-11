@@ -364,6 +364,8 @@ function renderHomeMain(): string {
           <label>Default preview colour <input type="color" data-setting-default="blush" value="${esc(defaults.blush || '#F5E4DF')}"></label>
         </section>
         <section class="settings-card"><h2>Storage locations</h2>
+          <p class="settings-note">Your menus, templates and exports live in <b>Documents › Griffin Menu Studio</b>.</p>
+          <button type="button" class="abtn primary" data-reveal-library>Open the Griffin Menu Studio folder</button>
           <label>Default menu folder <span class="path-row"><input data-setting-storage="defaultMenuFolder" value="${esc(storage.defaultMenuFolder || '')}" placeholder="System default"><button type="button" data-browse-storage="defaultMenuFolder">Browse</button></span></label>
           <label>Templates folder <span class="path-row"><input data-setting-storage="templatesFolder" value="${esc(storage.templatesFolder || '')}" placeholder="App templates folder"><button type="button" data-browse-storage="templatesFolder">Browse</button></span></label>
           <label>Recovery folder <span class="path-row"><input data-setting-storage="recoveryFolder" value="${esc(storage.recoveryFolder || '')}" placeholder="App recovery folder"><button type="button" data-browse-storage="recoveryFolder">Browse</button></span></label>
@@ -485,6 +487,12 @@ function initHomeWorkspace(): void {
     if (target.closest('[data-settings-save]')) {
       commit(['all']);
       renderHomeWorkspace();
+    }
+    if (target.closest('[data-reveal-library]')) {
+      void window.griffin?.revealLibraryFolder().then((res) => {
+        if (res && !res.ok) toast('Could not open the folder.', { kind: 'error' });
+      });
+      return;
     }
     const browse = target.closest<HTMLElement>('[data-browse-storage]');
     if (browse?.dataset.browseStorage) {
