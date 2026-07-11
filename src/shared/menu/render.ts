@@ -237,7 +237,7 @@ function sectionHTML(section: Section, list: SectionItem[], edit: boolean, dietK
       .map((arr, ci) => {
         const colName = section.columnNames[ci] || '';
         let inner = '';
-        if (colName || edit) {
+        if (colName.trim()) {
           inner += `<div class="m-subh">${editableSpan(edit, `col:${section.id}.${ci}`, colName)}</div>`;
         }
         for (const it of arr) inner += renderSectionItem(it, section, edit, dietKey);

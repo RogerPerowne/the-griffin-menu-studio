@@ -19,7 +19,7 @@ export function normaliseSectionColumns(s: Section): Section {
     });
     return s;
   }
-  s.columnNames = Array.from({ length: cols }, (_v, i) => s.columnNames?.[i] || `Column ${i + 1}`);
+  s.columnNames = Array.from({ length: cols }, (_v, i) => s.columnNames?.[i] ?? '');
   const needsSpread = items.some((it) => it.col == null || it.col < 0 || it.col >= cols);
   if (needsSpread) {
     const dishes = items.filter((it) => !it.rule);
