@@ -37,6 +37,23 @@
   font-family: 'Brandon', 'GGap', ui-sans-serif, system-ui, sans-serif;
 }
 
+/* Coordinated font sets (settings.typography.fontSet); 'griffin' is the default above. */
+.page.font-classic {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+}
+.page.font-classic .m-title,
+.page.font-classic .m-sech,
+.page.font-classic .m-nm,
+.page.font-classic .m-subh {
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+}
+.page.font-modern {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+.page.font-modern .m-title {
+  font-weight: 600;
+}
+
 /* ---------- Page box ---------- */
 .page {
   background: var(--blush);

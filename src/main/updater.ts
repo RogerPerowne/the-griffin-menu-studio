@@ -14,8 +14,12 @@ let getWin: () => BrowserWindow | null = () => null;
 let info: UpdateInfo = { phase: 'idle', currentVersion: app.getVersion() };
 
 function push(): void {
-  const win = getWin();
-  if (win && !win.isDestroyed()) win.webContents.send('update:state', info);
+  try {
+    const win = getWin();
+    if (win && !win.isDestroyed() && !win.webContents.isDestroyed()) win.webContents.send('update:state', info);
+  } catch {
+    // A closing window must never take the updater down with it.
+  }
 }
 
 function set(patch: Partial<UpdateInfo>): void {
@@ -37,15 +41,22 @@ interface Release {
 
 type FetchResult = { ok: true; release: Release } | { ok: false; code: UpdateErrorCode; message: string };
 
+const FETCH_TIMEOUT_MS = 10_000;
+
 /** Read the latest GitHub release for version + headline + change log, with clear errors. */
 async function fetchLatestRelease(): Promise<FetchResult> {
   let res: Response;
+  const abort = new AbortController();
+  const timer = setTimeout(() => abort.abort(), FETCH_TIMEOUT_MS);
   try {
     res = await fetch(`https://api.github.com/repos/${REPO}/releases/latest`, {
       headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'GriffinMenuStudio' },
+      signal: abort.signal,
     });
   } catch {
     return { ok: false, code: 'offline', message: 'No internet connection — could not reach the update server.' };
+  } finally {
+    clearTimeout(timer);
   }
   if (res.status === 404) {
     return { ok: false, code: 'notFound', message: 'No published release was found. The update source may not be connected yet.' };
@@ -119,7 +130,9 @@ export function initAutoUpdate(windowGetter: () => BrowserWindow | null): void {
     if (info.phase !== 'downloaded') set({ phase: 'upToDate' });
   });
   autoUpdater.on('update-downloaded', (_event, notes, name) => {
-    void announceDownloaded(name || undefined, notes || undefined);
+    announceDownloaded(name || undefined, notes || undefined).catch(() => {
+      set({ phase: 'downloaded', title: name || 'Update ready', notes: notes || '', deferred: false });
+    });
   });
   autoUpdater.on('error', (error) => set({ phase: 'error', errorCode: 'feedError', errorMessage: error instanceof Error ? error.message : String(error) }));
 }
@@ -134,8 +147,18 @@ async function announceDownloaded(name?: string, notes?: string): Promise<void> 
   }
 }
 
+let checkInFlight: Promise<UpdateInfo> | null = null;
+
 /** Manual check: clear errors, read GitHub, and kick Squirrel if a newer build exists. */
-export async function checkForUpdates(): Promise<UpdateInfo> {
+export function checkForUpdates(): Promise<UpdateInfo> {
+  // Serialise concurrent checks (double-clicks, IPC races) onto one promise.
+  checkInFlight ??= doCheck().finally(() => {
+    checkInFlight = null;
+  });
+  return checkInFlight;
+}
+
+async function doCheck(): Promise<UpdateInfo> {
   if (!app.isPackaged) {
     set({ phase: 'unsupported' });
     return info;

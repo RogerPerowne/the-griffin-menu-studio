@@ -33,8 +33,8 @@ import {
 const brand = getActiveBrand();
 const ASSETS = { crest: assetUrl(brand.assetKeys.crest), lockup: assetUrl(brand.assetKeys.lockup) };
 
-function renderArgs(edit: boolean): { edit: boolean; dietKey: DietKey[]; assets: { crest: string; lockup: string } } {
-  return { edit, dietKey: getState().settings.dietKey, assets: ASSETS };
+function renderArgs(edit: boolean): { edit: boolean; dietKey: DietKey[]; assets: { crest: string; lockup: string }; fontSet?: 'griffin' | 'classic' | 'modern' } {
+  return { edit, dietKey: getState().settings.dietKey, assets: ASSETS, fontSet: getState().settings.typography?.fontSet };
 }
 
 function pagewrapEl(): HTMLElement {

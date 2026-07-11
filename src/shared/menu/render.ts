@@ -93,6 +93,8 @@ export interface RenderOptions {
   dietKey: DietKey[];
   /** Resolved image URLs. Never base64, never a global — always supplied by the caller. */
   assets: { crest: string; lockup: string };
+  /** Coordinated font pairing (settings.typography.fontSet); 'griffin' is the default look. */
+  fontSet?: 'griffin' | 'classic' | 'modern';
 }
 
 type Pos = { x: number; y: number };
@@ -347,6 +349,7 @@ export function renderMenuHTML(menu: Menu, opts: RenderOptions): string {
   );
 
   const paperClass = style.paper === 'A5' ? 'A5' : '';
+  const fontClass = opts.fontSet && opts.fontSet !== 'griffin' ? ` font-${opts.fontSet}` : '';
   const scaleStyle = `--sc:${style.sc || 1};--dn:${style.dn || 1}`;
-  return `<div class="page ${paperClass}" style="${scaleStyle}"><div class="inner">${h}<div class="print-footer-zone">${foot}</div></div></div>`;
+  return `<div class="page ${paperClass}${fontClass}" style="${scaleStyle}"><div class="inner">${h}<div class="print-footer-zone">${foot}</div></div></div>`;
 }

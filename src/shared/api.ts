@@ -147,6 +147,8 @@ export interface GriffinApi {
   cancelUpdate(): Promise<{ ok: boolean }>;
   /** Open the Documents/Griffin Menu Studio library folder in the file explorer. */
   revealLibraryFolder(): Promise<{ ok: boolean; folderPath: string }>;
+  /** Resolve the actual folders currently in use (for display in Settings). */
+  getPaths(storage?: StorageLocations): Promise<{ library: string; menus: string; templates: string; exports: string; recovery: string }>;
   confirmClose(): Promise<{ ok: boolean }>;
   newWindow(): Promise<{ ok: boolean }>;
   listTemplates(storage?: StorageLocations): Promise<TemplateListResult>;

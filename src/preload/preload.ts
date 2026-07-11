@@ -44,6 +44,7 @@ const api: GriffinApi = {
   deferUpdate: () => ipcRenderer.invoke('update:defer'),
   cancelUpdate: () => ipcRenderer.invoke('update:cancel'),
   revealLibraryFolder: () => ipcRenderer.invoke('app:revealLibrary'),
+  getPaths: (storage) => ipcRenderer.invoke('app:getPaths', storage),
   confirmClose: () => ipcRenderer.invoke('window:confirmClose'),
   newWindow: () => ipcRenderer.invoke('app:newWindow'),
   listTemplates: (storage) => ipcRenderer.invoke('template:list', storage),

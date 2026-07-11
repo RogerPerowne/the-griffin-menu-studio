@@ -172,6 +172,17 @@ export interface Settings {
   /** Persisted bounds + open-state for the Photoshop-style floating tool windows. */
   floatWindows?: Record<string, FloatWindowBounds>;
   recovery?: RecoverySettings;
+  typography?: TypographySettings;
+}
+
+/** Global typography defaults (the Typography Master panel grows from these). */
+export interface TypographySettings {
+  /** Coordinated font pairing applied to the menu page. */
+  fontSet?: 'griffin' | 'classic' | 'modern';
+  /** Default overall text-size scale for new menus (maps to style.sc). */
+  scale?: number;
+  /** Default layout density for new menus (maps to style.dn). */
+  density?: 'compact' | 'balanced' | 'spacious';
 }
 
 /** Position, size and last-open state of one floating tool window. */

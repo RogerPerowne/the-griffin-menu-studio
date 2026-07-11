@@ -40,6 +40,11 @@ function fmtTimestamp(iso: string): string {
   return d.toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
+/** One row in the Typography Master roles preview (name + sample in the font set). */
+function typoRole(cls: string, name: string, sample: string): string {
+  return `<div class="typo-role"><span class="typo-role-name">${esc(name)}</span><span class="typo-sample typo-${cls}">${esc(sample)}</span></div>`;
+}
+
 let recoveryOverlay: HTMLElement | null = null;
 
 function recoveryItemsHtml(): string {
@@ -212,12 +217,16 @@ export async function createBlankMenu(): Promise<void> {
   const columns = Math.max(1, Math.min(4, defaults.cols || 1));
   const showPrices = defaults.showPrices !== false;
   const showKey = defaults.showKey !== false;
+  const typo = getState().settings.typography ?? {};
+  const densityScale = typo.density === 'compact' ? 0.9 : typo.density === 'spacious' ? 1.15 : 1;
   snapshot();
   const menu = newMenu('New Menu', {
     ...(defaults.paper ? { paper: defaults.paper } : {}),
     ...(defaults.header ? { header: defaults.header } : {}),
     showKey,
     showPrices,
+    sc: typo.scale ?? 1,
+    dn: densityScale,
   });
   menu.footer = defaults.footer || '';
   menu.sections = [
@@ -352,34 +361,71 @@ function renderHomeMain(): string {
     const settings = state.settings;
     const defaults = settings.defaults ?? {};
     const storage = settings.storage ?? {};
-    return `<section class="home-pane settings-pane"><div class="start-head"><h1>Settings</h1><button class="abtn" data-settings-save>Save settings</button></div>
+    const typo = settings.typography ?? {};
+    const fontSet = typo.fontSet || 'griffin';
+    const density = typo.density || 'balanced';
+    const scalePct = Math.round((typo.scale ?? 1) * 100);
+    const rec = settings.recovery ?? {};
+    const recInterval = rec.intervalSeconds ?? 30;
+    const opt = (val: string, label: string, on: boolean): string => `<option value="${val}" ${on ? 'selected' : ''}>${label}</option>`;
+    const seg = (key: string, val: string, cur: string, label: string): string => `<button type="button" class="seg-btn ${val === cur ? 'on' : ''}" data-setting-${key}="${val}">${label}</button>`;
+    const pathRow = (key: string, label: string): string =>
+      `<label>${label}<span class="path-row"><input data-setting-storage="${key}" value="${esc((storage as Record<string, string>)[key] || '')}" placeholder="Default"><button type="button" data-browse-storage="${key}">Browse</button></span></label>`;
+    return `<section class="home-pane settings-pane"><div class="start-head"><h1>Settings</h1><button class="abtn primary" data-settings-save>Save settings</button></div>
       <div class="settings-grid">
-        <section class="settings-card"><h2>Defaults</h2>
-          <label>Paper <select data-setting-default="paper"><option value="A4" ${defaults.paper !== 'A5' ? 'selected' : ''}>A4</option><option value="A5" ${defaults.paper === 'A5' ? 'selected' : ''}>A5</option></select></label>
-          <label>Header <select data-setting-default="header"><option value="title" ${defaults.header === 'title' ? 'selected' : ''}>Title only</option><option value="crest" ${defaults.header === 'crest' ? 'selected' : ''}>Crest + title</option><option value="lockup" ${defaults.header === 'lockup' ? 'selected' : ''}>Full lockup</option></select></label>
-          <label>Columns <select data-setting-default="cols">${[1, 2, 3, 4].map((n) => `<option value="${n}" ${defaults.cols === n ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
-          <label>Description style <select data-setting-default="descMode"><option value="inline" ${defaults.descMode !== 'below' ? 'selected' : ''}>Beside name</option><option value="below" ${defaults.descMode === 'below' ? 'selected' : ''}>Below name</option></select></label>
-          <label>Default footer <textarea data-setting-default="footer">${esc(defaults.footer || '')}</textarea></label>
+        <section class="settings-card"><h2>New-menu defaults</h2>
+          <p class="settings-note">Applied whenever you create a blank menu.</p>
+          <label>Paper size <select data-setting-default="paper">${opt('A4', 'A4 (portrait)', defaults.paper !== 'A5')}${opt('A5', 'A5 (portrait)', defaults.paper === 'A5')}</select></label>
+          <label>Header style <select data-setting-default="header">${opt('title', 'Title only', defaults.header === 'title')}${opt('crest', 'Crest + title', defaults.header === 'crest')}${opt('lockup', 'Full lockup', defaults.header === 'lockup')}</select></label>
+          <label>Columns <select data-setting-default="cols">${[1, 2, 3, 4].map((n) => opt(String(n), `${n} column${n > 1 ? 's' : ''}`, defaults.cols === n)).join('')}</select></label>
+          <label>Description position <select data-setting-default="descMode">${opt('inline', 'Beside the dish name', defaults.descMode !== 'below')}${opt('below', 'Below the dish name', defaults.descMode === 'below')}</select></label>
           <label class="tool-check"><input type="checkbox" data-setting-default="showPrices" ${defaults.showPrices !== false ? 'checked' : ''}> Show prices by default</label>
-          <label class="tool-check"><input type="checkbox" data-setting-default="showKey" ${defaults.showKey !== false ? 'checked' : ''}> Show dietary key by default</label>
-          <label>Default preview colour <input type="color" data-setting-default="blush" value="${esc(defaults.blush || '#F5E4DF')}"></label>
+          <label class="tool-check"><input type="checkbox" data-setting-default="showKey" ${defaults.showKey !== false ? 'checked' : ''}> Show the dietary key by default</label>
+          <label>Default footer <textarea data-setting-default="footer" placeholder="Printed at the bottom of every new menu…">${esc(defaults.footer || '')}</textarea></label>
+          <label>Preview paper tint <span class="colour-row"><input type="color" data-setting-default="blush" value="${esc(defaults.blush || '#F5E4DF')}"><small>Exports always stay white.</small></span></label>
         </section>
+
+        <section class="settings-card typo-card"><h2><span class="typo-mark">T</span> Default typography</h2>
+          <p class="settings-note">The coordinated look for new menus. Full per-role control (fonts, weights, spacing per element) arrives with the Typography Master panel in the editor.</p>
+          <div class="typo-block"><span class="typo-step">1</span><b>Global</b></div>
+          <label>Font set <select data-setting-typo="fontSet">${opt('griffin', 'Griffin — Georgia + Sans', fontSet === 'griffin')}${opt('classic', 'Classic — Playfair + Inter', fontSet === 'classic')}${opt('modern', 'Modern — Clean Sans', fontSet === 'modern')}</select></label>
+          <label>Overall text size <span class="range-row"><input type="range" min="70" max="140" step="1" value="${scalePct}" data-setting-typo="scale"><span class="range-val" id="typoScaleVal">${scalePct}%</span></span></label>
+          <div class="seg" role="group" aria-label="Density">${seg('typo-density', 'compact', density, 'Compact')}${seg('typo-density', 'balanced', density, 'Balanced')}${seg('typo-density', 'spacious', density, 'Spacious')}</div>
+          <div class="typo-block"><span class="typo-step">2</span><b>Roles</b></div>
+          <div class="typo-roles font-${fontSet}">
+            ${typoRole('title', 'Menu title', 'Sunday Menu')}
+            ${typoRole('section', 'Section header', 'To Start')}
+            ${typoRole('dish', 'Dish name', 'Roast Sirloin of Beef')}
+            ${typoRole('price', 'Dish price', '24')}
+            ${typoRole('desc', 'Dish description', 'Yorkshire pudding, roast potatoes, seasonal greens')}
+            ${typoRole('key', 'Dietary key', '(gf) gluten free   (v) vegetarian')}
+            ${typoRole('footer', 'Footer', 'Please let us know of any allergies or intolerances')}
+          </div>
+        </section>
+
         <section class="settings-card"><h2>Storage locations</h2>
           <p class="settings-note">Your menus, templates and exports live in <b>Documents › Griffin Menu Studio</b>.</p>
           <button type="button" class="abtn primary" data-reveal-library>Open the Griffin Menu Studio folder</button>
-          <label>Default menu folder <span class="path-row"><input data-setting-storage="defaultMenuFolder" value="${esc(storage.defaultMenuFolder || '')}" placeholder="System default"><button type="button" data-browse-storage="defaultMenuFolder">Browse</button></span></label>
-          <label>Templates folder <span class="path-row"><input data-setting-storage="templatesFolder" value="${esc(storage.templatesFolder || '')}" placeholder="App templates folder"><button type="button" data-browse-storage="templatesFolder">Browse</button></span></label>
-          <label>Recovery folder <span class="path-row"><input data-setting-storage="recoveryFolder" value="${esc(storage.recoveryFolder || '')}" placeholder="App recovery folder"><button type="button" data-browse-storage="recoveryFolder">Browse</button></span></label>
-          <p class="settings-note">These paths are preferences for file prompts and app-owned data. Changing them never deletes existing files.</p>
-        </section>
-        <section class="settings-card"><h2>Getting started</h2>
-          <p class="settings-note">Show the introduction again, or bring the in-editor tips back.</p>
-          <div class="settings-actions">
-            <button class="abtn" data-cmd="help-tutorial">Show welcome tour</button>
-            <button class="abtn" data-reset-tips>Show tips again</button>
-            <button class="abtn" data-cmd="help-shortcuts">Keyboard shortcuts</button>
+          <div class="path-current-list" id="pathCurrentList">
+            <div class="path-current-row"><span>Menus</span><code data-path-key="menus">…</code></div>
+            <div class="path-current-row"><span>Templates</span><code data-path-key="templates">…</code></div>
+            <div class="path-current-row"><span>Exports</span><code data-path-key="exports">…</code></div>
+            <div class="path-current-row"><span>Recovery</span><code data-path-key="recovery">…</code></div>
           </div>
+          <p class="settings-note">Override any of these (advanced):</p>
+          ${pathRow('defaultMenuFolder', 'Menus folder')}
+          ${pathRow('templatesFolder', 'Templates folder')}
+          ${pathRow('recoveryFolder', 'Recovery folder')}
+          <p class="settings-note">Changing a location never deletes existing files.</p>
         </section>
+
+        <section class="settings-card"><h2>Backup &amp; recovery</h2>
+          <p class="settings-note">Griffin keeps a safety copy of your open menu while you work, so a crash never loses it.</p>
+          <label class="tool-check"><input type="checkbox" data-setting-recovery="enabled" ${rec.enabled !== false ? 'checked' : ''}> Autosave a recovery copy</label>
+          <label>Autosave every <select data-setting-recovery="intervalSeconds">${[10, 20, 30, 60, 120, 300].map((n) => opt(String(n), n < 60 ? `${n} seconds` : `${n / 60} minute${n > 60 ? 's' : ''}`, recInterval === n)).join('')}</select></label>
+          <p class="settings-note">Recovery copies live in AppData and never sync to OneDrive.</p>
+        </section>
+
         ${renderUpdatesCard()}
       </div></section>`;
   }
@@ -411,6 +457,25 @@ function renderHomeWorkspace(): void {
     </aside>
     <main class="home-main">${renderHomeMain()}</main>
   </div>`;
+  if (current === 'home' && homePane === 'settings') void fillCurrentPaths();
+}
+
+/** Populate the Storage card's "current location" rows with the real resolved paths. */
+async function fillCurrentPaths(): Promise<void> {
+  const list = document.getElementById('pathCurrentList');
+  if (!list || !window.griffin?.getPaths) return;
+  try {
+    const paths = await window.griffin.getPaths(getState().settings.storage);
+    for (const [key, value] of Object.entries(paths)) {
+      const el = list.querySelector<HTMLElement>(`[data-path-key="${key}"]`);
+      if (el) {
+        el.textContent = value;
+        el.title = value;
+      }
+    }
+  } catch {
+    /* non-critical */
+  }
 }
 
 async function restoreRecovery(id: string): Promise<void> {
@@ -496,6 +561,13 @@ function initHomeWorkspace(): void {
       });
       return;
     }
+    const density = target.closest<HTMLElement>('[data-setting-typo-density]');
+    if (density?.dataset.settingTypoDensity) {
+      const t = (getState().settings.typography = getState().settings.typography ?? {});
+      t.density = density.dataset.settingTypoDensity as 'compact' | 'balanced' | 'spacious';
+      density.parentElement?.querySelectorAll('.seg-btn').forEach((b) => b.classList.toggle('on', b === density));
+      return;
+    }
     const browse = target.closest<HTMLElement>('[data-browse-storage]');
     if (browse?.dataset.browseStorage) {
       const key = browse.dataset.browseStorage as 'defaultMenuFolder' | 'templatesFolder' | 'recoveryFolder';
@@ -542,6 +614,28 @@ function initHomeWorkspace(): void {
       if (storageKey) {
         const storage = (getState().settings.storage = getState().settings.storage ?? {});
         storage[storageKey] = input.value;
+        return;
+      }
+      const typoKey = input.dataset.settingTypo as 'fontSet' | 'scale' | undefined;
+      if (typoKey) {
+        const t = (getState().settings.typography = getState().settings.typography ?? {});
+        if (typoKey === 'scale') {
+          t.scale = Math.max(0.7, Math.min(1.4, (Number(input.value) || 100) / 100));
+          const label = document.getElementById('typoScaleVal');
+          if (label) label.textContent = `${Math.round((t.scale ?? 1) * 100)}%`;
+        } else {
+          t.fontSet = input.value as 'griffin' | 'classic' | 'modern';
+          document.querySelector('.typo-roles')?.classList.remove('font-griffin', 'font-classic', 'font-modern');
+          document.querySelector('.typo-roles')?.classList.add(`font-${t.fontSet}`);
+        }
+        commit(['preview']);
+        return;
+      }
+      const recKey = input.dataset.settingRecovery as 'enabled' | 'intervalSeconds' | undefined;
+      if (recKey) {
+        const r = (getState().settings.recovery = getState().settings.recovery ?? {});
+        if (recKey === 'enabled' && input instanceof HTMLInputElement) r.enabled = input.checked;
+        else if (recKey === 'intervalSeconds') r.intervalSeconds = Math.max(10, Math.min(300, Number(input.value) || 30));
         return;
       }
     }

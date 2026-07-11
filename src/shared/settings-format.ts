@@ -138,7 +138,7 @@ export function migrateSettings(raw: unknown): Settings {
     defaults: defaults(input.defaults),
     storage: storage(input.storage),
     railWidth: number(input.railWidth, DEFAULT_SETTINGS.railWidth || 230, 160, 640),
-    railHidden: bool(input.railHidden) ?? false,
+    railHidden: bool(input.railHidden) ?? true,
     editorWidth: number(input.editorWidth, DEFAULT_SETTINGS.editorWidth || 380, 260, 760),
     tipSeen: bool(input.tipSeen) ?? false,
     tipbarHidden: bool(input.tipbarHidden) ?? false,
@@ -147,6 +147,18 @@ export function migrateSettings(raw: unknown): Settings {
       enabled: bool(record(input.recovery)?.enabled) ?? true,
       intervalSeconds: Math.round(number(record(input.recovery)?.intervalSeconds, 30, 10, 300)),
     },
+    typography: typography(input.typography),
+  };
+}
+
+function typography(value: unknown): Settings['typography'] {
+  const input = record(value);
+  const fontSet = input?.fontSet;
+  const density = input?.density;
+  return {
+    fontSet: fontSet === 'classic' || fontSet === 'modern' ? fontSet : 'griffin',
+    scale: number(input?.scale, 1, 0.7, 1.4),
+    density: density === 'compact' || density === 'spacious' ? density : 'balanced',
   };
 }
 

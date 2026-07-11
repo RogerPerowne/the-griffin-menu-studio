@@ -1,4 +1,4 @@
-import { dialog, ipcMain, shell, BrowserWindow, type WebContents } from 'electron';
+import { app, dialog, ipcMain, shell, BrowserWindow, type WebContents } from 'electron';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import * as docs from './documents';
@@ -7,7 +7,7 @@ import * as recovery from './recovery';
 import * as templates from './templates';
 import { assertValidTemplate } from '../shared/template-format';
 import { checkForUpdates, getUpdateInfo, installUpdateNow, deferUpdate, cancelUpdate } from './updater';
-import { griffinDocumentsRoot } from './app-paths';
+import { griffinDocumentsRoot, menusDir, templatesDir, exportsDir } from './app-paths';
 import type { StorageLocations } from '../shared/types';
 
 function record(value: unknown): Record<string, unknown> | null {
@@ -155,6 +155,20 @@ export function registerIpc(createWindow: () => BrowserWindow): void {
     requireWin(e.sender);
     cancelUpdate();
     return { ok: true };
+  });
+  ipcMain.handle('app:getPaths', (e, locations) => {
+    requireWin(e.sender);
+    const loc = storage(locations);
+    const recovery = loc?.recoveryFolder && path.isAbsolute(loc.recoveryFolder)
+      ? path.normalize(loc.recoveryFolder)
+      : path.join(app.getPath('userData'), 'recovery');
+    return {
+      library: griffinDocumentsRoot(),
+      menus: menusDir(loc),
+      templates: templatesDir(loc),
+      exports: exportsDir(),
+      recovery,
+    };
   });
   ipcMain.handle('app:revealLibrary', async (e) => {
     requireWin(e.sender);

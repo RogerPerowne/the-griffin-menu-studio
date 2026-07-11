@@ -68,17 +68,21 @@ function showNotification(info: UpdateInfo): void {
     el.setAttribute('role', 'dialog');
     el.setAttribute('aria-label', 'Update available');
     document.body.appendChild(el);
+    // Clicking the notification itself (not its buttons) opens the Updates card.
+    el.addEventListener('click', (e) => {
+      if (!(e.target as HTMLElement).closest('button')) handleAction('view');
+    });
   }
   const ver = info.newVersion ? `Version ${esc(info.newVersion)}` : '';
   el.innerHTML = `
+    <button class="update-note-x" data-upd="cancel" title="Skip this update" aria-label="Skip this update"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     <div class="update-note-head"><span class="update-note-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></span>
       <div class="update-note-text"><b>${esc(info.title || 'Update ready')}</b><small>${ver}</small></div></div>
     <div class="update-note-actions">
-      <button class="abtn" data-upd="view">View</button>
       <button class="abtn primary" data-upd="now">Update Now</button>
       <button class="abtn" data-upd="later">Later</button>
-      <button class="abtn ghost" data-upd="cancel">Cancel</button>
-    </div>`;
+    </div>
+    <small class="update-note-hint">Click for details — Later installs when you close the app.</small>`;
 }
 
 function removeNotification(): void {
@@ -100,6 +104,12 @@ function refreshCard(): void {
 
 function updatesBodyInner(info: UpdateInfo): string {
   const version = `<p class="updates-version">Installed version <b>${esc(info.currentVersion || '')}</b></p>`;
+  const about = `<p class="updates-about">Griffin Menu Studio keeps itself up to date automatically: it quietly checks for a
+    new version about once an hour, downloads it in the background while you work, and only then lets you know.
+    Nothing is interrupted — you choose when the update is applied.</p>
+    <p class="updates-about">When an update is ready you can <b>Update Now</b> (the app restarts and comes back on the new
+    version in a few seconds), choose <b>Later</b> (it installs itself the next time you close the app), or skip it for
+    this session. Your menus, templates and settings are never touched by an update.</p>`;
   const check = info.phase === 'downloaded' || info.phase === 'checking'
     ? ''
     : `<button class="abtn" data-upd="check">Check for updates</button>`;
@@ -109,7 +119,7 @@ function updatesBodyInner(info: UpdateInfo): string {
       status = `<p class="updates-status">Checking for updates…</p>`;
       break;
     case 'downloading':
-      status = `<p class="updates-status">Downloading ${info.newVersion ? `version ${esc(info.newVersion)}` : 'the update'}…</p>`;
+      status = `<p class="updates-status">Downloading ${info.newVersion ? `version ${esc(info.newVersion)}` : 'the update'}… you can keep working.</p>`;
       break;
     case 'downloaded':
       status = downloadedInner(info);
@@ -118,29 +128,31 @@ function updatesBodyInner(info: UpdateInfo): string {
       status = `<p class="updates-status error">${esc(info.errorMessage || 'Could not check for updates.')}</p>`;
       break;
     case 'upToDate':
-      status = `<p class="updates-status ok">You’re up to date.</p>`;
+      status = `<p class="updates-status ok">You’re up to date — this is the newest version.</p>`;
       break;
     case 'unsupported':
-      status = `<p class="updates-status">Automatic updates run in the installed app (not in development).</p>`;
+      status = `<p class="updates-status">Automatic updates run in the installed app (not in development builds).</p>`;
       break;
     default:
-      status = `<p class="updates-status">Updates download automatically in the background — you can also check any time.</p>`;
+      status = `<p class="updates-status">No update waiting right now — you can check at any time.</p>`;
   }
-  return `${version}${check}${status}`;
+  return `${version}${about}${check}${status}`;
 }
 
 function downloadedInner(info: UpdateInfo): string {
   const title = esc(info.title || 'Update ready');
   const badge = info.newVersion ? `<span class="updates-badge">v${esc(info.newVersion)}</span>` : '';
+  const published = info.publishedAt ? `<small class="updates-date">Published ${esc(new Date(info.publishedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }))}</small>` : '';
   return `<div class="updates-ready">
     <div class="updates-ready-head"><b>${title}</b>${badge}</div>
+    ${published}
     <div class="updates-notes">${renderNotes(info.notes || '')}</div>
     <div class="updates-actions">
       <button class="abtn primary" data-upd="now">Update Now</button>
       <button class="abtn" data-upd="later">Later</button>
-      <button class="abtn ghost" data-upd="cancel">Cancel</button>
+      <button class="abtn ghost" data-upd="cancel">Skip this update</button>
     </div>
-    <p class="updates-hint">Update Now restarts and installs it. Later applies it next time you open the app. Cancel skips this update.</p>
+    <p class="updates-hint">Update Now restarts and installs it. Later applies it next time you open the app.</p>
   </div>`;
 }
 
