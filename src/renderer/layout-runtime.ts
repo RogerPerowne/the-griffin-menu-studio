@@ -45,8 +45,33 @@ export function applyZoom(): void {
   wrap.style.transform = `scale(${zoom})`;
   wrap.style.width = `${pw * zoom}px`;
   wrap.style.height = `${ph * zoom}px`;
-  const label = document.getElementById('scReset');
+  const label = document.getElementById('zoomPct');
   if (label) label.textContent = `${Math.round(zoom * 100)}%`;
+  renderRulers();
+}
+
+/**
+ * Draw the top + right preview rulers. Tick spacing is derived from the ACTUAL
+ * rendered page rect (so it is correct at any zoom/DPI), and the origin (0 mark)
+ * is pinned to the page's top-left edge and tracks scrolling — Word/Acrobat style.
+ */
+export function renderRulers(): void {
+  const scroll = document.getElementById('stageScroll');
+  const page = document.querySelector<HTMLElement>('#pagewrap .page');
+  const top = document.getElementById('rulerTop');
+  const right = document.getElementById('rulerRight');
+  if (!scroll || !page || !top || !right) return;
+  const sr = scroll.getBoundingClientRect();
+  const pr = page.getBoundingClientRect();
+  if (pr.width < 1) return;
+  const paperWcm = page.classList.contains('A5') ? 14.8 : 21;
+  const paperHcm = page.classList.contains('A5') ? 21 : 29.7;
+  const pxPerCmX = pr.width / paperWcm;
+  const pxPerCmY = pr.height / paperHcm;
+  top.style.setProperty('--px-cm', `${pxPerCmX}px`);
+  top.style.setProperty('--origin', `${pr.left - sr.left}px`);
+  right.style.setProperty('--px-cm', `${pxPerCmY}px`);
+  right.style.setProperty('--origin', `${pr.top - sr.top}px`);
 }
 
 export function fitPage(): void {

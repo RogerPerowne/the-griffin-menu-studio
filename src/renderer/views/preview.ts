@@ -22,9 +22,9 @@ import {
   observePagewrapPage,
   type ProductionInfo,
   productionInfo,
+  renderRulers,
   scheduleOverflowCheck,
   setFollowFit,
-  setZoom,
 } from '../layout-runtime';
 
 const brand = getActiveBrand();
@@ -425,12 +425,10 @@ export function initPreview(): void {
 
   document.getElementById('btnMove')?.addEventListener('click', toggleMoveMode);
 
-  document.getElementById('scUp')?.addEventListener('click', () => setZoom(getZoom() * 1.18));
-  document.getElementById('scDown')?.addEventListener('click', () => setZoom(getZoom() / 1.18));
-  document.getElementById('scReset')?.addEventListener('click', () => {
-    setFollowFit(true);
-    fitPage();
-  });
+  // Zoom controls now live on the bottom zoom bar as command buttons
+  // (data-cmd="zoom-in|zoom-out|fit-width|actual-size"). Keep the rulers in sync
+  // as the preview is scrolled.
+  document.getElementById('stageScroll')?.addEventListener('scroll', renderRulers, { passive: true });
   window.addEventListener('resize', () => fitPage());
   if (document.fonts?.ready) {
     document.fonts.ready.then(() => {
