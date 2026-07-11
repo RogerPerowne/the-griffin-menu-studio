@@ -34,6 +34,28 @@ function Draw-ImageContained($graphics, $image, [System.Drawing.RectangleF]$box)
   $graphics.DrawImage($image, [System.Drawing.RectangleF]::new($x, $y, $w, $h))
 }
 
+# Recolour the black crest line-art to a solid colour, preserving its alpha
+# channel (so the openwork detail and anti-aliased edges survive intact).
+function Draw-ImageTinted($graphics, $image, [System.Drawing.RectangleF]$box, [string]$hex) {
+  $r = [Convert]::ToInt32($hex.Substring(1, 2), 16) / 255.0
+  $g = [Convert]::ToInt32($hex.Substring(3, 2), 16) / 255.0
+  $b = [Convert]::ToInt32($hex.Substring(5, 2), 16) / 255.0
+  $cm = New-Object System.Drawing.Imaging.ColorMatrix
+  $cm.Matrix00 = 0; $cm.Matrix11 = 0; $cm.Matrix22 = 0   # drop source RGB
+  $cm.Matrix40 = $r; $cm.Matrix41 = $g; $cm.Matrix42 = $b # inject brand colour
+  # Matrix33 stays 1 -> source alpha (the crest shape) is preserved
+  $attr = New-Object System.Drawing.Imaging.ImageAttributes
+  $attr.SetColorMatrix($cm)
+  $ratio = [Math]::Min($box.Width / $image.Width, $box.Height / $image.Height)
+  $w = [int]($image.Width * $ratio)
+  $h = [int]($image.Height * $ratio)
+  $x = [int]($box.X + (($box.Width - $w) / 2))
+  $y = [int]($box.Y + (($box.Height - $h) / 2))
+  $dest = New-Object System.Drawing.Rectangle $x, $y, $w, $h
+  $graphics.DrawImage($image, $dest, 0, 0, $image.Width, $image.Height, [System.Drawing.GraphicsUnit]::Pixel, $attr)
+  $attr.Dispose()
+}
+
 $cream = New-Brush '#F6F3ED'
 $panel = New-Brush '#FFFFFF'
 $green = New-Brush '#00403D'
@@ -44,44 +66,41 @@ $linePen = New-Object System.Drawing.Pen ([System.Drawing.Color]::FromArgb(228, 
 
 $crest = [System.Drawing.Image]::FromFile($crestPath)
 
+# WiX (WixUI_InstallDir) draws its OWN text over these bitmaps:
+#  - Dialog bmp (Welcome/Exit): title + body render on the RIGHT ~two-thirds,
+#    so branding must stay inside the LEFT 164px sidebar and nowhere else.
+#  - Banner bmp (all other dialogs): title + description render at the top-LEFT,
+#    so branding must sit hard-RIGHT and the left must stay clear.
+# Keeping to those zones is what prevents the text overlap.
+
 try {
   $dialog = New-Object System.Drawing.Bitmap 493, 312
   $g = [System.Drawing.Graphics]::FromImage($dialog)
   try {
     $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
     $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+    $g.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAliasGridFit
+    # Right two-thirds: clean cream canvas that WiX paints its wizard text onto.
     $g.Clear([System.Drawing.Color]::FromArgb(246, 243, 237))
-    $g.FillRectangle($green, 0, 0, 164, 312)
-    Draw-ImageContained $g $crest ([System.Drawing.RectangleF]::new(52, 42, 60, 60))
-    $titleFont = New-Object System.Drawing.Font 'Georgia', 14, ([System.Drawing.FontStyle]::Bold)
-    $bodyFont = New-Object System.Drawing.Font 'Segoe UI', 8.5
+    # Left sidebar: brand green with the crest and stacked wordmark, all within 164px.
+    $sidebarW = 164
+    $g.FillRectangle($green, 0, 0, $sidebarW, 312)
+    Draw-ImageTinted $g $crest ([System.Drawing.RectangleF]::new(42, 66, 80, 80)) '#FFF4F4'
+    $center = New-Object System.Drawing.StringFormat
+    $center.Alignment = [System.Drawing.StringAlignment]::Center
+    $titleFont = New-Object System.Drawing.Font 'Georgia', 15, ([System.Drawing.FontStyle]::Bold)
+    $tagFont = New-Object System.Drawing.Font 'Segoe UI', 8
     try {
-      $g.DrawString('Griffin', $titleFont, $pink, 34, 126)
-      $g.DrawString('Menu Studio', $titleFont, $pink, 34, 150)
-      $g.DrawString('Install, repair or remove the desktop menu studio.', $bodyFont, $pink, [System.Drawing.RectangleF]::new(26, 190, 112, 58))
+      $g.DrawString('Griffin', $titleFont, $pink, ([System.Drawing.RectangleF]::new(0, 172, $sidebarW, 26)), $center)
+      $g.DrawString('Menu Studio', $titleFont, $pink, ([System.Drawing.RectangleF]::new(0, 196, $sidebarW, 26)), $center)
+      $g.DrawString('THE GRIFFIN', $tagFont, $pink, ([System.Drawing.RectangleF]::new(0, 232, $sidebarW, 18)), $center)
     } finally {
       $titleFont.Dispose()
-      $bodyFont.Dispose()
+      $tagFont.Dispose()
+      $center.Dispose()
     }
-    $g.FillRectangle($panel, 194, 44, 250, 116)
-    $g.DrawRectangle($linePen, 194, 44, 250, 116)
-    Draw-ImageContained $g $crest ([System.Drawing.RectangleF]::new(216, 64, 54, 54))
-    $lockupFont = New-Object System.Drawing.Font 'Georgia', 19, ([System.Drawing.FontStyle]::Bold)
-    $studioFont = New-Object System.Drawing.Font 'Segoe UI', 8
-    try {
-      $g.DrawString('The Griffin', $lockupFont, $ink, 282, 70)
-      $g.DrawString('MENU STUDIO', $studioFont, $muted, 286, 104)
-    } finally {
-      $lockupFont.Dispose()
-      $studioFont.Dispose()
-    }
-    $smallFont = New-Object System.Drawing.Font 'Segoe UI', 9
-    try {
-      $g.DrawString('Professional Windows Installer', $smallFont, $muted, 204, 188)
-      $g.DrawString('Supports first install, update, repair and uninstall.', $smallFont, $ink, [System.Drawing.RectangleF]::new(204, 212, 230, 52))
-    } finally {
-      $smallFont.Dispose()
-    }
+    # Hairline separating the sidebar from WiX's text column.
+    $g.DrawLine($linePen, $sidebarW, 0, $sidebarW, 312)
   } finally {
     $g.Dispose()
   }
@@ -92,18 +111,11 @@ try {
   try {
     $g2.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
     $g2.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+    $g2.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAliasGridFit
+    # Left: clean canvas for WiX's dialog title + description. Branding sits hard-right.
     $g2.Clear([System.Drawing.Color]::FromArgb(246, 243, 237))
-    $g2.FillRectangle($green, 0, 0, 58, 58)
-    Draw-ImageContained $g2 $crest ([System.Drawing.RectangleF]::new(13, 12, 34, 34))
-    $headFont = New-Object System.Drawing.Font 'Georgia', 13, ([System.Drawing.FontStyle]::Bold)
-    $subFont = New-Object System.Drawing.Font 'Segoe UI', 8
-    try {
-      $g2.DrawString('Griffin Menu Studio', $headFont, $ink, 78, 9)
-      $g2.DrawString('Desktop menu editor for The Griffin', $subFont, $muted, 80, 34)
-    } finally {
-      $headFont.Dispose()
-      $subFont.Dispose()
-    }
+    $g2.FillRectangle($green, 435, 0, 58, 58)
+    Draw-ImageTinted $g2 $crest ([System.Drawing.RectangleF]::new(447, 12, 34, 34)) '#FFF4F4'
     $g2.DrawLine($linePen, 0, 57, 493, 57)
   } finally {
     $g2.Dispose()
