@@ -325,3 +325,25 @@
   height: 100%;
   background: repeating-linear-gradient(45deg, #fafafa, #fafafa 8px, #f2efe9 8px, #f2efe9 16px);
 }
+
+/* ---------- Page-flip reader ---------- */
+.bk-stage .stage-body { position: relative; }
+.bk-read-btn { display: inline-flex; align-items: center; gap: 5px; }
+.bk-read-btn svg { fill: none; stroke: currentColor; stroke-width: 1.6; }
+.bk-read-btn.on { background: var(--brand-green); color: var(--brand-pink); }
+.bk-reader {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px 46px;
+  background: linear-gradient(180deg, #EFE8DD, #E7DED2);
+}
+.bk-reader[hidden] { display: none; }
+.bk-page-ind { font-size: 11px; color: var(--mut); min-width: 92px; text-align: center; letter-spacing: 0.03em; }
+.bk-turn svg { fill: none; stroke: currentColor; stroke-width: 1.8; }
+/* Cover/back rendered as a standalone A5 page inside the reader */
+.bk-cover-page { background: var(--blush); }
+.bk-cover-page .inner { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }

@@ -14,7 +14,8 @@
 
 import type { Booklet, BookletPanel, HeaderStyle, Menu } from '@shared/types';
 import { newBooklet, newMenu } from '@shared/menu/factories';
-import { renderBookletHTML, type SheetSide } from '@shared/menu/booklet';
+import { renderBookletHTML, renderBookletPages, type SheetSide } from '@shared/menu/booklet';
+import { mountBookletFlip, type BookletFlipHandle } from './booklet-flip';
 import { getActiveBrand } from '@shared/brand';
 import { assetUrl } from '../brand-assets';
 import { escapeHtml as esc } from '../util/escape';
@@ -28,6 +29,7 @@ import {
   BOOKLET_STAGE,
   applyReleaseSettings,
   fitPage,
+  fitWholePage,
   getZoom,
   scheduleRulers,
   setFollowFit,
@@ -196,6 +198,9 @@ export function renderBookletWorkspace(): void {
   const root = document.getElementById('bookletWorkspace');
   const booklet = getBooklet();
   if (!root || !booklet) return;
+  // The reader's DOM is inside `root` and about to be wiped — drop the stale handle.
+  readerHandle?.destroy();
+  readerHandle = null;
   // Move the real editor node to safety BEFORE replacing root's HTML, so its
   // listeners survive; it is re-mounted below when the Inside tab is active.
   parkEditor();
@@ -225,6 +230,7 @@ export function renderBookletWorkspace(): void {
           <button class="bk-seg ${side === 'outer' ? 'on' : ''}" data-bk-side="outer">Outer (cover)</button>
           <button class="bk-seg ${side === 'inner' ? 'on' : ''}" data-bk-side="inner">Inner (pages)</button>
         </div>
+        <button class="bk-seg bk-read-btn" data-bk-read title="Flip through the pages like a real folded booklet"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 6c-2-1.5-5-1.5-7 0v12c2-1.5 5-1.5 7 0m0-12c2-1.5 5-1.5 7 0v12c-2-1.5-5-1.5-7 0m0-12v12"/></svg>Read</button>
         <span class="bk-fold-hint">${foldHint(side)}</span>
         <span class="sp"></span>
         <button class="abtn" data-bk-act="print">Print…</button>
@@ -234,11 +240,15 @@ export function renderBookletWorkspace(): void {
         <canvas class="ruler ruler-top" id="bookletRulerTop" aria-hidden="true"></canvas>
         <div class="ruler-corner" aria-hidden="true"></div>
         <div class="stage-scroll" id="bookletStageScroll"><div class="pagewrap" id="bookletPagewrap"></div></div>
+        <div class="bk-reader" id="bookletReader" hidden></div>
         <canvas class="ruler ruler-right" id="bookletRulerRight" aria-hidden="true"></canvas>
       </div>
       <div class="stage-zoombar" role="toolbar" aria-label="Booklet preview zoom">
+        <button class="zoomb icon bk-turn" data-bk-flip="prev" aria-label="Previous page" hidden><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <span class="bk-page-ind" id="bkPageInd" hidden></span>
+        <button class="zoomb icon bk-turn" data-bk-flip="next" aria-label="Next page" hidden><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
         <button class="zoomb wide" data-bk-zoom="fit-width">Fit width</button>
-        <button class="zoomb wide" data-bk-zoom="actual-size">Actual size</button>
+        <button class="zoomb wide" data-bk-zoom="fit-page">Fit page</button>
         <span class="sp"></span>
         <button class="zoomb icon" data-bk-zoom="out" aria-label="Zoom out"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
         <input type="range" class="zoom-slider" id="bookletZoomSlider" min="20" max="300" step="1" value="100" aria-label="Zoom level">
@@ -287,9 +297,73 @@ function debPreview(): void {
   debounceTimer = window.setTimeout(() => renderBookletPreviewOnly(), 160);
 }
 
+/* ================= page-flip reader ================= */
+
+let readerHandle: BookletFlipHandle | null = null;
+const PAGE_LABELS = ['Front cover', 'Inside left', 'Inside right', 'Back cover'];
+
+function updatePageInd(i: number): void {
+  const ind = document.getElementById('bkPageInd');
+  if (ind) ind.textContent = `${i + 1}/4 · ${PAGE_LABELS[i] ?? ''}`;
+}
+
+/** Scale each fixed-mm A5 `.page` to fill its flip-reader cell. */
+function fitReaderPages(): void {
+  document.querySelectorAll<HTMLElement>('#bookletReader .bf-page').forEach((cell) => {
+    const page = cell.querySelector<HTMLElement>('.page');
+    if (!page) return;
+    const cw = cell.clientWidth;
+    const pw = page.offsetWidth;
+    if (pw < 10 || cw < 10) return;
+    page.style.transformOrigin = 'top left';
+    page.style.transform = `scale(${cw / pw})`;
+  });
+}
+
+function toggleReaderControls(on: boolean): void {
+  document.querySelectorAll<HTMLElement>('[data-bk-flip], #bkPageInd').forEach((el) => (el.hidden = !on));
+  document.querySelector<HTMLElement>('[data-bk-read]')?.classList.toggle('on', on);
+}
+
+function enterReader(): void {
+  const booklet = getBooklet();
+  const host = document.getElementById('bookletReader');
+  const sheet = document.getElementById('bookletStageScroll');
+  if (!booklet || !host || !sheet) return;
+  sheet.hidden = true;
+  host.hidden = false;
+  readerHandle = mountBookletFlip(host, renderBookletPages(booklet, renderOpts(getSide())), { onChange: updatePageInd });
+  applyReleaseSettings();
+  toggleReaderControls(true);
+  requestAnimationFrame(fitReaderPages);
+  updatePageInd(readerHandle.index());
+}
+
+export function exitReader(): void {
+  const host = document.getElementById('bookletReader');
+  const sheet = document.getElementById('bookletStageScroll');
+  readerHandle?.destroy();
+  readerHandle = null;
+  if (host) {
+    host.hidden = true;
+    host.innerHTML = '';
+  }
+  if (sheet) sheet.hidden = false;
+  toggleReaderControls(false);
+  fitPage(BOOKLET_STAGE);
+}
+
+function toggleReader(): void {
+  if (readerHandle) exitReader();
+  else enterReader();
+}
+
 /* ================= stage wiring (zoom / rulers) ================= */
 
 function bindBookletStage(): void {
+  window.addEventListener('resize', () => {
+    if (readerHandle) fitReaderPages();
+  });
   const scroll = document.getElementById('bookletStageScroll');
   scroll?.addEventListener('scroll', () => scheduleRulers(BOOKLET_STAGE), { passive: true });
   scroll?.addEventListener(
@@ -393,6 +467,17 @@ function onFormClick(e: Event): void {
     return;
   }
 
+  if (target.closest('[data-bk-read]')) {
+    toggleReader();
+    return;
+  }
+  const flipBtn = target.closest<HTMLElement>('[data-bk-flip]');
+  if (flipBtn?.dataset.bkFlip) {
+    if (flipBtn.dataset.bkFlip === 'next') readerHandle?.next();
+    else readerHandle?.prev();
+    return;
+  }
+
   const zoomBtn = target.closest<HTMLElement>('[data-bk-zoom]');
   if (zoomBtn?.dataset.bkZoom) {
     const action = zoomBtn.dataset.bkZoom;
@@ -401,7 +486,8 @@ function onFormClick(e: Event): void {
     else if (action === 'fit-width') {
       setFollowFit(true, BOOKLET_STAGE);
       fitPage(BOOKLET_STAGE);
-    } else if (action === 'actual-size') setZoom(1, BOOKLET_STAGE);
+    } else if (action === 'fit-page') fitWholePage(BOOKLET_STAGE);
+    else if (action === 'actual-size') setZoom(1, BOOKLET_STAGE);
     return;
   }
 

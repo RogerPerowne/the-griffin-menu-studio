@@ -208,3 +208,24 @@ export function renderBookletHTML(booklet: Booklet, opts: BookletRenderOptions):
   }
   return `<div class="page sheet booklet" data-side="${opts.side}">${cells}</div>`;
 }
+
+/** Each cover/back panel wrapped as a standalone A5 `.page` (so the flip reader
+ *  can show it beside the inside menus, which are already A5 `.page`s). */
+function coverPage(inner: string): string {
+  return `<div class="page A5 bk-cover-page"><div class="inner">${inner}</div></div>`;
+}
+
+/**
+ * The four booklet pages as standalone A5 `.page` HTML strings, in READING order
+ * — [front cover, inside-left, inside-right, back] — for the page-flip reader.
+ * Cover/back are light panels; the inside cells reuse the normal menu renderer.
+ */
+export function renderBookletPages(booklet: Booklet, opts: BookletRenderOptions): string[] {
+  const imp = imposeBooklet(booklet);
+  return [
+    coverPage(renderPanelCell(booklet.cover, opts)),
+    renderPageCell(imp.inner[0], opts, opts.insideSplit),
+    renderPageCell(imp.inner[1], opts, opts.insideSplit),
+    coverPage(renderPanelCell(booklet.back, opts)),
+  ];
+}
