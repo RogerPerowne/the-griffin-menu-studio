@@ -27,7 +27,7 @@ const STEPS: Step[] = [
   },
   {
     title: 'Home is your hub',
-    body: 'Open recent menus, start new ones, and manage templates and dishes — all from this green sidebar.',
+    body: 'Open recent menus, start new ones, find dishes, and adjust settings from this green sidebar.',
     workspace: 'home',
     before: () => goHomePane('open'),
     selector: '.home-nav',
@@ -36,7 +36,7 @@ const STEPS: Step[] = [
     title: 'Start from a template',
     body: 'Pick a Griffin template (or a blank page) to create your own editable menu. Use “Preview” to see one first, or “Use template” to begin.',
     workspace: 'home',
-    before: () => goHomePane('templates'),
+    before: () => goHomePane('new'),
     selector: '.template-card',
   },
   {

@@ -16,7 +16,7 @@ import { trapFocus } from '../util/focus-trap';
 
 export type Workspace = 'home' | 'editor' | 'export';
 
-type HomePane = 'open' | 'new' | 'templates' | 'dishes' | 'settings';
+type HomePane = 'open' | 'new' | 'dishes' | 'settings';
 type ExportPane = 'print' | 'pdf' | 'png' | 'save';
 
 let current: Workspace = 'home';
@@ -156,7 +156,20 @@ export function createBlankMenu(): void {
 
 function renderMenuCard(menu: Menu, dietKey: DietKey[]): string {
   const scale = paperScale(menu.style?.paper);
-  const filter = `${menu.name || ''} ${fmtDate(menu.date)} ${menu.style?.paper || ''}`.toLowerCase();
+  const filter = [
+    menu.name,
+    fmtDate(menu.date),
+    menu.style?.paper,
+    ...menu.sections.flatMap((section) => [
+      section.name,
+      section.note,
+      ...section.items.flatMap((item) => {
+        if ((item as { type?: string }).type === 'rule') return [];
+        const dish = item as Dish;
+        return [dish.name, dish.desc, dish.price, ...(dish.tags || []).map((tag) => tag.c)];
+      }),
+    ]),
+  ].filter(Boolean).join(' ').toLowerCase();
   return `<button class="start-card" data-open-menu="${esc(menu.id)}" data-menu-filter="${esc(filter)}">
     <div class="start-card-thumb"><div class="start-card-scale" style="transform:translate(-50%,-50%) scale(${scale})">${renderMenuHTML(menu, { edit: false, dietKey, assets: assets() })}</div></div>
     <span class="start-card-name">${esc(menu.name)}</span>
@@ -234,17 +247,12 @@ function renderHomeMain(): string {
   const state = getState();
   const dietKey = state.settings.dietKey;
   if (homePane === 'new') {
-    const firstTemplates = allTemplates().slice(0, 6).map((t) => renderTemplateCard(t, dietKey)).join('');
+    const templates = allTemplates().map((t) => renderTemplateCard(t, dietKey)).join('');
     return `<section class="home-pane"><div class="start-head"><h1>New menu</h1></div>
       <div class="home-action-row">
         <button class="home-action-card" data-cmd="new-blank"><b>Blank menu</b><span>Start with empty starter, main and dessert sections.</span></button>
-        <button class="home-action-card" data-cmd="new-template"><b>Template gallery</b><span>Choose from the full Griffin template set.</span></button>
       </div>
-      <h2 class="home-section-title">Useful templates</h2><div class="start-grid">${firstTemplates}</div></section>`;
-  }
-  if (homePane === 'templates') {
-    return `<section class="home-pane"><div class="start-head"><h1>Templates</h1><div class="start-actions"><button class="abtn" data-cmd="save-template">Save current layout as template...</button><button class="abtn" data-cmd="import-templates">Import .menu...</button><button class="abtn" data-cmd="reveal-templates-folder">Open templates folder</button></div></div>
-      <div class="start-grid">${allTemplates().map((t) => renderTemplateCard(t, dietKey)).join('')}</div></section>`;
+      <h2 class="home-section-title">Choose a template</h2><div class="start-grid">${templates}</div></section>`;
   }
   if (homePane === 'dishes') {
     const rows = dishRows();
@@ -294,7 +302,7 @@ function renderHomeMain(): string {
   }
   const cards = state.menus.map((menu) => renderMenuCard(menu, dietKey)).join('');
   const body = cards
-    ? `<input class="home-search" id="homeMenuSearch" placeholder="Search your menus by name, date or paper size">
+    ? `<input class="home-search" id="homeMenuSearch" placeholder="Search menus, sections or dishes">
        <div class="start-grid" id="homeMenuGrid">${cards}</div>
        <p class="start-empty" id="homeMenuNoMatch" hidden>No menus match your search.</p>`
     : `<div class="home-empty">
@@ -303,7 +311,7 @@ function renderHomeMain(): string {
         <p>Create your first menu from a Griffin template or a blank page — it opens straight in the editor.</p>
         <div class="home-empty-actions"><button class="abtn primary" data-cmd="new-template">New from Template</button><button class="abtn" data-cmd="new-blank">Blank menu</button></div>
       </div>`;
-  return `<section class="home-pane"><div class="start-head"><h1>Open menu</h1><div class="start-actions"><button class="abtn primary" data-cmd="new-template">New from Template</button><button class="abtn" data-cmd="open">Open…</button></div></div>
+  return `<section class="home-pane"><div class="start-head"><h1>Open menu</h1><div class="start-actions"><button class="abtn primary" data-home-pane="new">Create menu</button><button class="abtn" data-cmd="open">Open…</button></div></div>
     ${body}</section>`;
 }
 
@@ -315,7 +323,6 @@ function renderHomeWorkspace(): void {
       <div class="home-brand">Griffin<br>Menu Studio</div>
       <button data-home-pane="open"${activeNav('open')}>Open</button>
       <button data-home-pane="new"${activeNav('new')}>New</button>
-      <button data-home-pane="templates"${activeNav('templates')}>Templates</button>
       <button data-home-pane="dishes"${activeNav('dishes')}>Dishes</button>
       <button data-home-pane="settings"${activeNav('settings')}>Settings</button>
     </aside>
@@ -600,7 +607,7 @@ export function getWorkspace(): Workspace {
 }
 
 /** Open Home on a specific pane (used by File ▸ Settings and the command palette). */
-export function goHomePane(pane: 'open' | 'new' | 'templates' | 'dishes' | 'settings'): void {
+export function goHomePane(pane: 'open' | 'new' | 'dishes' | 'settings'): void {
   homePane = pane;
   setWorkspace('home');
 }

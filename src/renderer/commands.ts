@@ -6,7 +6,6 @@
 import { newDish, newRule, newSection } from '@shared/menu/factories';
 import { fmtDate } from './views/rail';
 import { canRedo, canUndo, commit, currentMenu, getState, persist, redo, snapshot, undo } from './store';
-import { openGallery } from './views/gallery';
 import { openDishPicker } from './views/dishpicker';
 import { downloadBackup, openRestoreDialog } from './views/backup';
 import { deleteCurrentMenu, duplicateMenu, saveLayoutAsTemplate } from './views/editor';
@@ -278,7 +277,7 @@ const align = (mode: Parameters<typeof alignSelectedMove>[0]) => () => alignSele
 export const COMMANDS: Command[] = [
   // File
   { id: 'new-blank', label: 'New Blank Menu', group: 'File', hint: 'Ctrl+N', keywords: 'create empty', run: () => createBlankMenu() },
-  { id: 'new-template', label: 'New from Template…', group: 'File', keywords: 'create layout gallery', run: () => openGallery() },
+  { id: 'new-template', label: 'New from Template…', group: 'File', keywords: 'create layout gallery', run: () => goHomePane('new') },
   { id: 'new-window', label: 'New Window', group: 'File', hint: 'Ctrl+Shift+N', keywords: 'app window second', run: () => void window.griffin?.newWindow() },
   { id: 'open', label: 'Open…', group: 'File', hint: 'Ctrl+O', keywords: 'file document menu', run: () => void openDocumentFromDisk() },
   { id: 'save', label: 'Save', group: 'File', hint: 'Ctrl+S', keywords: 'store document', enabled: hasMenu, run: () => void saveDocument(false) },
