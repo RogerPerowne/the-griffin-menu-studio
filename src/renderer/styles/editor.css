@@ -264,7 +264,9 @@ svg{stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-l
 /* ---------- Editor ---------- */
 .editor{background:transparent;border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0;min-height:0}
 .ed-head{padding:16px 18px 12px}
-.ed-head .cap{font-size:10px;letter-spacing:.3em;color:var(--mut);margin-bottom:6px}
+.ed-head .cap{display:flex;align-items:center;font-size:10px;letter-spacing:.3em;color:var(--mut);margin-bottom:6px}
+.ed-head .cap .iconb{width:22px;height:22px;margin-left:auto}
+.ed-head .cap .iconb svg{width:13px;height:13px}
 input.mname{width:100%;border:none;background:none;font-size:22px;font-weight:400;letter-spacing:.02em;padding:2px 0;border-bottom:1px solid transparent}
 input.mname:focus{outline:none;border-bottom-color:var(--copper)}
 .ed-meta{display:flex;gap:8px;margin-top:11px;flex-wrap:wrap;align-items:center}
