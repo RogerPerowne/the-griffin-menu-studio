@@ -1,7 +1,7 @@
 {
   "name": "griffin-menu-studio",
   "productName": "Griffin Menu Studio",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Desktop menu editor and print/export tool for The Griffin.",
   "main": ".vite/build/main.js",
   "author": "The Griffin",
