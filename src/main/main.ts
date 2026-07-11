@@ -14,6 +14,14 @@ if (squirrelStartup) {
   app.quit();
 }
 
+// Single-instance: a second launch (e.g. double-clicking another .menu, or the
+// updater relaunch) routes into the running instance instead of spawning a new
+// process/window. The second instance's argv is delivered via 'second-instance'.
+const hasSingleInstanceLock = app.requestSingleInstanceLock();
+if (!hasSingleInstanceLock) {
+  app.quit();
+}
+
 const brand = getActiveBrand();
 const APP_USER_MODEL_ID = 'com.thegriffin.GriffinMenuStudio';
 const MIN_SPLASH_MS = 1_800;
@@ -222,7 +230,22 @@ ipcMain.on('app:rendererReady', (event) => {
   }
 });
 
+app.on('second-instance', (_event, argv) => {
+  const win = mainWindow;
+  if (!win || win.isDestroyed()) return;
+  if (win.isMinimized()) win.restore();
+  win.focus();
+  // Route a double-clicked .menu from the second launch into this window: stage
+  // it (pull model) and nudge the renderer to open it (with its dirty guard).
+  const launchPath = launchMenuPath(argv);
+  if (launchPath) {
+    stageLaunchDocument(win, launchPath);
+    win.webContents.send('document:launched');
+  }
+});
+
 app.on('ready', () => {
+  if (!hasSingleInstanceLock) return;
   registerIpc(() => createMainWindow());
   void startPrimaryWindow(process.argv);
 });

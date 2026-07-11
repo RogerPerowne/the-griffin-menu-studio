@@ -104,6 +104,8 @@ export interface GriffinApi {
   reloadDocument(): Promise<OpenResult>;
   newDocument(): Promise<{ ok: boolean }>;
   onCloseRequest(handler: () => void): () => void;
+  /** A second app launch handed this window a .menu to open (pull via consumeLaunchDocument). */
+  onLaunchDocument(handler: () => void): () => void;
   confirmClose(): Promise<{ ok: boolean }>;
   newWindow(): Promise<{ ok: boolean }>;
   listTemplates(storage?: StorageLocations): Promise<TemplateListResult>;

@@ -23,6 +23,11 @@ const api: GriffinApi = {
     ipcRenderer.on('window:closeRequest', listener);
     return () => ipcRenderer.removeListener('window:closeRequest', listener);
   },
+  onLaunchDocument: (handler) => {
+    const listener = () => handler();
+    ipcRenderer.on('document:launched', listener);
+    return () => ipcRenderer.removeListener('document:launched', listener);
+  },
   confirmClose: () => ipcRenderer.invoke('window:confirmClose'),
   newWindow: () => ipcRenderer.invoke('app:newWindow'),
   listTemplates: (storage) => ipcRenderer.invoke('template:list', storage),

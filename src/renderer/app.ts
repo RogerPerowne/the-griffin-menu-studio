@@ -331,6 +331,13 @@ async function boot(): Promise<void> {
     });
   });
 
+  // A second app launch (double-clicked .menu) routed a file into this window.
+  window.griffin?.onLaunchDocument(() => {
+    void confirmDocumentTransition().then((ok) => {
+      if (ok) void openLaunchDocumentIfAny();
+    });
+  });
+
   renderRail();
   renderEditor();
   renderPreview();
