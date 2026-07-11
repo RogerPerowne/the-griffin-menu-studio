@@ -8,6 +8,7 @@ import { beginRecoverySession, markRecoverySessionClean } from './recovery';
 import { stageLaunchDocument, disposeDocumentWatch } from './documents';
 import { initAutoUpdate } from './updater';
 import { seedRealMenus } from './menus-seed';
+import { isDevChannel } from './app-paths';
 
 // The Squirrel Setup.exe launches the app with --squirrel-install / -updated /
 // -uninstall / -obsolete so it can create or remove Start-menu and desktop
@@ -217,8 +218,9 @@ async function startPrimaryWindow(argv: string[]): Promise<void> {
   await Promise.race([critical, timeout]);
   await revealMainWindow(win);
 
-  // Non-blocking: check for updates once the window is up (packaged builds only).
-  initAutoUpdate(() => mainWindow);
+  // Non-blocking: check for updates once the window is up. Skipped entirely on the
+  // dev channel so a test build can never pull (or push) an update to a real install.
+  if (!isDevChannel()) initAutoUpdate(() => mainWindow);
 }
 
 ipcMain.on('app:startupStatus', (event, label: unknown) => {

@@ -6,6 +6,15 @@ import { PublisherGithub } from '@electron-forge/publisher-github';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import path from 'node:path';
 
+// Dev channel (GRIFFIN_CHANNEL=dev, via `npm run make:dev`): a separate product
+// ("Griffin Menu Studio Dev") that installs alongside production with its own data
+// + no auto-update, so it can be tested without ever touching the restaurant's
+// install. Production (`npm run make`) is unchanged; `npm run release` publishes it.
+const isDevChannel = process.env.GRIFFIN_CHANNEL === 'dev';
+const productName = isDevChannel ? 'Griffin Menu Studio Dev' : 'Griffin Menu Studio';
+const internalName = isDevChannel ? 'GriffinMenuStudioDev' : 'GriffinMenuStudio';
+const setupExeName = `${productName} Setup.exe`;
+
 const certificateFile = process.env.WINDOWS_CERTIFICATE_FILE;
 const certificatePassword = process.env.WINDOWS_CERTIFICATE_PASSWORD;
 const rootDir = __dirname;
@@ -21,16 +30,16 @@ const windowsSign =
 
 const config: ForgeConfig = {
   packagerConfig: {
-    name: 'Griffin Menu Studio',
-    executableName: 'Griffin Menu Studio',
+    name: productName,
+    executableName: productName,
     asar: true,
     icon: 'build/icon',
     appCopyright: 'Copyright (c) The Griffin',
     win32metadata: {
       CompanyName: 'The Griffin',
       FileDescription: 'Desktop menu editor and print/export tool for The Griffin.',
-      ProductName: 'Griffin Menu Studio',
-      InternalName: 'GriffinMenuStudio',
+      ProductName: productName,
+      InternalName: internalName,
     },
     ...(windowsSign ? { windowsSign } : {}),
   },
@@ -40,8 +49,8 @@ const config: ForgeConfig = {
     // installs into %LocalAppData% with no admin/UAC prompt and no folder
     // picker — double-click and it launches itself when done.
     new MakerSquirrel({
-      name: 'GriffinMenuStudio',
-      setupExe: 'Griffin Menu Studio Setup.exe',
+      name: internalName,
+      setupExe: setupExeName,
       setupIcon: path.join(rootDir, 'build/icon.ico'),
       loadingGif: path.join(rootDir, 'build/installer/squirrel-splash.gif'),
       authors: 'The Griffin',
@@ -49,6 +58,11 @@ const config: ForgeConfig = {
       noMsi: true,
       ...(windowsSign ? { windowsSign } : {}),
     }),
+    // The dev channel ships only the Squirrel installer; the MSI/ZIP below (with
+    // their own upgrade codes) are production-only.
+    ...(isDevChannel
+      ? []
+      : [
     // Full branded MSI wizard for machine-wide / managed installs (needs admin).
     new MakerWix({
       name: 'Griffin Menu Studio',
@@ -74,6 +88,7 @@ const config: ForgeConfig = {
       ...(windowsSign ? { windowsSign } : {}),
     }),
     new MakerZIP({}, ['win32']),
+        ]),
   ],
   publishers: [
     // `npm run publish` uploads the Squirrel Setup.exe + .nupkg + RELEASES (and

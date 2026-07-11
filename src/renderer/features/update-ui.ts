@@ -156,6 +156,9 @@ function downloadedInner(info: UpdateInfo): string {
 
 /** Minimal, safe Markdown for GitHub release bodies (headings, bullets, bold, code). */
 function renderNotes(notes: string): string {
+  // Strip HTML comments (e.g. the machine-readable `<!-- griffin-features: … -->`
+  // block the Feature Board timeline reads) so they never show to users.
+  notes = notes.replace(/<!--[\s\S]*?-->/g, '').trim();
   if (!notes.trim()) return `<p class="updates-empty">No description was provided for this update.</p>`;
   const lines = notes.split(/\r?\n/);
   let html = '';

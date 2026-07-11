@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Griffin Menu Studio — Feature Board</title>
+<style>
+  :root{
+    --bronze:#B4763B; --bronze-hi:#9A6230; --green:#00403d; --pink:#FFF4F4;
+    --ivory:#FBF7EF; --panel:#fff; --ink:#2A231C; --mut:#867a6b; --line:#E7DFD1;
+    --ship:#00403d; --build:#B4763B; --plan:#7C8B99; --idea:#8A6FB0; --bug:#B4463B; --want:#C99A2E;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',system-ui,sans-serif;background:var(--ivory);color:var(--ink);font-size:14px;line-height:1.45}
+  header{display:flex;align-items:center;gap:14px;padding:16px 24px;background:var(--green);color:var(--pink);position:sticky;top:0;z-index:5}
+  header h1{font-family:Georgia,serif;font-weight:400;font-size:20px;margin:0}
+  header .sub{font-size:12px;opacity:.8}
+  .sp{flex:1}
+  button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:7px 13px}
+  button:hover{border-color:var(--bronze);color:var(--bronze)}
+  header button{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.25);color:var(--pink)}
+  header button:hover{background:rgba(255,255,255,.22);color:#fff}
+  .tabs{display:flex;gap:4px;padding:14px 24px 0}
+  .tab{padding:9px 18px;border:none;border-bottom:2px solid transparent;background:none;border-radius:0;color:var(--mut)}
+  .tab.on{color:var(--ink);border-bottom-color:var(--bronze);font-weight:600}
+  main{padding:18px 24px 60px;max-width:1180px}
+  .status{font-size:12px;color:var(--mut);padding:4px 0 12px}
+  .status.err{color:var(--bug)}
+  /* timeline */
+  .tl{position:relative;margin-left:8px;padding-left:26px;border-left:2px solid var(--line)}
+  .rel{position:relative;margin-bottom:22px}
+  .rel::before{content:'';position:absolute;left:-34px;top:3px;width:13px;height:13px;border-radius:50%;background:var(--bronze);border:3px solid var(--ivory)}
+  .rel.latest::before{background:var(--green)}
+  .rel h3{margin:0 0 2px;font-size:15px;font-family:Georgia,serif;font-weight:400}
+  .rel .when{font-size:11px;color:var(--mut);margin-bottom:8px}
+  .rel .badge{display:inline-block;font-size:10px;font-weight:600;color:var(--pink);background:var(--green);border-radius:999px;padding:1px 8px;margin-left:8px;vertical-align:middle}
+  .feats{display:flex;flex-direction:column;gap:5px}
+  .feat{display:flex;align-items:flex-start;gap:9px;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:8px 11px}
+  .dot{flex:none;width:9px;height:9px;border-radius:50%;margin-top:5px}
+  .k-feature{background:var(--bronze)} .k-fix{background:var(--plan)}
+  .feat .t{flex:1}
+  .area{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);border:1px solid var(--line);border-radius:6px;padding:1px 6px;align-self:flex-start;margin-top:2px}
+  .rel .rawnotes{color:var(--mut);font-size:12.5px;white-space:pre-wrap}
+  /* board */
+  .cols{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;align-items:start}
+  .col h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;margin:0 0 9px;color:var(--mut)}
+  .col.want h2{color:var(--want)} .col.building h2{color:var(--build)} .col.bug h2{color:var(--bug)} .col.idea h2{color:var(--idea)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 11px;margin-bottom:9px;box-shadow:0 1px 2px rgba(42,35,28,.04)}
+  .card .top{display:flex;align-items:flex-start;gap:7px}
+  .card .title{flex:1;font-weight:500}
+  .card .meta{display:flex;gap:6px;align-items:center;margin-top:7px;flex-wrap:wrap}
+  .star{border:none;background:none;padding:2px;font-size:15px;line-height:1;color:#cbb98f}
+  .star.on{color:var(--want)}
+  .pri{font-size:10.5px;border-radius:6px;padding:2px 7px;border:1px solid var(--line);color:var(--mut)}
+  .pri.p1{border-color:var(--bug);color:var(--bug)} .pri.p2{border-color:var(--bronze);color:var(--bronze)} .pri.p3{border-color:var(--plan);color:var(--plan)}
+  .area-pill{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut)}
+  .cmts{margin-top:8px;display:flex;flex-direction:column;gap:5px}
+  .cmt{font-size:12px;background:var(--ivory);border-radius:7px;padding:5px 8px;color:var(--ink)}
+  .cmt .del{float:right;color:var(--mut);cursor:pointer}
+  .addcmt{display:flex;gap:5px;margin-top:6px}
+  .addcmt input{flex:1;border:1px solid var(--line);border-radius:7px;padding:5px 8px;font:inherit;min-width:0}
+  .addcmt input:focus{outline:none;border-color:var(--bronze)}
+  .newitem{display:flex;gap:7px;flex-wrap:wrap;margin:6px 0 18px}
+  .newitem input,.newitem select{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit}
+  .newitem input[type=text]{flex:1;min-width:180px}
+  .del-item{border:none;background:none;color:var(--mut);font-size:12px;padding:2px 4px}
+  .empty{color:var(--mut);font-size:12px;font-style:italic}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Griffin Menu Studio</h1><div class="sub">Feature Board &amp; version timeline</div></div>
+  <div class="sp"></div>
+  <button id="btnRefresh">↻ Refresh timeline</button>
+  <button id="btnExport">⭳ Export</button>
+  <button id="btnImport">⭱ Import</button>
+  <input id="fileImport" type="file" accept="application/json" class="hidden" />
+</header>
+<div class="tabs">
+  <button class="tab on" data-view="timeline">Version timeline</button>
+  <button class="tab" data-view="board">Board</button>
+</div>
+<main>
+  <div id="statusLine" class="status">Loading…</div>
+  <section id="timelineView"></section>
+  <section id="boardView" class="hidden"></section>
+</main>
+
+<script>
+const REPO = 'RogerPerowne/the-griffin-menu-studio';
+const LS_KEY = 'griffinFeatureBoard.v1';
+const AREAS = ['panels','typography','booklet','updates','editor','filing','brand','other'];
+
+// Seeded roadmap — the work not yet in a release. User edits merge on top (localStorage).
+const SEED = [
+  {id:'panels-dnd', title:'Panels: drag & drop between groups', area:'panels', status:'building'},
+  {id:'panels-float', title:'Panels: floating groups + redock', area:'panels', status:'building'},
+  {id:'panels-workspaces', title:'Panels: named workspaces + Reset', area:'panels', status:'building'},
+  {id:'panels-collapse', title:'Panels: collapse dock to icons + flyouts', area:'panels', status:'planned'},
+  {id:'typo-master-panel', title:'Typography Master panel (docked, 4 sections)', area:'typography', status:'building'},
+  {id:'booklet-authoring', title:'Booklet authoring UI (New → Booklet, 4 panels)', area:'booklet', status:'building'},
+  {id:'booklet-foldtest', title:'Booklet: printed fold-order verification', area:'booklet', status:'planned'},
+  {id:'brand-assets', title:'Brand assets library (logos/crests, insert into menus)', area:'brand', status:'planned'},
+  {id:'brandon-font', title:'Wire licensed Brandon Grotesque (Title + Section font)', area:'typography', status:'planned'},
+];
+
+let userState = load();
+function load(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)) || {items:{}, custom:[]}; }catch{ return {items:{}, custom:[]}; } }
+function save(){ localStorage.setItem(LS_KEY, JSON.stringify(userState)); }
+
+// ---- data helpers ----
+function allBoardItems(){
+  const base = SEED.map(s => ({...s, ...(userState.items[s.id]||{})}));
+  const custom = (userState.custom||[]).map(c => ({...c, ...(userState.items[c.id]||{})}));
+  return [...base, ...custom];
+}
+function patch(id, delta){ userState.items[id] = {...(userState.items[id]||{}), ...delta}; save(); renderBoard(); }
+
+// ---- timeline ----
+async function loadTimeline(){
+  const status = document.getElementById('statusLine');
+  status.className = 'status'; status.textContent = 'Fetching releases from GitHub…';
+  try{
+    const res = await fetch(`https://api.github.com/repos/${REPO}/releases?per_page=100`, {headers:{Accept:'application/vnd.github+json'}});
+    if(!res.ok) throw new Error(`GitHub returned ${res.status}`);
+    const rels = await res.json();
+    renderTimeline(rels);
+    status.textContent = `${rels.length} release${rels.length===1?'':'s'} · updated just now`;
+  }catch(e){
+    status.className = 'status err';
+    status.textContent = `Couldn't reach GitHub (${e.message}). The Board tab works offline; open this over http:// if the browser blocks file:// requests.`;
+    document.getElementById('timelineView').innerHTML = '';
+  }
+}
+function parseFeatures(body){
+  const m = (body||'').match(/<!--\s*griffin-features:\s*([\s\S]*?)-->/);
+  if(!m) return null;
+  try{ return JSON.parse(m[1].trim()); }catch{ return null; }
+}
+function esc(s){ return String(s==null?'':s).replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function renderTimeline(rels){
+  const el = document.getElementById('timelineView');
+  if(!rels.length){ el.innerHTML = '<p class="empty">No releases yet.</p>'; return; }
+  el.innerHTML = '<div class="tl">' + rels.map((r,i)=>{
+    const feats = parseFeatures(r.body);
+    const date = r.published_at ? new Date(r.published_at).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : '';
+    let inner;
+    if(feats && feats.length){
+      inner = '<div class="feats">' + feats.map(f=>`
+        <div class="feat"><span class="dot k-${f.k==='fix'?'fix':'feature'}"></span>
+          <span class="t">${esc(f.t)}</span><span class="area">${esc(f.a||'other')}</span></div>`).join('') + '</div>';
+    } else {
+      const notes = (r.body||'').replace(/<!--[\s\S]*?-->/g,'').trim();
+      inner = notes ? `<div class="rawnotes">${esc(notes.slice(0,600))}</div>` : '<div class="empty">No feature details recorded.</div>';
+    }
+    return `<div class="rel${i===0?' latest':''}"><h3>${esc(r.name||r.tag_name)}${i===0?'<span class="badge">Latest</span>':''}</h3>
+      <div class="when">${esc(r.tag_name)} · ${esc(date)}</div>${inner}</div>`;
+  }).join('') + '</div>';
+}
+
+// ---- board ----
+const COLS = [
+  {key:'want', label:'⭐ Want next', match:it=>it.want},
+  {key:'building', label:'Building now', match:it=>it.status==='building'},
+  {key:'planned', label:'Planned', match:it=>it.status==='planned'},
+  {key:'idea', label:'Ideas', match:it=>it.status==='idea'},
+  {key:'bug', label:'Bugs', match:it=>it.status==='bug'},
+];
+function renderBoard(){
+  const items = allBoardItems();
+  const view = document.getElementById('boardView');
+  const newItem = `<div class="newitem">
+    <input type="text" id="niTitle" placeholder="Add an idea or a bug…" />
+    <select id="niStatus"><option value="idea">Idea</option><option value="bug">Bug</option><option value="planned">Planned</option></select>
+    <select id="niArea">${AREAS.map(a=>`<option>${a}</option>`).join('')}</select>
+    <button id="niAdd">Add</button></div>`;
+  const cols = COLS.map(c=>{
+    const list = items.filter(c.match);
+    const cards = list.length ? list.map(card).join('') : '<div class="empty">Nothing here.</div>';
+    return `<div class="col ${c.key}"><h2>${c.label} · ${list.length}</h2>${cards}</div>`;
+  }).join('');
+  view.innerHTML = newItem + '<div class="cols">' + cols + '</div>';
+  wireBoard();
+}
+function card(it){
+  const cmts = (it.comments||[]).map((c,idx)=>`<div class="cmt" data-cmt="${it.id}:${idx}">${esc(c)}<span class="del" data-delcmt="${it.id}:${idx}" title="Delete">✕</span></div>`).join('');
+  const pri = it.priority||0;
+  const priLabel = ['Set priority','High','Medium','Low'][pri]||'Set priority';
+  const isCustom = (userState.custom||[]).some(c=>c.id===it.id);
+  return `<div class="card" data-id="${it.id}">
+    <div class="top">
+      <button class="star ${it.want?'on':''}" data-want="${it.id}" title="I want this">${it.want?'★':'☆'}</button>
+      <span class="title">${esc(it.title)}</span>
+      ${isCustom?`<button class="del-item" data-del="${it.id}" title="Delete">✕</button>`:''}
+    </div>
+    <div class="meta">
+      <span class="area-pill">${esc(it.area||'other')}</span>
+      <button class="pri p${pri}" data-pri="${it.id}">${priLabel}</button>
+    </div>
+    <div class="cmts">${cmts}</div>
+    <div class="addcmt"><input type="text" data-newcmt="${it.id}" placeholder="Add a comment / bug note…" /></div>
+  </div>`;
+}
+function wireBoard(){
+  document.querySelectorAll('[data-want]').forEach(b=>b.onclick=()=>{const id=b.dataset.want;patch(id,{want:!getItem(id).want});});
+  document.querySelectorAll('[data-pri]').forEach(b=>b.onclick=()=>{const id=b.dataset.pri;patch(id,{priority:((getItem(id).priority||0)+1)%4});});
+  document.querySelectorAll('[data-newcmt]').forEach(inp=>inp.onkeydown=e=>{
+    if(e.key==='Enter' && inp.value.trim()){ const id=inp.dataset.newcmt; const it=getItem(id); patch(id,{comments:[...(it.comments||[]), inp.value.trim()]}); }
+  });
+  document.querySelectorAll('[data-delcmt]').forEach(x=>x.onclick=()=>{
+    const [id,idx]=x.dataset.delcmt.split(':'); const it=getItem(id); const c=[...(it.comments||[])]; c.splice(+idx,1); patch(id,{comments:c});
+  });
+  document.querySelectorAll('[data-del]').forEach(x=>x.onclick=()=>{
+    const id=x.dataset.del; userState.custom=(userState.custom||[]).filter(c=>c.id!==id); delete userState.items[id]; save(); renderBoard();
+  });
+  const add=document.getElementById('niAdd');
+  if(add) add.onclick=()=>{
+    const t=document.getElementById('niTitle').value.trim(); if(!t) return;
+    const id='u'+Date.now();
+    userState.custom=[...(userState.custom||[]), {id, title:t, area:document.getElementById('niArea').value, status:document.getElementById('niStatus').value}];
+    save(); renderBoard();
+  };
+}
+function getItem(id){ return allBoardItems().find(i=>i.id===id)||{}; }
+
+// ---- export / import ----
+document.getElementById('btnExport').onclick=()=>{
+  const blob=new Blob([JSON.stringify(userState,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='griffin-board.json'; a.click();
+};
+document.getElementById('btnImport').onclick=()=>document.getElementById('fileImport').click();
+document.getElementById('fileImport').onchange=e=>{
+  const f=e.target.files[0]; if(!f) return; const r=new FileReader();
+  r.onload=()=>{ try{ userState=JSON.parse(r.result); save(); renderBoard(); }catch{ alert('Not a valid board file.'); } };
+  r.readAsText(f);
+};
+document.getElementById('btnRefresh').onclick=loadTimeline;
+
+// ---- tabs ----
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===t));
+  const v=t.dataset.view;
+  document.getElementById('timelineView').classList.toggle('hidden', v!=='timeline');
+  document.getElementById('boardView').classList.toggle('hidden', v!=='board');
+  document.getElementById('statusLine').classList.toggle('hidden', v!=='timeline');
+});
+
+renderBoard();
+loadTimeline();
+</script>
+</body>
+</html>

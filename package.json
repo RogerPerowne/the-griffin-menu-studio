@@ -16,6 +16,8 @@
     "assets:installer": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/generate-wix-assets.ps1",
     "package": "electron-forge package",
     "make": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/make-windows.ps1",
+    "make:dev": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"$env:GRIFFIN_CHANNEL='dev'; & scripts/make-windows.ps1\"",
+    "release": "node scripts/publish-release.mjs",
     "make:release": "node scripts/require-windows-signing.cjs && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/make-windows.ps1 && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-windows-signatures.ps1",
     "publish": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/publish-windows.ps1",
     "verify:signatures": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-windows-signatures.ps1",

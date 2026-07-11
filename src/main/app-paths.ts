@@ -9,9 +9,23 @@ import type { StorageLocations } from '../shared/types';
 
 const APP_FOLDER = 'Griffin Menu Studio';
 
-/** `Documents/Griffin Menu Studio` — the root of the user-facing library. */
+/**
+ * True for any non-production build: an unpackaged run (`npm start`) or the
+ * packaged "Griffin Menu Studio Dev" channel. Dev builds get their OWN Documents
+ * folder + userData + no auto-update, so testing never touches the released app's
+ * data or the restaurant's install. (Production packaged build → false.)
+ */
+export function isDevChannel(): boolean {
+  return !app.isPackaged || app.getName().toLowerCase().includes('dev');
+}
+
+function appFolder(): string {
+  return isDevChannel() ? `${APP_FOLDER} Dev` : APP_FOLDER;
+}
+
+/** `Documents/Griffin Menu Studio[ Dev]` — the root of the user-facing library. */
 export function griffinDocumentsRoot(): string {
-  return path.join(app.getPath('documents'), APP_FOLDER);
+  return path.join(app.getPath('documents'), appFolder());
 }
 
 /** Where menus are saved by default. Override: `storage.defaultMenuFolder`. */
