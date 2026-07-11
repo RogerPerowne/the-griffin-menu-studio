@@ -8,8 +8,10 @@ for (const [key, value] of Object.entries(paletteToCssVars(brand.palette))) {
   root.style.setProperty(key, value);
 }
 
-const logo = document.getElementById('splash-logo') as HTMLImageElement | null;
-if (logo) logo.src = assetUrl(brand.assetKeys.lockup);
+// Drive the crest as a CSS mask so it renders crisp at any DPI and takes the
+// brand-pink fill — no upscaled raster (the old lockup <img> pixelated).
+const crest = assetUrl(brand.assetKeys.crest);
+if (crest) root.style.setProperty('--crest-url', `url("${crest}")`);
 
 const status = document.getElementById('splash-status');
 window.griffinSplash?.onStatus((label) => {

@@ -34,6 +34,70 @@ function Draw-ImageContained($graphics, $image, [System.Drawing.RectangleF]$box)
   $graphics.DrawImage($image, [System.Drawing.RectangleF]::new($x, $y, $w, $h))
 }
 
+function Add-Ramp([System.Collections.Generic.List[System.Drawing.Color]]$list, [string]$fromHex, [string]$toHex, [int]$steps) {
+  $fr = [Convert]::ToInt32($fromHex.Substring(1, 2), 16); $fg = [Convert]::ToInt32($fromHex.Substring(3, 2), 16); $fb = [Convert]::ToInt32($fromHex.Substring(5, 2), 16)
+  $tr = [Convert]::ToInt32($toHex.Substring(1, 2), 16); $tg = [Convert]::ToInt32($toHex.Substring(3, 2), 16); $tb = [Convert]::ToInt32($toHex.Substring(5, 2), 16)
+  for ($i = 0; $i -lt $steps; $i++) {
+    $t = if ($steps -le 1) { 0 } else { $i / [double]($steps - 1) }
+    $r = [int][Math]::Round($fr + ($tr - $fr) * $t)
+    $g = [int][Math]::Round($fg + ($tg - $fg) * $t)
+    $b = [int][Math]::Round($fb + ($tb - $fb) * $t)
+    $list.Add([System.Drawing.Color]::FromArgb($r, $g, $b))
+  }
+}
+
+# Encode a 32bpp bitmap to an 8bpp GIF using an EXACT custom palette, mapping each
+# pixel to its nearest palette entry with no dithering. GDI+'s default GIF encoder
+# snaps to a fixed web palette and error-diffusion dithers non-web colours (e.g.
+# brand green), which is what produced the speckled texture.
+function Save-IndexedGif([System.Drawing.Bitmap]$src, [string]$path, [System.Drawing.Color[]]$palette) {
+  $w = $src.Width; $h = $src.Height
+  $rect = New-Object System.Drawing.Rectangle 0, 0, $w, $h
+  $sd = $src.LockBits($rect, [System.Drawing.Imaging.ImageLockMode]::ReadOnly, [System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+  $sstride = $sd.Stride
+  $sbytes = New-Object byte[] ($sstride * $h)
+  [System.Runtime.InteropServices.Marshal]::Copy($sd.Scan0, $sbytes, 0, $sbytes.Length)
+  $src.UnlockBits($sd)
+
+  $dst = New-Object System.Drawing.Bitmap $w, $h, ([System.Drawing.Imaging.PixelFormat]::Format8bppIndexed)
+  $pal = $dst.Palette
+  for ($i = 0; $i -lt $pal.Entries.Length; $i++) {
+    $pal.Entries[$i] = if ($i -lt $palette.Length) { $palette[$i] } else { [System.Drawing.Color]::Black }
+  }
+  $dst.Palette = $pal
+  $pcount = $palette.Length
+  $pr = New-Object int[] $pcount; $pg = New-Object int[] $pcount; $pb = New-Object int[] $pcount
+  for ($p = 0; $p -lt $pcount; $p++) { $pr[$p] = $palette[$p].R; $pg[$p] = $palette[$p].G; $pb[$p] = $palette[$p].B }
+
+  $dd = $dst.LockBits($rect, [System.Drawing.Imaging.ImageLockMode]::WriteOnly, [System.Drawing.Imaging.PixelFormat]::Format8bppIndexed)
+  $dstride = $dd.Stride
+  $dbytes = New-Object byte[] ($dstride * $h)
+  $cache = @{}
+  for ($y = 0; $y -lt $h; $y++) {
+    $srow = $y * $sstride; $drow = $y * $dstride
+    for ($x = 0; $x -lt $w; $x++) {
+      $si = $srow + $x * 4
+      $b = $sbytes[$si]; $g = $sbytes[$si + 1]; $r = $sbytes[$si + 2]
+      $key = ($r -shl 16) -bor ($g -shl 8) -bor $b
+      $idx = $cache[$key]
+      if ($null -eq $idx) {
+        $best = 0; $bestd = [int]::MaxValue
+        for ($p = 0; $p -lt $pcount; $p++) {
+          $dr = $r - $pr[$p]; $dg = $g - $pg[$p]; $db = $b - $pb[$p]
+          $d = $dr * $dr + $dg * $dg + $db * $db
+          if ($d -lt $bestd) { $bestd = $d; $best = $p }
+        }
+        $idx = $best; $cache[$key] = $idx
+      }
+      $dbytes[$drow + $x] = [byte]$idx
+    }
+  }
+  [System.Runtime.InteropServices.Marshal]::Copy($dbytes, 0, $dd.Scan0, $dbytes.Length)
+  $dst.UnlockBits($dd)
+  $dst.Save($path, [System.Drawing.Imaging.ImageFormat]::Gif)
+  $dst.Dispose()
+}
+
 function New-RoundedPath([single]$x, [single]$y, [single]$w, [single]$h, [single]$r) {
   $p = New-Object System.Drawing.Drawing2D.GraphicsPath
   $d = $r * 2
@@ -168,7 +232,12 @@ try {
   } finally {
     $g3.Dispose()
   }
-  $splash.Save((Join-Path $outDir 'squirrel-splash.gif'), [System.Drawing.Imaging.ImageFormat]::Gif)
+  $splashPalette = New-Object System.Collections.Generic.List[System.Drawing.Color]
+  Add-Ramp $splashPalette '#F6F3ED' '#00403D' 22   # cream background <-> green card edge
+  Add-Ramp $splashPalette '#00403D' '#FFF4F4' 26   # green card <-> pink crest & wordmark
+  Add-Ramp $splashPalette '#F6F3ED' '#66584A' 16   # cream <-> muted status text
+  Save-IndexedGif $splash (Join-Path $outDir 'squirrel-splash.gif') $splashPalette.ToArray()
+  $splash.Dispose()
 } finally {
   $crest.Dispose()
   $cream.Dispose()

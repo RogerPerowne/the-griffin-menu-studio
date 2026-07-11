@@ -25,10 +25,10 @@ let homePane: HomePane = 'open';
 let exportPane: ExportPane = 'print';
 let recoverySnapshots: RecoverySummary[] = [];
 
-/** Called at boot with crash-recovery snapshots to surface as a Home banner. */
+/** Called at boot with crash-recovery snapshots to surface as a modal dialog. */
 export function setRecoverySnapshots(list: RecoverySummary[]): void {
   recoverySnapshots = list;
-  if (current === 'home') renderHomeWorkspace();
+  showRecoveryDialog();
 }
 
 function fmtTimestamp(iso: string): string {
@@ -37,9 +37,10 @@ function fmtTimestamp(iso: string): string {
   return d.toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
-function recoveryBanner(): string {
-  if (!recoverySnapshots.length) return '';
-  const items = recoverySnapshots
+let recoveryOverlay: HTMLElement | null = null;
+
+function recoveryItemsHtml(): string {
+  return recoverySnapshots
     .map(
       (s) => `<div class="recovery-item">
         <span class="recovery-info"><b>${esc(s.documentName || 'Untitled menu')}</b><small>${esc(s.documentPath || 'Not yet saved to a file')} · ${esc(fmtTimestamp(s.createdAt))}</small></span>
@@ -47,11 +48,66 @@ function recoveryBanner(): string {
       </div>`,
     )
     .join('');
-  return `<section class="recovery-banner" role="region" aria-label="Recovered work">
-      <div class="recovery-head"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg>
-        <div><b>Unsaved work was recovered</b><span>Griffin closed unexpectedly last time. Restore a menu, or discard it.</span></div></div>
-      <div class="recovery-list">${items}</div>
-    </section>`;
+}
+
+function closeRecoveryDialog(): void {
+  if (!recoveryOverlay) return;
+  window.removeEventListener('keydown', onRecoveryKey, true);
+  recoveryOverlay.remove();
+  recoveryOverlay = null;
+}
+
+/** Refresh the open dialog after an action; close it once nothing is left. */
+function refreshRecoveryDialog(): void {
+  if (!recoverySnapshots.length) {
+    closeRecoveryDialog();
+    return;
+  }
+  const list = recoveryOverlay?.querySelector('#recoveryModalList');
+  if (list) list.innerHTML = recoveryItemsHtml();
+}
+
+function onRecoveryKey(e: KeyboardEvent): void {
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    closeRecoveryDialog();
+  }
+}
+
+/** Surface crash-recovered work as a centred, focus-trapped modal on Home. */
+function showRecoveryDialog(): void {
+  if (recoveryOverlay || !recoverySnapshots.length) return;
+  const root = document.createElement('div');
+  root.className = 'recovery-overlay';
+  root.innerHTML = `<div class="recovery-modal" role="alertdialog" aria-modal="true" aria-labelledby="recoveryTitle" aria-describedby="recoveryDesc">
+      <div class="recovery-modal-head">
+        <span class="recovery-modal-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg></span>
+        <div><h2 id="recoveryTitle">Recover your work</h2><p id="recoveryDesc">Griffin closed unexpectedly last time. Restore a menu to pick up where you left off, or discard it.</p></div>
+      </div>
+      <div class="recovery-modal-list" id="recoveryModalList">${recoveryItemsHtml()}</div>
+      <div class="recovery-modal-foot"><button class="abtn" type="button" data-recovery-close>Not now</button></div>
+    </div>`;
+  document.body.appendChild(root);
+  recoveryOverlay = root;
+
+  root.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    if (target === root || target.closest('[data-recovery-close]')) {
+      closeRecoveryDialog();
+      return;
+    }
+    const restore = target.closest<HTMLElement>('[data-recovery-restore]');
+    if (restore?.dataset.recoveryRestore) {
+      void restoreRecovery(restore.dataset.recoveryRestore);
+      return;
+    }
+    const discard = target.closest<HTMLElement>('[data-recovery-discard]');
+    if (discard?.dataset.recoveryDiscard) {
+      void discardRecovery(discard.dataset.recoveryDiscard);
+    }
+  });
+  window.addEventListener('keydown', onRecoveryKey, true);
+  root.querySelector<HTMLButtonElement>('.recovery-modal .abtn.primary')?.focus();
 }
 
 const THUMB_BOX_PX = 176;
@@ -339,7 +395,7 @@ function renderHomeWorkspace(): void {
       <button data-home-pane="dishes"${activeNav('dishes')}>Dishes</button>
       <button data-home-pane="settings"${activeNav('settings')}>Settings</button>
     </aside>
-    <main class="home-main">${recoveryBanner()}${renderHomeMain()}</main>
+    <main class="home-main">${renderHomeMain()}</main>
   </div>`;
 }
 
@@ -356,6 +412,7 @@ async function restoreRecovery(id: string): Promise<void> {
   window.dispatchEvent(new Event('griffin:dirty')); // recovered work is unsaved until the user saves it
   recoverySnapshots = recoverySnapshots.filter((s) => s.id !== id);
   void api.discardRecovery?.(id, getState().settings.storage);
+  closeRecoveryDialog();
   setWorkspace('editor');
   toast('Recovered menu restored — review it and Save to keep it.', { kind: 'success' });
 }
@@ -365,7 +422,7 @@ async function discardRecovery(id: string): Promise<void> {
   if (!ok) return;
   await window.griffin?.discardRecovery?.(id, getState().settings.storage);
   recoverySnapshots = recoverySnapshots.filter((s) => s.id !== id);
-  renderHomeWorkspace();
+  refreshRecoveryDialog();
 }
 
 function initHomeWorkspace(): void {
