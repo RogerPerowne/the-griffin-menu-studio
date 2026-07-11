@@ -1,12 +1,11 @@
-/* Pre-JS fallback tokens — these deliberately mirror the Griffin brand palette
-   (see src/shared/brand/griffin.ts). splash.ts applies the live palette via
-   paletteToCssVars() on load, so these values only cover the first paint and
-   must stay in sync with the palette to avoid any colour flash. */
+/* Pre-JS fallback tokens mirror the Griffin palette so first paint matches. */
 :root {
-  --copper: #66584a; /* palette.copper */
-  --cream: #f6f3ed; /* palette.cream */
-  --ink: #222222; /* palette.ink */
-  --muted: #7a7266; /* palette.muted */
+  --copper: #66584a;
+  --cream: #f6f3ed;
+  --panel: #ffffff;
+  --ink: #222222;
+  --muted: #7a7266;
+  --line: #e4ddd1;
 }
 
 * {
@@ -21,10 +20,16 @@ body {
 }
 
 body {
-  background: var(--cream);
+  background: #ebe4d8;
   color: var(--ink);
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: 'Segoe UI', system-ui, sans-serif;
   user-select: none;
+  opacity: 1;
+  transition: opacity 220ms ease;
+}
+
+body.leaving {
+  opacity: 0;
 }
 
 .splash {
@@ -33,25 +38,64 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 18px;
   padding: 28px;
 }
 
-.splash img {
-  width: min(280px, 70%);
-  height: auto;
+.splash-card {
+  width: min(440px, calc(100vw - 64px));
+  min-height: 168px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px 22px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--cream);
+  box-shadow: 0 24px 60px rgba(34, 34, 34, 0.12), 0 2px 10px rgba(34, 34, 34, 0.08);
 }
 
-.splash-title {
-  font-size: 15px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--copper);
-  font-weight: 700;
+.splash-card img {
+  width: min(380px, 92%);
+  height: auto;
+  display: block;
+}
+
+.splash-status-row {
+  min-height: 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 8px;
 }
 
 .splash-status {
   font-size: 12px;
   color: var(--muted);
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
+}
+
+.splash-spinner {
+  width: 14px;
+  height: 14px;
+  border: 1px solid rgba(102, 88, 74, 0.32);
+  border-top-color: var(--copper);
+  border-radius: 50%;
+  animation: splash-spin 900ms linear infinite;
+}
+
+@keyframes splash-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body {
+    transition: none;
+  }
+
+  .splash-spinner {
+    animation: none;
+  }
 }

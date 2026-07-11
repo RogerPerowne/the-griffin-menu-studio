@@ -6,18 +6,17 @@
 - Tests: `npm.cmd test`
 - Type check: `npm.cmd run typecheck`
 - Package unpacked app: `npm.cmd run package`
+- Generate installer artwork: `npm.cmd run assets:installer`
 - Build Windows distributables: `npm.cmd run make`
 - Build a signed release: `npm.cmd run make:release`
 - Verify a signed release: `npm.cmd run verify:signatures`
 
-The Windows installer output is written under `out/make/squirrel.windows/x64/` when the Squirrel maker succeeds:
+The Windows installer output is written under `out/make/wix/x64/` when the WiX maker succeeds:
 
-- `GriffinMenuStudioSetup.exe`: installer for normal Windows users
-- `GriffinMenuStudio-<version>-full.nupkg`: Squirrel release package
-- `RELEASES`: Squirrel release manifest
+- `Griffin Menu Studio.msi`: branded Windows Installer package with first install, update, repair and uninstall maintenance mode
 - `out/make/zip/win32/x64/`: portable ZIP build
 
-To install, run `GriffinMenuStudioSetup.exe`. To upgrade, run the newer setup executable; it preserves the user's app data and documents. To uninstall, use **Settings > Apps > Installed apps > Griffin Menu Studio > Uninstall**. Uninstalling the app must not delete saved `.menu` documents or user templates.
+To install, run `Griffin Menu Studio.msi`. To upgrade, run a newer MSI built with the same WiX `upgradeCode`. To repair, run the same MSI again and choose **Repair** in maintenance mode. To uninstall, use **Settings > Apps > Installed apps > Griffin Menu Studio > Uninstall** or the MSI's **Remove** action. Uninstalling the app must not delete saved `.menu` documents or user templates.
 
 The app is offline-first and ships its renderer, fonts, and Griffin artwork locally.
 
@@ -34,10 +33,10 @@ installer and packaged Windows binaries. See
 `docs/windows-release-process.md` for the full install, update, uninstall and
 repair policy.
 
-Squirrel provides the normal per-user install, in-place update and uninstall
-experience. It does not provide a true Windows Installer Repair option; a
-separately tested signed WiX MSI channel is required when formal Repair/Modify/
-Uninstall maintenance is a business requirement.
+The build script uses WiX Toolset v3 (`candle.exe` and `light.exe`). If WiX is
+not installed on PATH, `scripts/make-windows.ps1` downloads the official WiX
+3.14.1 NuGet package into a local build cache under the user's profile and uses
+those tools for the current build.
 
 ## Document Format
 

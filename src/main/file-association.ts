@@ -1,7 +1,6 @@
 import { app } from 'electron';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import path from 'node:path';
 
 const execFileAsync = promisify(execFile);
 
@@ -15,23 +14,19 @@ export interface MenuAssociationValues {
 }
 
 /**
- * Use Squirrel's stable Update.exe launcher so a file association survives an
- * in-place update even though the versioned app directory changes.
+ * MSI installations use the installed executable directly. WiX owns the normal
+ * repair/update/uninstall lifecycle; this per-user association keeps double-
+ * clicked `.menu` files working even for non-admin installs.
  */
-export function menuAssociationValues(executablePath: string, updatePath: string): MenuAssociationValues {
-  const executableName = path.basename(executablePath);
+export function menuAssociationValues(executablePath: string): MenuAssociationValues {
   return {
-    command: `"${updatePath}" --processStart "${executableName}" --processStartArgs "\\\"%1\\\""`,
+    command: `"${executablePath}" "%1"`,
     icon: `"${executablePath}",0`,
   };
 }
 
 function isWindowsPackagedApp(): boolean {
   return process.platform === 'win32' && app.isPackaged;
-}
-
-function updateExecutablePath(): string {
-  return path.join(path.dirname(path.dirname(process.execPath)), 'Update.exe');
 }
 
 async function reg(args: string[]): Promise<string> {
@@ -43,10 +38,10 @@ async function setDefault(key: string, value: string): Promise<void> {
   await reg(['add', key, '/ve', '/d', value, '/f']);
 }
 
-/** Register the current packaged Squirrel installation as the `.menu` handler. */
+/** Register the current packaged MSI installation as the `.menu` handler. */
 export async function ensureMenuFileAssociation(): Promise<void> {
   if (!isWindowsPackagedApp()) return;
-  const values = menuAssociationValues(process.execPath, updateExecutablePath());
+  const values = menuAssociationValues(process.execPath);
   await setDefault(MENU_EXTENSION_KEY, MENU_PROG_ID);
   await setDefault(MENU_PROG_KEY, 'Griffin Menu Studio Menu');
   await setDefault(`${MENU_PROG_KEY}\\DefaultIcon`, values.icon);

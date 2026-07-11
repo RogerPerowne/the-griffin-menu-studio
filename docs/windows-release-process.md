@@ -1,55 +1,70 @@
-# Windows Install, Update And Recovery Process
+# Windows Install, Update, Repair And Uninstall Process
 
 ## Distribution Model
 
-Griffin Menu Studio is distributed as a signed Squirrel Windows setup executable:
+Griffin Menu Studio is distributed as a Windows Installer MSI:
 
 ```text
-GriffinMenuStudioSetup.exe
+Griffin Menu Studio.msi
 ```
 
-This is the only file sent to a normal restaurant user. The `.nupkg`, `RELEASES` file and ZIP are release-support artefacts and are not emailed to end users.
+This replaces the earlier Squirrel setup executable. The MSI is the professional
+Windows installer channel because it supports a branded setup wizard, normal
+Windows maintenance mode, repair, update and uninstall through Installed Apps.
 
-The installer is per-user, does not require an administrator account and creates the Windows Installed Apps entry plus the Start menu shortcut. The application keeps menu documents, templates, preferences, recovery files and thumbnail cache in the user's profile; uninstalling the application must not remove that user data.
+The app keeps menu documents, templates, preferences and recovery files in the
+user profile. Uninstalling the application must not delete restaurant menu
+documents or user-created templates.
 
 ## First Install
 
-1. Recipient downloads the signed setup executable from a trusted link.
+1. Recipient downloads the signed MSI from a trusted link.
 2. Windows verifies the Authenticode signature and publisher before running it.
-3. Squirrel installs the app into the current user's local application folder and registers the uninstall entry.
-4. The first run performs Griffin's one-time app-data/template setup and opens Home.
+3. The branded installer wizard opens, shows Griffin artwork, lets the user
+   confirm the install location, and installs Griffin Menu Studio.
+4. The first launch shows the Griffin splash while real startup work runs:
+   recovery marker setup, file association registration, preference restore,
+   template loading, editor initialisation, print-engine preparation and font
+   readiness.
 
 ## Update
 
 1. Build a release with a higher semantic version.
-2. Sign every packaged Windows binary and the setup executable.
-3. Distribute the new `GriffinMenuStudioSetup.exe`.
-4. Recipient closes every Griffin Menu Studio window before running it, protecting unsaved edits.
-5. The setup executable recognises the existing Squirrel identity and applies the higher version in place.
-6. The existing user data remains untouched; the new Start menu shortcut points at the upgraded version.
+2. Keep the same WiX `upgradeCode` in `forge.config.ts`.
+3. Sign every packaged Windows binary and the MSI.
+4. Recipient closes every Griffin Menu Studio window before running the newer
+   MSI, protecting unsaved edits.
+5. Windows Installer recognises the existing product family and performs an
+   in-place upgrade.
+6. Existing user data remains untouched.
 
-Never reuse a version number for a different release. Do not force-close running Griffin processes during an update: users may have unsaved menu changes.
+Never reuse a version number for a different release. Do not force-close running
+Griffin processes during an update: users may have unsaved menu changes.
 
-## Reinstall And Uninstall
+## Repair
 
-- Running the same signed setup executable again is an idempotent reinstall of the packaged application files, but it must not be marketed as a full Windows repair operation.
-- Uninstall is available from **Settings > Apps > Installed apps > Griffin Menu Studio > Uninstall**. Squirrel handles the uninstall event and shortcut cleanup.
-- A user who needs to keep documents/templates should uninstall normally. Do not delete `%APPDATA%\Griffin Menu Studio` unless they intentionally want to reset app data after backing it up.
+Repair is available through Windows Installer maintenance mode:
 
-## Repair Policy
+- Run the installed MSI again, or use **Settings > Apps > Installed apps >
+  Griffin Menu Studio > Modify/Repair** where Windows exposes it.
+- Choose **Repair** to restore missing or damaged application files.
+- Repair must not reset preferences, templates, recovery snapshots or `.menu`
+  documents.
 
-Squirrel.Windows provides a low-friction per-user installer and in-place update, but it does not provide a true Windows Installer maintenance/Repair experience. A real Repair button requires a maintenance-capable package such as MSI (WiX) or MSIX/App Installer.
+## Uninstall
 
-For this release track:
+Uninstall is available from **Settings > Apps > Installed apps > Griffin Menu
+Studio > Uninstall** or from the MSI maintenance wizard's **Remove** option.
 
-1. A signed same-version reinstall is the supported first response for damaged application files.
-2. The app should expose diagnostics and an `Open app data folder` action, never a destructive automatic reset.
-3. If the restaurant needs formal Repair/Modify/Uninstall maintenance, ship a separately tested signed MSI built with Electron Forge's WiX maker. This requires WiX Toolset on the release machine and a code-signing identity.
-4. Do not switch the normal email-distribution installer to MSI until first-install, major upgrade, downgrade prevention, rollback, uninstall and repair have been tested on clean Windows accounts.
+Uninstall removes application files and shortcuts. It intentionally preserves
+user data in the profile so the restaurant can reinstall without losing menus.
+Only delete the app data folder manually after making a backup and confirming a
+full reset is intended.
 
 ## Signing A Release
 
-Use a real organisation-validated code-signing identity for The Griffin. The PFX file and password are secrets and must never be committed.
+Use a real organisation-validated code-signing identity for The Griffin. The PFX
+file and password are secrets and must never be committed.
 
 Set these environment variables in the release environment:
 
@@ -65,23 +80,32 @@ Then run:
 npm.cmd run make:release
 ```
 
-`make:release` refuses to run without a readable certificate, signs the packaged app and Squirrel setup executable through Electron Forge, then checks Authenticode status on the generated Windows binaries. Verify the final installer independently before distributing it:
+`make:release` refuses to run without a readable certificate, builds the branded
+MSI and verifies Authenticode status on the generated Windows binaries. The make
+script uses installed WiX v3 tools when available; otherwise it downloads the
+official WiX 3.14.1 NuGet package into a local build cache for the current user.
+Verify the final MSI independently before distributing it:
 
 ```powershell
-Get-AuthenticodeSignature .\out\make\squirrel.windows\x64\GriffinMenuStudioSetup.exe
+Get-AuthenticodeSignature ".\out\make\wix\x64\Griffin Menu Studio.msi"
 ```
 
-For Azure Trusted Signing or an EV certificate stored in hardware/cloud storage, replace the PFX configuration with an `@electron/windows-sign` hook. Do not add cloud credentials to this repository.
+For Azure Trusted Signing or an EV certificate stored in hardware/cloud storage,
+replace the PFX configuration with an `@electron/windows-sign` hook. Do not add
+cloud credentials to this repository.
 
 ## Release QA
 
 - Clean-account first install.
-- Re-run the same setup executable.
-- Upgrade from the previous released version.
-- Attempt downgrade and confirm it is refused or clearly handled.
+- Re-run the same MSI and confirm maintenance mode appears.
+- Run Repair and confirm the app still launches.
+- Upgrade from the previous MSI release.
+- Attempt downgrade and confirm Windows Installer refuses or clearly handles it.
 - Update after all Griffin windows are closed.
-- Attempt update with a Griffin window containing unsaved changes; verify user guidance and no forced data loss.
-- Uninstall and confirm saved `.menu` files, user templates and preferences remain.
-- Reinstall after uninstall and confirm the app can recover existing user data.
-- Verify the installer and packaged application have `Valid` Authenticode signatures.
+- Attempt update with a Griffin window containing unsaved changes; verify user
+  guidance and no forced data loss.
+- Uninstall and confirm saved `.menu` files, user templates and preferences
+  remain.
+- Reinstall after uninstall and confirm the app can use existing user data.
+- Verify the MSI and packaged application have `Valid` Authenticode signatures.
 - Confirm Start menu, taskbar and Installed Apps show the Griffin icon/name.

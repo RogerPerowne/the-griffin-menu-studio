@@ -1,30 +1,44 @@
-import { app, BrowserWindow, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import path from 'node:path';
-import started from 'electron-squirrel-startup';
 import { getActiveBrand } from '../shared/brand';
-import { ensureMenuFileAssociation, removeMenuFileAssociation } from './file-association';
+import { ensureMenuFileAssociation } from './file-association';
 import { registerIpc } from './ipc';
 import { beginRecoverySession, markRecoverySessionClean } from './recovery';
 import { stageLaunchDocument } from './documents';
 
-// Handle Squirrel install/uninstall shortcut events on Windows.
-if (started) {
-  if (process.argv.includes('--squirrel-uninstall')) {
-    void removeMenuFileAssociation().finally(() => app.quit());
-  } else {
-    app.quit();
-  }
-}
-
 const brand = getActiveBrand();
+const APP_USER_MODEL_ID = 'com.thegriffin.GriffinMenuStudio';
+const MIN_SPLASH_MS = 1_800;
+const SPLASH_FADE_MS = 220;
+const STARTUP_TIMEOUT_MS = 15_000;
 
-// Keeps taskbar grouping, Start menu activation and Squirrel-installed
-// shortcuts stable even though the user-facing product name contains spaces.
-app.setAppUserModelId('com.squirrel.GriffinMenuStudio.GriffinMenuStudio');
+// Keeps taskbar grouping, Start menu activation and Windows notifications stable.
+app.setAppUserModelId(APP_USER_MODEL_ID);
 
 let mainWindow: BrowserWindow | null = null;
 let splashWindow: BrowserWindow | null = null;
 let cleanQuitInProgress = false;
+let splashStartedAt = 0;
+const rendererReadyResolvers = new WeakMap<BrowserWindow, () => void>();
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function sendSplashStatus(label: string): void {
+  if (!splashWindow || splashWindow.isDestroyed()) return;
+  splashWindow.webContents.send('splash:status', label);
+}
+
+async function startupTask(label: string, task: () => Promise<unknown>, critical = true): Promise<void> {
+  sendSplashStatus(label);
+  try {
+    await task();
+  } catch (error) {
+    console.error(`Startup task failed: ${label}`, error);
+    if (critical) throw error;
+  }
+}
 
 function hardenWindowNavigation(win: BrowserWindow): void {
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -57,14 +71,16 @@ function launchMenuPath(argv: string[]): string | null {
 }
 
 function createSplashWindow(): void {
+  splashStartedAt = Date.now();
   splashWindow = new BrowserWindow({
-    width: 460,
-    height: 300,
+    width: 560,
+    height: 360,
     frame: false,
     resizable: false,
     show: true,
     backgroundColor: brand.palette.cream,
     webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
@@ -74,7 +90,7 @@ function createSplashWindow(): void {
   loadRendererPage(splashWindow, 'splash');
 }
 
-function createMainWindow(): BrowserWindow {
+function createMainWindow(options: { deferShow?: boolean } = {}): BrowserWindow {
   const win = new BrowserWindow({
     width: 1440,
     height: 980,
@@ -113,11 +129,7 @@ function createMainWindow(): BrowserWindow {
 
   loadRendererPage(win, 'index');
 
-  win.once('ready-to-show', () => {
-    if (splashWindow && !splashWindow.isDestroyed()) splashWindow.close();
-    splashWindow = null;
-    win.show();
-  });
+  if (!options.deferShow) win.once('ready-to-show', () => win.show());
 
   win.on('closed', () => {
     if (mainWindow === win) {
@@ -128,14 +140,83 @@ function createMainWindow(): BrowserWindow {
   return win;
 }
 
-app.on('ready', () => {
-  void beginRecoverySession();
-  void ensureMenuFileAssociation();
-  registerIpc(createMainWindow);
+function waitForRendererReady(win: BrowserWindow): Promise<void> {
+  return new Promise((resolve) => rendererReadyResolvers.set(win, resolve));
+}
+
+function waitForReadyToShow(win: BrowserWindow): Promise<void> {
+  return new Promise((resolve) => {
+    if (win.isVisible()) {
+      resolve();
+      return;
+    }
+    win.once('ready-to-show', resolve);
+  });
+}
+
+async function revealMainWindow(win: BrowserWindow): Promise<void> {
+  sendSplashStatus('Ready');
+  const elapsed = Date.now() - splashStartedAt;
+  if (elapsed < MIN_SPLASH_MS) await wait(MIN_SPLASH_MS - elapsed);
+
+  if (splashWindow && !splashWindow.isDestroyed()) {
+    splashWindow.webContents.send('splash:hide');
+    await wait(SPLASH_FADE_MS);
+  }
+
+  if (!win.isDestroyed()) {
+    win.show();
+    win.focus();
+  }
+  if (splashWindow && !splashWindow.isDestroyed()) splashWindow.close();
+  splashWindow = null;
+}
+
+async function startPrimaryWindow(argv: string[]): Promise<void> {
   createSplashWindow();
-  const win = createMainWindow();
-  const launchPath = launchMenuPath(process.argv);
+  sendSplashStatus('Preparing workspace');
+
+  const recoveryTask = startupTask('Checking recovery', beginRecoverySession, true);
+  const associationTask = startupTask('Registering menu files', ensureMenuFileAssociation, false);
+
+  sendSplashStatus('Loading application shell');
+  const win = createMainWindow({ deferShow: true });
+  const launchPath = launchMenuPath(argv);
   if (launchPath) stageLaunchDocument(win, launchPath);
+
+  const critical = Promise.all([
+    recoveryTask,
+    associationTask,
+    waitForReadyToShow(win),
+    waitForRendererReady(win),
+  ]);
+  const timeout = wait(STARTUP_TIMEOUT_MS).then(() => {
+    console.error(`Startup timed out after ${STARTUP_TIMEOUT_MS}ms; revealing main window with fallback.`);
+  });
+
+  await Promise.race([critical, timeout]);
+  await revealMainWindow(win);
+}
+
+ipcMain.on('app:startupStatus', (event, label: unknown) => {
+  if (typeof label !== 'string' || label.length > 80) return;
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win && win === mainWindow) sendSplashStatus(label);
+});
+
+ipcMain.on('app:rendererReady', (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (!win) return;
+  const resolve = rendererReadyResolvers.get(win);
+  if (resolve) {
+    rendererReadyResolvers.delete(win);
+    resolve();
+  }
+});
+
+app.on('ready', () => {
+  registerIpc(() => createMainWindow());
+  void startPrimaryWindow(process.argv);
 });
 
 app.on('before-quit', (event) => {
@@ -151,7 +232,6 @@ app.on('window-all-closed', () => {
 
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
-    createSplashWindow();
-    createMainWindow();
+    void startPrimaryWindow([]);
   }
 });

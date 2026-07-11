@@ -283,12 +283,16 @@ async function checkRecoveryStatus(): Promise<void> {
 }
 
 async function boot(): Promise<void> {
+  window.griffin?.startupStatus('Preparing workspace');
   mountAppShell();
   applyBrand();
+  window.griffin?.startupStatus('Restoring preferences');
   loadFromStorage(griffinSeed);
+  window.griffin?.startupStatus('Loading templates');
   await loadDesktopTemplates();
   applyLayoutPrefs();
 
+  window.griffin?.startupStatus('Preparing editor');
   // Views subscribe to store scopes so any commit re-renders the right panes.
   on('rail', renderRail);
   on('editor', renderEditor);
@@ -334,10 +338,15 @@ async function boot(): Promise<void> {
   renderPreview();
   refreshCommandStates();
 
+  window.griffin?.startupStatus('Checking recovery');
   initRecoveryLifecycle();
   await openLaunchDocumentIfAny();
   void checkRecoveryStatus();
+  window.griffin?.startupStatus('Preparing print engine');
+  await document.fonts?.ready;
   maybeShowFirstRun();
+  window.griffin?.startupStatus('Ready');
+  window.griffin?.rendererReady();
 }
 
 void boot();

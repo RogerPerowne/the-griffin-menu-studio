@@ -8,14 +8,14 @@ if ([string]::IsNullOrWhiteSpace($OutputRoot)) {
 }
 
 $resolvedRoot = Resolve-Path $OutputRoot -ErrorAction Stop
-$setup = Join-Path $resolvedRoot 'make\squirrel.windows\x64\GriffinMenuStudioSetup.exe'
+$setup = Join-Path $resolvedRoot 'make\wix\x64\Griffin Menu Studio.msi'
 $appRoot = Join-Path $resolvedRoot 'Griffin Menu Studio-win32-x64'
 
 $targets = @()
 if (Test-Path -LiteralPath $setup) {
   $targets += Get-Item -LiteralPath $setup
 } else {
-  throw "Missing Squirrel setup executable: $setup"
+  throw "Missing WiX MSI installer: $setup"
 }
 
 if (Test-Path -LiteralPath $appRoot) {

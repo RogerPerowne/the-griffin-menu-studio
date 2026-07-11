@@ -10,9 +10,13 @@
   </head>
   <body>
     <div class="splash">
-      <img id="splash-logo" alt="The Griffin" />
-      <div class="splash-title">Menu Studio</div>
-      <div class="splash-status" id="splash-status">Starting…</div>
+      <div class="splash-card">
+        <img id="splash-logo" alt="The Griffin" />
+      </div>
+      <div class="splash-status-row" aria-live="polite">
+        <span class="splash-spinner" aria-hidden="true"></span>
+        <span class="splash-status" id="splash-status">Preparing workspace</span>
+      </div>
     </div>
     <script type="module" src="/src/renderer/splash.ts"></script>
   </body>

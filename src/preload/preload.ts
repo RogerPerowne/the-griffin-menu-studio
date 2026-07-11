@@ -1,6 +1,8 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { GriffinApi } from '../shared/api';
 
+const isSplashPage = window.location.pathname.endsWith('/splash.html') || window.location.pathname.endsWith('splash.html');
+
 // Typed bridge. Renderer never touches Node or ipcRenderer directly.
 const api: GriffinApi = {
   isDesktop: true,
@@ -34,6 +36,27 @@ const api: GriffinApi = {
   readRecovery: (id, storage) => ipcRenderer.invoke('recovery:read', id, storage),
   discardRecovery: (id, storage) => ipcRenderer.invoke('recovery:discard', id, storage),
   markRecoverySessionClean: () => ipcRenderer.invoke('recovery:markCleanExit'),
+  startupStatus: (label) => {
+    if (typeof label === 'string' && label.length <= 80) ipcRenderer.send('app:startupStatus', label);
+  },
+  rendererReady: () => ipcRenderer.send('app:rendererReady'),
 };
 
-contextBridge.exposeInMainWorld('griffin', api);
+if (!isSplashPage) contextBridge.exposeInMainWorld('griffin', api);
+
+if (isSplashPage) {
+  contextBridge.exposeInMainWorld('griffinSplash', {
+    onStatus(handler: (label: string) => void): () => void {
+      const listener = (_event: Electron.IpcRendererEvent, label: unknown) => {
+        if (typeof label === 'string') handler(label);
+      };
+      ipcRenderer.on('splash:status', listener);
+      return () => ipcRenderer.removeListener('splash:status', listener);
+    },
+    onHide(handler: () => void): () => void {
+      const listener = () => handler();
+      ipcRenderer.on('splash:hide', listener);
+      return () => ipcRenderer.removeListener('splash:hide', listener);
+    },
+  });
+}

@@ -117,5 +117,7 @@ export interface GriffinApi {
   readRecovery(id: string, storage?: StorageLocations): Promise<RecoveryReadResult>;
   discardRecovery(id: string, storage?: StorageLocations): Promise<{ ok: boolean }>;
   markRecoverySessionClean(): Promise<{ ok: boolean }>;
+  startupStatus(label: string): void;
+  rendererReady(): void;
 }
 import type { StorageLocations, Template } from './types';

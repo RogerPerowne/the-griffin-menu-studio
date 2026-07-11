@@ -1,10 +1,12 @@
 import type { ForgeConfig } from '@electron-forge/shared-types';
-import { MakerSquirrel } from '@electron-forge/maker-squirrel';
+import { MakerWix } from '@electron-forge/maker-wix';
 import { MakerZIP } from '@electron-forge/maker-zip';
 import { VitePlugin } from '@electron-forge/plugin-vite';
+import path from 'node:path';
 
 const certificateFile = process.env.WINDOWS_CERTIFICATE_FILE;
 const certificatePassword = process.env.WINDOWS_CERTIFICATE_PASSWORD;
+const rootDir = __dirname;
 const windowsSign =
   certificateFile && certificatePassword
     ? {
@@ -32,14 +34,27 @@ const config: ForgeConfig = {
   },
   rebuildConfig: {},
   makers: [
-    new MakerSquirrel({
-      name: 'GriffinMenuStudio',
-      setupExe: 'GriffinMenuStudioSetup.exe',
-      setupIcon: 'build/icon.ico',
-      authors: 'The Griffin',
-      title: 'Griffin Menu Studio',
+    new MakerWix({
+      name: 'Griffin Menu Studio',
+      shortName: 'GriffinMenuStudio',
+      manufacturer: 'The Griffin',
+      exe: 'Griffin Menu Studio.exe',
+      icon: 'build/icon.ico',
+      appUserModelId: 'com.thegriffin.GriffinMenuStudio',
+      upgradeCode: '4c3e1791-1d30-4b86-97b6-f4f0dd2f0b83',
+      programFilesFolderName: 'Griffin Menu Studio',
+      shortcutFolderName: 'The Griffin',
+      shortcutName: 'Griffin Menu Studio',
+      defaultInstallMode: 'perUser',
+      language: 1033,
+      ui: {
+        chooseDirectory: true,
+        images: {
+          background: path.join(rootDir, 'build/installer/wix-dialog.bmp'),
+          banner: path.join(rootDir, 'build/installer/wix-banner.bmp'),
+        },
+      },
       description: 'Desktop menu editor and print/export tool for The Griffin.',
-      copyright: 'Copyright (c) The Griffin',
       ...(windowsSign ? { windowsSign } : {}),
     }),
     new MakerZIP({}, ['win32']),
