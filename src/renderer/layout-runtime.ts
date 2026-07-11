@@ -119,7 +119,9 @@ export function fitPage(): void {
   const page = wrap?.querySelector<HTMLElement>('.page');
   const stageScroll = document.getElementById('stageScroll');
   if (!page || !stageScroll) return;
-  const availW = Math.max(1, stageScroll.clientWidth - 40);
+  const cs = getComputedStyle(stageScroll);
+  const padX = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+  const availW = Math.max(1, stageScroll.clientWidth - padX);
   const pw = page.offsetWidth;
   if (pw < 10) return;
   baseZoom = Math.min(availW / pw, 1.6);
@@ -149,6 +151,13 @@ export interface ProductionInfo {
 
 const EMPTY_INFO: ProductionInfo = { over: false, footerCollision: false, pages: 1, used: 0, limit: 0, spare: 0 };
 
+/** Actual render scale of a page element (rendered width ÷ unscaled layout width). */
+function pageInnerScale(page: HTMLElement): number {
+  const w = page.offsetWidth;
+  if (!w) return 1;
+  return page.getBoundingClientRect().width / w;
+}
+
 export function productionInfo(root?: HTMLElement | null): ProductionInfo {
   const scope = root ?? document.getElementById('pagewrap');
   const page = scope?.querySelector<HTMLElement>('.page');
@@ -161,7 +170,13 @@ export function productionInfo(root?: HTMLElement | null): ProductionInfo {
   const br = body.getBoundingClientRect();
   const fr = foot.getBoundingClientRect();
   const cs = getComputedStyle(inner);
-  const padBottom = parseFloat(cs.paddingBottom) || 0;
+  // Every rect above is in *rendered* (transform-scaled) pixels, but computed
+  // padding is in unscaled CSS px. Scale the padding by the page's actual render
+  // scale so all operands share one coordinate system — this makes the overflow
+  // decision zoom-invariant and identical for the scaled live preview (#pagewrap)
+  // and the unscaled export page (#printRoot), which keeps editor + export in sync.
+  const renderScale = pageInnerScale(page);
+  const padBottom = (parseFloat(cs.paddingBottom) || 0) * renderScale;
   const blockBottoms = Array.from(body.querySelectorAll<HTMLElement>('.mblk')).map(
     (el) => el.getBoundingClientRect().bottom,
   );

@@ -11,7 +11,7 @@ import { openDishPicker } from './views/dishpicker';
 import { downloadBackup, openRestoreDialog } from './views/backup';
 import { deleteCurrentMenu, duplicateMenu, saveLayoutAsTemplate } from './views/editor';
 import { autoFitOnePage, isArrangeMode, preparePrintDOM, resetAllPositions, toggleMoveMode } from './views/preview';
-import { fitPage, getZoom, setZoom } from './layout-runtime';
+import { fitPage, getZoom, setFollowFit, setZoom } from './layout-runtime';
 import { createBlankMenu, getWorkspace, goHomePane, setWorkspace } from './workspaces';
 import {
   alignSelectedMove,
@@ -70,6 +70,10 @@ const tipShown = (): boolean => !getState().settings.tipbarHidden;
 
 /** Consistent, non-blocking message when preflight blocks output. */
 function preflightBlocked(verb: string, reason?: string): void {
+  if (reason === 'fonts' || reason === 'images') {
+    toast(`Still preparing the ${reason === 'fonts' ? 'fonts' : 'images'} — try ${verb} again in a moment.`, { kind: 'warn' });
+    return;
+  }
   toast(
     reason === 'footer'
       ? `${verb} stopped — text would overlap the footer. Use Shrink to Fit, or shorten the menu.`
@@ -316,7 +320,7 @@ export const COMMANDS: Command[] = [
   // View
   { id: 'zoom-in', label: 'Zoom In', group: 'View', hint: 'Ctrl+=', run: () => setZoom(getZoom() * 1.18) },
   { id: 'zoom-out', label: 'Zoom Out', group: 'View', hint: 'Ctrl+-', run: () => setZoom(getZoom() / 1.18) },
-  { id: 'fit-width', label: 'Fit to Width', group: 'View', keywords: 'zoom fit', run: () => fitPage() },
+  { id: 'fit-width', label: 'Fit to Width', group: 'View', keywords: 'zoom fit', run: () => { setFollowFit(true); fitPage(); } },
   { id: 'actual-size', label: 'Actual Size', group: 'View', hint: 'Ctrl+0', keywords: 'zoom 100', run: () => setZoom(1) },
   { id: 'auto-fit', label: 'Shrink to Fit One Page', group: 'View', keywords: 'fit overflow shrink', enabled: hasMenu, run: runAutoFit },
   { id: 'toggle-rail', label: 'Menus Column', group: 'View', keywords: 'sidebar rail list', checked: railShown, run: toggleRail },
