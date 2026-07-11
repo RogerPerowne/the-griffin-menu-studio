@@ -207,20 +207,25 @@ export async function createBlankMenu(): Promise<void> {
   await window.griffin?.newDocument?.();
   const defaults = getState().settings.defaults ?? {};
   const columns = Math.max(1, Math.min(4, defaults.cols || 1));
+  const showPrices = defaults.showPrices !== false;
+  const showKey = defaults.showKey !== false;
   snapshot();
   const menu = newMenu('New Menu', {
     ...(defaults.paper ? { paper: defaults.paper } : {}),
     ...(defaults.header ? { header: defaults.header } : {}),
+    showKey,
+    showPrices,
   });
   menu.footer = defaults.footer || '';
   menu.sections = [
-    newSection('Starters', [], { cols: columns, descMode: defaults.descMode || 'inline' }),
-    newSection('Mains', [], { cols: columns, descMode: defaults.descMode || 'inline' }),
-    newSection('Desserts', [], { cols: columns, descMode: defaults.descMode || 'inline' }),
+    newSection('Starters', [], { cols: columns, descMode: defaults.descMode || 'inline', prices: showPrices }),
+    newSection('Mains', [], { cols: columns, descMode: defaults.descMode || 'inline', prices: showPrices }),
+    newSection('Desserts', [], { cols: columns, descMode: defaults.descMode || 'inline', prices: showPrices }),
   ];
   const state = getState();
   state.menus.unshift(menu);
   state.currentMenuId = menu.id;
+  if (defaults.blush) state.settings.blush = defaults.blush;
   setWorkspace('editor');
   commit(['all']);
 }
@@ -352,6 +357,9 @@ function renderHomeMain(): string {
           <label>Columns <select data-setting-default="cols">${[1, 2, 3, 4].map((n) => `<option value="${n}" ${defaults.cols === n ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
           <label>Description style <select data-setting-default="descMode"><option value="inline" ${defaults.descMode !== 'below' ? 'selected' : ''}>Beside name</option><option value="below" ${defaults.descMode === 'below' ? 'selected' : ''}>Below name</option></select></label>
           <label>Default footer <textarea data-setting-default="footer">${esc(defaults.footer || '')}</textarea></label>
+          <label class="tool-check"><input type="checkbox" data-setting-default="showPrices" ${defaults.showPrices !== false ? 'checked' : ''}> Show prices by default</label>
+          <label class="tool-check"><input type="checkbox" data-setting-default="showKey" ${defaults.showKey !== false ? 'checked' : ''}> Show dietary key by default</label>
+          <label>Default preview colour <input type="color" data-setting-default="blush" value="${esc(defaults.blush || '#F5E4DF')}"></label>
         </section>
         <section class="settings-card"><h2>Storage locations</h2>
           <label>Default menu folder <span class="path-row"><input data-setting-storage="defaultMenuFolder" value="${esc(storage.defaultMenuFolder || '')}" placeholder="System default"><button type="button" data-browse-storage="defaultMenuFolder">Browse</button></span></label>
@@ -493,7 +501,16 @@ function initHomeWorkspace(): void {
   document.getElementById('homeWorkspace')?.addEventListener('input', (e) => {
     const input = e.target;
     if (input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement || input instanceof HTMLSelectElement) {
-      const defaultKey = input.dataset.settingDefault as 'paper' | 'header' | 'cols' | 'descMode' | 'footer' | undefined;
+      const defaultKey = input.dataset.settingDefault as
+        | 'paper'
+        | 'header'
+        | 'cols'
+        | 'descMode'
+        | 'footer'
+        | 'showPrices'
+        | 'showKey'
+        | 'blush'
+        | undefined;
       const storageKey = input.dataset.settingStorage as
         | 'defaultMenuFolder'
         | 'templatesFolder'
@@ -501,6 +518,10 @@ function initHomeWorkspace(): void {
         | undefined;
       if (defaultKey) {
         const defaults = (getState().settings.defaults = getState().settings.defaults ?? {});
+        if (input instanceof HTMLInputElement && input.type === 'checkbox') {
+          (defaults as Record<string, unknown>)[defaultKey] = input.checked;
+          return;
+        }
         const value = input.value;
         if (defaultKey === 'cols') defaults.cols = Math.max(1, Math.min(4, Number(value) || 1));
         else (defaults as Record<string, unknown>)[defaultKey] = value;

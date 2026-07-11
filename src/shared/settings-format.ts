@@ -24,7 +24,7 @@ export const DEFAULT_SETTINGS: Settings = {
   dietKey: DEFAULT_DIET_KEY,
   blush: '#F5E4DF',
   layout: DEFAULT_LAYOUT,
-  defaults: { paper: 'A4', header: 'title', cols: 1, descMode: 'inline', footer: '' },
+  defaults: { paper: 'A4', header: 'title', cols: 1, descMode: 'inline', footer: '', showPrices: true, showKey: true },
   storage: {},
   railWidth: 230,
   railHidden: true,
@@ -88,6 +88,8 @@ function defaults(value: unknown): AppDefaults {
     descMode: input?.descMode === 'below' ? 'below' : 'inline',
     footer: text(input?.footer, 2_000) || '',
     blush: /^#[0-9a-f]{6}$/i.test(String(input?.blush || '')) ? String(input?.blush) : undefined,
+    showPrices: bool(input?.showPrices) ?? true,
+    showKey: bool(input?.showKey) ?? true,
   };
 }
 

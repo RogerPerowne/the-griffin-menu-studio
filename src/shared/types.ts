@@ -135,6 +135,8 @@ export interface AppDefaults {
   descMode?: DescMode;
   footer?: string;
   blush?: string;
+  showPrices?: boolean;
+  showKey?: boolean;
 }
 
 export interface StorageLocations {
