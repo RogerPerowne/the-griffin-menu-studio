@@ -195,3 +195,17 @@ export const BUILTIN_TEMPLATES: Template[] = [
     footer: 'Please let us know if you have any intolerances or allergies.',
   },
 ];
+
+/**
+ * The full template set shown in the gallery: the on-disk library (seeded
+ * built-ins + user templates) merged with the code-bundled built-ins, deduped
+ * by id with the on-disk copy winning. This guarantees built-ins always appear
+ * (even before first-run seeding finishes, or if a seeded file is unreadable)
+ * and are never doubled once they exist on disk.
+ */
+export function combineTemplates(userTemplates: readonly Template[]): Template[] {
+  const byId = new Map<string, Template>();
+  for (const template of BUILTIN_TEMPLATES) byId.set(template.id, template);
+  for (const template of userTemplates) byId.set(template.id, template);
+  return [...byId.values()];
+}

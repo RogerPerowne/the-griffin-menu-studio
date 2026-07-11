@@ -2,18 +2,83 @@ import { app, BrowserWindow, dialog, shell } from 'electron';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { MAX_TEMPLATE_BYTES, parseTemplateText, serializeTemplate, TEMPLATE_EXTENSION } from '../shared/template-format';
+import { BUILTIN_TEMPLATES } from '../shared/templates/builtins';
 import type { SaveResult, TemplateListResult } from '../shared/api';
 import type { StorageLocations, Template } from '../shared/types';
 import { atomicWriteFile, safeFileStem } from './file-storage';
+import { templatesDir } from './app-paths';
+
+// Marker so first-run seeding + legacy migration happen exactly once, and a
+// built-in the user deliberately deletes is not resurrected on the next launch.
+const LIBRARY_MARKER = '.griffin-library';
 
 function userTemplatesDir(storage?: StorageLocations): string {
-  return storage?.templatesFolder && path.isAbsolute(storage.templatesFolder)
-    ? path.normalize(storage.templatesFolder)
-    : path.join(app.getPath('userData'), 'templates', 'user');
+  return templatesDir(storage);
 }
 
 async function ensureDir(dir: string): Promise<void> {
   await fs.mkdir(dir, { recursive: true });
+}
+
+let libraryInit: Promise<void> | undefined;
+
+/** Idempotently seed built-in templates to disk and migrate any legacy
+ *  AppData templates, so the Templates folder is the single browsable source. */
+function ensureLibrary(storage?: StorageLocations): Promise<void> {
+  libraryInit ??= initLibrary(storage);
+  return libraryInit;
+}
+
+async function initLibrary(storage?: StorageLocations): Promise<void> {
+  const dir = userTemplatesDir(storage);
+  await ensureDir(dir);
+  const marker = path.join(dir, LIBRARY_MARKER);
+  try {
+    await fs.access(marker);
+    return; // already initialised
+  } catch {
+    // Not initialised yet — seed + migrate below.
+  }
+
+  // 1. Migrate any legacy user templates from the old AppData location.
+  const legacyDir = path.join(app.getPath('userData'), 'templates', 'user');
+  if (path.normalize(legacyDir) !== path.normalize(dir)) {
+    try {
+      const entries = await fs.readdir(legacyDir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (!entry.isFile() || path.extname(entry.name).toLowerCase() !== TEMPLATE_EXTENSION) continue;
+        const to = path.join(dir, entry.name);
+        try {
+          await fs.access(to); // already present — leave both in place
+        } catch {
+          try {
+            await atomicWriteFile(to, await fs.readFile(path.join(legacyDir, entry.name)));
+            await fs.rm(path.join(legacyDir, entry.name), { force: true });
+          } catch {
+            // A single failed migration is non-fatal; the legacy file stays put.
+          }
+        }
+      }
+    } catch {
+      // No legacy folder — nothing to migrate.
+    }
+  }
+
+  // 2. Seed built-in templates as browsable files (builtin flag preserved).
+  const existing = await readTemplates(dir);
+  const haveIds = new Set(existing.templates.map((t) => t.id));
+  for (const template of BUILTIN_TEMPLATES) {
+    if (haveIds.has(template.id)) continue;
+    try {
+      const seeded: Template = { ...template, builtin: true };
+      await atomicWriteFile(path.join(dir, templateFileName(seeded)), serializeTemplate(seeded));
+    } catch {
+      // A failed seed is non-fatal — combineTemplates still shows it from code.
+    }
+  }
+
+  // 3. Mark initialised so deleted built-ins are not re-seeded next launch.
+  await atomicWriteFile(marker, `${JSON.stringify({ initialisedAt: new Date().toISOString(), version: 1 })}\n`).catch(() => undefined);
 }
 
 export function templateFileName(template: Template): string {
@@ -34,7 +99,8 @@ async function readTemplates(dir: string): Promise<{ templates: Template[]; erro
       const stat = await fs.stat(filePath);
       if (stat.size > MAX_TEMPLATE_BYTES) throw new Error('Template file is too large to open safely.');
       const document = parseTemplateText(await fs.readFile(filePath, 'utf8'));
-      templates.push({ ...document.template, builtin: false });
+      // Seeded built-ins carry builtin:true; user-created templates default false.
+      templates.push({ ...document.template, builtin: document.template.builtin === true });
     } catch (error) {
       errors.push(`${entry.name}: ${error instanceof Error ? error.message : 'Could not read template'}`);
     }
@@ -71,7 +137,7 @@ function uniqueTemplateId(template: Template, usedIds: ReadonlySet<string>): Tem
 
 export async function listUserTemplates(storage?: StorageLocations): Promise<TemplateListResult> {
   const dir = userTemplatesDir(storage);
-  await ensureDir(dir);
+  await ensureLibrary(storage);
   const { templates, errors } = await readTemplates(dir);
   return { templates, folderPath: dir, errors };
 }

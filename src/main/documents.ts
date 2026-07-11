@@ -4,6 +4,7 @@ import path from 'node:path';
 import { DOCUMENT_EXTENSION, MAX_DOCUMENT_BYTES, parseDocumentText, serializeDocument } from '../shared/document-format';
 import type { DocumentConflict, OpenResult, SaveResult } from '../shared/api';
 import { atomicWriteFile, readFileRevision, revisionFor, revisionsMatch, type FileRevision, safeFileStem } from './file-storage';
+import { menusDir } from './app-paths';
 import type { StorageLocations } from '../shared/types';
 
 interface DocumentSession {
@@ -69,9 +70,15 @@ async function detectConflict(session: DocumentSession): Promise<DocumentConflic
 
 async function chooseSavePath(win: BrowserWindow, state: unknown, suggestedPath?: string | null, storage?: StorageLocations): Promise<string | null> {
   const fallback = defaultFileName(state);
-  const defaultPath = suggestedPath || (storage?.defaultMenuFolder && path.isAbsolute(storage.defaultMenuFolder)
-    ? path.join(path.normalize(storage.defaultMenuFolder), fallback)
-    : fallback);
+  let defaultPath: string;
+  if (suggestedPath) {
+    defaultPath = suggestedPath;
+  } else {
+    // Default new saves into Documents/Griffin Menu Studio/Menus (Word-like).
+    const dir = menusDir(storage);
+    await fs.mkdir(dir, { recursive: true }).catch(() => undefined);
+    defaultPath = path.join(dir, fallback);
+  }
   const res = await dialog.showSaveDialog(win, {
     title: 'Save Griffin Menu',
     defaultPath,

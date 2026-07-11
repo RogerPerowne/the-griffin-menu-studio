@@ -11,7 +11,7 @@ import type { DietKey, Dish, Menu, MenuStyle, Tag, Template } from '@shared/type
 import { newDish, newMenu, newRule, newSection, T } from '@shared/menu/factories';
 import { normaliseMenuColumns } from '@shared/menu/normalize';
 import { renderMenuHTML } from '@shared/menu/render';
-import { BUILTIN_TEMPLATES } from '@shared/templates/builtins';
+import { BUILTIN_TEMPLATES, combineTemplates } from '@shared/templates/builtins';
 import { getActiveBrand } from '@shared/brand';
 import { assetUrl } from '../brand-assets';
 import { commit, getState, snapshot } from '../store';
@@ -37,7 +37,7 @@ function setMobileTab(t: string): void {
 }
 
 function allTemplates(): Template[] {
-  return [...BUILTIN_TEMPLATES, ...getState().userTemplates];
+  return combineTemplates(getState().userTemplates);
 }
 
 let selTpl: string = BUILTIN_TEMPLATES[0].id;

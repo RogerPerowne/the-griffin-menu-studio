@@ -3,7 +3,7 @@ import { newDish, newMenu, newRule, newSection, T } from '@shared/menu/factories
 import { normaliseMenuColumns } from '@shared/menu/normalize';
 import { renderMenuHTML } from '@shared/menu/render';
 import { getActiveBrand } from '@shared/brand';
-import { BUILTIN_TEMPLATES } from '@shared/templates/builtins';
+import { combineTemplates } from '@shared/templates/builtins';
 import { assetUrl } from '../brand-assets';
 import { commit, currentMenu, getState, on, persist, snapshot } from '../store';
 import { fmtDate } from '../views/rail';
@@ -137,7 +137,7 @@ function paperScale(paper: string | undefined, targetWidth = THUMB_BOX_PX, targe
 }
 
 function allTemplates(): Template[] {
-  return [...BUILTIN_TEMPLATES, ...getState().userTemplates];
+  return combineTemplates(getState().userTemplates);
 }
 
 function styleFromTemplate(t: Template): MenuStyle {
