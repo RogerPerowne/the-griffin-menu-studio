@@ -27,6 +27,20 @@ import { toast } from '../ui/toast';
 
 const SCOPES_ALL: Scope[] = ['editor', 'preview', 'rail'];
 
+/** The editor's "current section" — mirrors `selectedMoveKey` in
+ *  window-panels.ts:49. Drives the `.sec.selected` highlight; defaults to the
+ *  first section whenever nothing has been explicitly picked yet. */
+let selectedSectionId: string | null = null;
+
+export function getSelectedSectionId(): string | null {
+  if (selectedSectionId) return selectedSectionId;
+  return currentMenu()?.sections[0]?.id ?? null;
+}
+
+export function setSelectedSectionId(id: string | null): void {
+  selectedSectionId = id;
+}
+
 /* ================= helpers ================= */
 
 const ESCAPE_MAP: Record<string, string> = {
@@ -119,9 +133,11 @@ export function renderEditor(): void {
   let h = `<div class="rootdropzone edge" data-rootpos="top"></div>`;
   (m.rootRules ?? []).filter((r) => r.position === 'top').forEach((r) => (h += rootRuleRow(r)));
 
+  const selSecId = selectedSectionId ?? m.sections[0]?.id ?? null;
   for (const s of m.sections) {
     const cols = s.cols || 1;
-    h += `<div class="sec" data-sid="${s.id}"><div class="sec-h"><input class="sname" value="${esc(s.name)}" data-f="name" title="Section name">
+    const secSelected = s.id === selSecId ? ' selected' : '';
+    h += `<div class="sec${secSelected}" data-sid="${s.id}" data-section-id="${s.id}"><div class="sec-h"><input class="sname" value="${esc(s.name)}" data-f="name" title="Section name">
      <div class="more sec-more">
        <button class="iconb" data-act="secmenu" title="Section options">${ICONS.dots}</button>
        <div class="pop right">
@@ -232,11 +248,30 @@ function onEdScrollChange(e: Event): void {
   }
 }
 
+/** Updates `selectedSectionId` + the `.sec.selected` highlight to match the
+ *  `.sec` block containing `target`, DOM-patching in place (no re-render) so
+ *  focus/scroll position survive — mirrors `handleMoveSelection` in
+ *  window-panels.ts. */
+function updateSelectedSection(target: Element): void {
+  const secEl = target.closest<HTMLElement>('.sec');
+  const id = secEl?.dataset.sectionId;
+  if (!id || id === selectedSectionId) return;
+  selectedSectionId = id;
+  document.querySelectorAll('#edScroll .sec.selected').forEach((el) => el.classList.remove('selected'));
+  secEl.classList.add('selected');
+}
+
+function onEdScrollFocusIn(e: FocusEvent): void {
+  if (!(e.target instanceof Element)) return;
+  updateSelectedSection(e.target);
+}
+
 function onEdScrollClick(e: Event): void {
   const m = currentMenu();
   if (!m) return;
   const target = e.target;
   if (!(target instanceof Element)) return;
+  updateSelectedSection(target);
 
   if (target.id === 'btnAddSec' || target.closest('#btnAddSec')) {
     snapshot();
@@ -791,6 +826,7 @@ export function initEditor(): void {
     sc.addEventListener('input', onEdScrollInput);
     sc.addEventListener('change', onEdScrollChange);
     sc.addEventListener('click', onEdScrollClick);
+    sc.addEventListener('focusin', onEdScrollFocusIn);
     sc.addEventListener('pointerdown', onEdScrollPointerDown);
   }
 
