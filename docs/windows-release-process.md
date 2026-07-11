@@ -2,15 +2,23 @@
 
 ## Distribution Model
 
-Griffin Menu Studio is distributed as a Windows Installer MSI:
+Griffin Menu Studio ships two Windows installers, both branded:
 
 ```text
-Griffin Menu Studio.msi
+Griffin Menu Studio Setup.exe   (Squirrel — recommended for most people)
+Griffin Menu Studio.msi         (WiX — machine-wide / managed installs)
 ```
 
-This replaces the earlier Squirrel setup executable. The MSI is the professional
-Windows installer channel because it supports a branded setup wizard, normal
-Windows maintenance mode, repair, update and uninstall through Installed Apps.
+**Setup.exe (Squirrel)** is the recommended path for anyone who has never
+installed software before. It installs into the user's own profile
+(`%LocalAppData%`) with no administrator rights, no UAC prompt and no folder
+picker: double-click, watch the branded splash, and the app launches itself when
+it finishes. Uninstall is via Installed Apps.
+
+**MSI (WiX)** is the machine-wide / IT-managed channel. It presents the full
+branded setup wizard and supports normal Windows maintenance mode — repair,
+update and uninstall through Installed Apps — but installs under
+`Program Files`, so it requires administrator rights.
 
 The app keeps menu documents, templates, preferences and recovery files in the
 user profile. Uninstalling the application must not delete restaurant menu

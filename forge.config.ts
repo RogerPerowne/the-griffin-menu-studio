@@ -1,4 +1,5 @@
 import type { ForgeConfig } from '@electron-forge/shared-types';
+import { MakerSquirrel } from '@electron-forge/maker-squirrel';
 import { MakerWix } from '@electron-forge/maker-wix';
 import { MakerZIP } from '@electron-forge/maker-zip';
 import { VitePlugin } from '@electron-forge/plugin-vite';
@@ -34,6 +35,20 @@ const config: ForgeConfig = {
   },
   rebuildConfig: {},
   makers: [
+    // Recommended path for non-technical users: a per-user Setup.exe that
+    // installs into %LocalAppData% with no admin/UAC prompt and no folder
+    // picker — double-click and it launches itself when done.
+    new MakerSquirrel({
+      name: 'GriffinMenuStudio',
+      setupExe: 'Griffin Menu Studio Setup.exe',
+      setupIcon: path.join(rootDir, 'build/icon.ico'),
+      loadingGif: path.join(rootDir, 'build/installer/squirrel-splash.gif'),
+      authors: 'The Griffin',
+      description: 'Desktop menu editor and print/export tool for The Griffin.',
+      noMsi: true,
+      ...(windowsSign ? { windowsSign } : {}),
+    }),
+    // Full branded MSI wizard for machine-wide / managed installs (needs admin).
     new MakerWix({
       name: 'Griffin Menu Studio',
       shortName: 'GriffinMenuStudio',

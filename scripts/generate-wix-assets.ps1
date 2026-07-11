@@ -34,6 +34,17 @@ function Draw-ImageContained($graphics, $image, [System.Drawing.RectangleF]$box)
   $graphics.DrawImage($image, [System.Drawing.RectangleF]::new($x, $y, $w, $h))
 }
 
+function New-RoundedPath([single]$x, [single]$y, [single]$w, [single]$h, [single]$r) {
+  $p = New-Object System.Drawing.Drawing2D.GraphicsPath
+  $d = $r * 2
+  $p.AddArc($x, $y, $d, $d, 180, 90)
+  $p.AddArc($x + $w - $d, $y, $d, $d, 270, 90)
+  $p.AddArc($x + $w - $d, $y + $h - $d, $d, $d, 0, 90)
+  $p.AddArc($x, $y + $h - $d, $d, $d, 90, 90)
+  $p.CloseFigure()
+  return $p
+}
+
 # Recolour the black crest line-art to a solid colour, preserving its alpha
 # channel (so the openwork detail and anti-aliased edges survive intact).
 function Draw-ImageTinted($graphics, $image, [System.Drawing.RectangleF]$box, [string]$hex) {
@@ -121,6 +132,43 @@ try {
     $g2.Dispose()
   }
   $banner.Save((Join-Path $outDir 'wix-banner.bmp'), [System.Drawing.Imaging.ImageFormat]::Bmp)
+
+  # Squirrel install splash (shown while Setup.exe copies files). Squirrel has no
+  # wizard, so this single graphic carries the whole brand: a green seal card with
+  # the pink crest and Georgia wordmark, matching the MSI dialog aesthetic.
+  $splash = New-Object System.Drawing.Bitmap 560, 360
+  $g3 = [System.Drawing.Graphics]::FromImage($splash)
+  try {
+    $g3.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+    $g3.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+    $g3.TextRenderingHint = [System.Drawing.Text.TextRenderingHint]::AntiAliasGridFit
+    $g3.Clear([System.Drawing.Color]::FromArgb(246, 243, 237))
+    $card = New-RoundedPath 90 55 380 250 24
+    try {
+      $g3.FillPath($green, $card)
+    } finally {
+      $card.Dispose()
+    }
+    Draw-ImageTinted $g3 $crest ([System.Drawing.RectangleF]::new(232, 86, 96, 96)) '#FFF4F4'
+    $center = New-Object System.Drawing.StringFormat
+    $center.Alignment = [System.Drawing.StringAlignment]::Center
+    $wordFont = New-Object System.Drawing.Font 'Georgia', 21, ([System.Drawing.FontStyle]::Bold)
+    $tagFont = New-Object System.Drawing.Font 'Segoe UI', 9
+    $statusFont = New-Object System.Drawing.Font 'Segoe UI', 10
+    try {
+      $g3.DrawString('Griffin Menu Studio', $wordFont, $pink, ([System.Drawing.RectangleF]::new(90, 198, 380, 34)), $center)
+      $g3.DrawString('THE GRIFFIN', $tagFont, $pink, ([System.Drawing.RectangleF]::new(90, 238, 380, 20)), $center)
+      $g3.DrawString('Setting things up...', $statusFont, $muted, ([System.Drawing.RectangleF]::new(0, 318, 560, 24)), $center)
+    } finally {
+      $wordFont.Dispose()
+      $tagFont.Dispose()
+      $statusFont.Dispose()
+      $center.Dispose()
+    }
+  } finally {
+    $g3.Dispose()
+  }
+  $splash.Save((Join-Path $outDir 'squirrel-splash.gif'), [System.Drawing.Imaging.ImageFormat]::Gif)
 } finally {
   $crest.Dispose()
   $cream.Dispose()
@@ -132,4 +180,4 @@ try {
   $linePen.Dispose()
 }
 
-Write-Output "Generated WiX installer artwork in $outDir"
+Write-Output "Generated installer artwork (MSI banner/dialog + Squirrel splash) in $outDir"

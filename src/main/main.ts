@@ -1,10 +1,18 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import path from 'node:path';
+import squirrelStartup from 'electron-squirrel-startup';
 import { getActiveBrand } from '../shared/brand';
 import { ensureMenuFileAssociation } from './file-association';
 import { registerIpc } from './ipc';
 import { beginRecoverySession, markRecoverySessionClean } from './recovery';
 import { stageLaunchDocument } from './documents';
+
+// The Squirrel Setup.exe launches the app with --squirrel-install / -updated /
+// -uninstall / -obsolete so it can create or remove Start-menu and desktop
+// shortcuts. Handle those silently and quit — never show a window mid-install.
+if (squirrelStartup) {
+  app.quit();
+}
 
 const brand = getActiveBrand();
 const APP_USER_MODEL_ID = 'com.thegriffin.GriffinMenuStudio';
