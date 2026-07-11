@@ -75,7 +75,6 @@ function showNotification(info: UpdateInfo): void {
   }
   const ver = info.newVersion ? `Version ${esc(info.newVersion)}` : '';
   el.innerHTML = `
-    <button class="update-note-x" data-upd="cancel" title="Skip this update" aria-label="Skip this update"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     <div class="update-note-head"><span class="update-note-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg></span>
       <div class="update-note-text"><b>${esc(info.title || 'Update ready')}</b><small>${ver}</small></div></div>
     <div class="update-note-actions">
@@ -108,8 +107,8 @@ function updatesBodyInner(info: UpdateInfo): string {
     new version about once an hour, downloads it in the background while you work, and only then lets you know.
     Nothing is interrupted — you choose when the update is applied.</p>
     <p class="updates-about">When an update is ready you can <b>Update Now</b> (the app restarts and comes back on the new
-    version in a few seconds), choose <b>Later</b> (it installs itself the next time you close the app), or skip it for
-    this session. Your menus, templates and settings are never touched by an update.</p>`;
+    version in a few seconds) or choose <b>Later</b> (it installs itself the next time you close the app). Your menus,
+    templates and settings are never touched by an update.</p>`;
   const check = info.phase === 'downloaded' || info.phase === 'checking'
     ? ''
     : `<button class="abtn" data-upd="check">Check for updates</button>`;
@@ -150,7 +149,6 @@ function downloadedInner(info: UpdateInfo): string {
     <div class="updates-actions">
       <button class="abtn primary" data-upd="now">Update Now</button>
       <button class="abtn" data-upd="later">Later</button>
-      <button class="abtn ghost" data-upd="cancel">Skip this update</button>
     </div>
     <p class="updates-hint">Update Now restarts and installs it. Later applies it next time you open the app.</p>
   </div>`;
