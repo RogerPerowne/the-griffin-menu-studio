@@ -85,6 +85,7 @@ svg{stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-l
 @media (max-width:640px){.settings-grid{grid-template-columns:1fr}}
 .settings-card{height:100%;background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px}
 .settings-card h2{font-family:'Georgia','Times New Roman',serif;font-weight:400;font-size:22px;margin-bottom:3px}
+.settings-subhead{font-family:'Georgia','Times New Roman',serif;font-weight:400;font-size:17px;margin:18px 0 4px;padding-top:14px;border-top:1px solid var(--hair,rgba(0,0,0,0.08))}
 .settings-card label{display:grid;gap:6px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
 .settings-card input,.settings-card select,.settings-card textarea{border:1px solid var(--line2);border-radius:8px;background:#fff;padding:9px 10px;color:var(--ink);text-transform:none;letter-spacing:0;font-size:13px}
 .settings-card textarea{min-height:80px;resize:vertical}

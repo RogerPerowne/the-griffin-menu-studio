@@ -471,7 +471,7 @@ function renderHomeMain(): string {
           ${typoRoleControls()}
         </section>
 
-        <section class="settings-card"><h2>Storage locations</h2>
+        <section class="settings-card"><h2>Storage</h2>
           <p class="settings-note">Your menus, templates and exports live in <b>Documents › Griffin Menu Studio</b>.</p>
           <button type="button" class="abtn primary" data-reveal-library>Open the Griffin Menu Studio folder</button>
           <div class="path-current-list" id="pathCurrentList">
@@ -485,13 +485,11 @@ function renderHomeMain(): string {
           ${pathRow('templatesFolder', 'Templates folder')}
           ${pathRow('recoveryFolder', 'Recovery folder')}
           <p class="settings-note">Changing a location never deletes existing files.</p>
-        </section>
 
-        <section class="settings-card"><h2>Backup &amp; recovery</h2>
-          <p class="settings-note">Griffin keeps a safety copy of your open menu while you work, so a crash never loses it.</p>
+          <h3 class="settings-subhead">Backup &amp; recovery</h3>
+          <p class="settings-note">Griffin keeps a safety copy of your open menu while you work, so a crash never loses it. Recovery copies live in AppData and never sync to OneDrive.</p>
           <label class="tool-check"><input type="checkbox" data-setting-recovery="enabled" ${rec.enabled !== false ? 'checked' : ''}> Autosave a recovery copy</label>
           <label>Autosave every <select data-setting-recovery="intervalSeconds">${[10, 20, 30, 60, 120, 300].map((n) => opt(String(n), n < 60 ? `${n} seconds` : `${n / 60} minute${n > 60 ? 's' : ''}`, recInterval === n)).join('')}</select></label>
-          <p class="settings-note">Recovery copies live in AppData and never sync to OneDrive.</p>
         </section>
 
         ${renderUpdatesCard()}
