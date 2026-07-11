@@ -4,9 +4,11 @@
 // Faithful port of the mockup's backup/restore handlers, with a light shim so
 // backups from the original mockup (state.cur / state.templates) restore too.
 
-import type { AppState, Menu, Settings, Snippet, Product, Template } from '@shared/types';
+import type { AppState, Menu, Settings, Snippet, Template } from '@shared/types';
 import { todayISO } from '@shared/menu/factories';
 import { getState, replaceState } from '../store';
+import { confirmDialog } from '../ui/confirm';
+import { toast } from '../ui/toast';
 
 function closePops(): void {
   document.querySelectorAll('.more.open').forEach((x) => x.classList.remove('open'));
@@ -22,7 +24,6 @@ function coerceBackup(parsed: unknown): AppState | null {
     version: typeof raw.version === 'number' ? raw.version : 1,
     currentMenuId: raw.currentMenuId ?? raw.cur ?? null,
     menus: raw.menus as Menu[],
-    products: Array.isArray(raw.products) ? (raw.products as Product[]) : [],
     userTemplates: Array.isArray(raw.userTemplates)
       ? raw.userTemplates
       : Array.isArray(raw.templates)
@@ -53,21 +54,27 @@ function onRestoreFile(input: HTMLInputElement): void {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = () => {
+    let next: AppState | null;
     try {
-      const parsed: unknown = JSON.parse(String(reader.result));
-      const next = coerceBackup(parsed);
-      if (!next) throw new Error('not a backup');
-      if (
-        !window.confirm(
-          `Restore ${next.menus.length} menu(s) from this backup? Your current menus will be replaced.`,
-        )
-      ) {
-        return;
-      }
-      replaceState(next);
+      next = coerceBackup(JSON.parse(String(reader.result)));
     } catch {
-      window.alert('That file doesn’t look like a Menu Studio backup.');
+      next = null;
     }
+    if (!next) {
+      toast('That file doesn’t look like a Menu Studio backup.', { kind: 'error' });
+      return;
+    }
+    const restored = next;
+    void confirmDialog({
+      title: `Restore ${restored.menus.length} menu(s)?`,
+      body: 'Your current menus will be replaced by the ones in this backup file.',
+      confirmLabel: 'Restore backup',
+      danger: true,
+    }).then((ok) => {
+      if (!ok) return;
+      replaceState(restored);
+      toast('Backup restored.', { kind: 'success' });
+    });
   };
   reader.readAsText(file);
   input.value = '';

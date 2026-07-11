@@ -6,18 +6,7 @@
 import type { Dish, SectionItem } from '@shared/types';
 import { uid } from '@shared/menu/factories';
 import { commit, currentMenu, findDish, getState, snapshot } from '../store';
-
-const ESCAPE_MAP: Record<string, string> = {
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  '"': '&quot;',
-  "'": '&#39;',
-};
-
-function esc(value: string | undefined | null): string {
-  return String(value ?? '').replace(/[&<>"']/g, (c) => ESCAPE_MAP[c] ?? c);
-}
+import { escapeHtml as esc } from '../util/escape';
 
 function isDish(item: SectionItem): item is Dish {
   return (item as { type?: string }).type !== 'rule';

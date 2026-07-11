@@ -121,7 +121,7 @@ export function loadFromStorage(seed: () => AppState): void {
   state = seed();
 }
 
-/** Replace the whole library (e.g. after opening a .griffinmenu document). */
+/** Replace the whole library (e.g. after opening a .menu document). */
 export function replaceState(next: AppState): void {
   state = next;
   if (!state.currentMenuId || !state.menus.find((m) => m.id === state.currentMenuId)) {

@@ -19,11 +19,10 @@
 import type { Dish, HeaderStyle, Menu, Paper, Rule, SectionItem, Template } from '@shared/types';
 import { newDish, newRule, newSection, T, todayISO, uid, newMenu } from '@shared/menu/factories';
 import { normaliseMenuColumns, normaliseSectionColumns } from '@shared/menu/normalize';
-import { commit, currentMenu, findDish, getState, persist, redo, snapshot, undo } from '../store';
+import { commit, currentMenu, findDish, getState, persist, snapshot } from '../store';
 import type { Scope } from '../store';
 import { fitPage } from '../layout-runtime';
 import { openDishPicker } from './dishpicker';
-import { openSettings } from './settings';
 
 const SCOPES_ALL: Scope[] = ['editor', 'preview', 'rail'];
 
@@ -95,6 +94,10 @@ function itemRow(it: Dish): string {
     <div class="itools"><button class="iconb" data-act="hide" title="${it.hidden ? 'Hidden from print - click to show' : 'Shown - click to hide from print'}">${it.hidden ? ICONS.eyeoff : ICONS.eye}</button><button class="iconb danger" data-act="del" title="Delete dish">${ICONS.x}</button></div></div>`;
 }
 
+function columnOptions(cols: number): string {
+  return [1, 2, 3, 4].map((n) => `<option value="${n}" ${n === cols ? 'selected' : ''}>${n}</option>`).join('');
+}
+
 export function renderEditor(): void {
   const m = currentMenu();
   if (!m) return;
@@ -126,7 +129,7 @@ export function renderEditor(): void {
          <hr>
          <button class="mi" data-act="secprices"><span class="mi-check">${s.prices ? ICONS.check : ''}</span>Show prices</button>
          <button class="mi" data-act="secdesc">Description: ${s.descMode === 'below' ? 'below name' : 'beside name'}</button>
-         <button class="mi" data-act="seccols">Columns: ${cols}</button>
+         <label class="mi sec-cols-row"><span>Columns</span><select class="sec-col-select" data-sec-cols>${columnOptions(cols)}</select></label>
          <hr>
          <button class="mi danger" data-act="secdel">${ICONS.x} Delete section</button>
        </div>
@@ -215,6 +218,14 @@ function onEdScrollChange(e: Event): void {
     snapshot();
     currentMenu().style.showKey = (target as HTMLInputElement).checked;
     commit(); // preview + rail; the checkbox itself already shows the new state
+  } else if (target instanceof HTMLSelectElement && target.dataset.secCols != null) {
+    const secEl = target.closest<HTMLElement>('.sec');
+    const section = secEl ? currentMenu().sections.find((x) => x.id === secEl.dataset.sid) : null;
+    if (!section) return;
+    snapshot();
+    section.cols = Math.max(1, Math.min(4, Number(target.value) || 1));
+    normaliseSectionColumns(section);
+    commit(SCOPES_ALL);
   } else {
     persist();
   }
@@ -328,14 +339,6 @@ function onEdScrollClick(e: Event): void {
     if (!s) return;
     snapshot();
     s.descMode = s.descMode === 'below' ? 'inline' : 'below';
-    commit(SCOPES_ALL);
-    return;
-  }
-  if (act === 'seccols') {
-    if (!s) return;
-    snapshot();
-    s.cols = ((Number(s.cols) || 1) % 4) + 1;
-    normaliseSectionColumns(s);
     commit(SCOPES_ALL);
     return;
   }
@@ -656,44 +659,9 @@ export function saveLayoutAsTemplate(): void {
     })),
   };
   getState().userTemplates.push(template);
+  void window.griffin?.saveTemplate(template);
   persist();
   window.alert(`Saved. “${name}” now appears in the New Menu gallery.`);
-}
-
-function wireMorePopover(): void {
-  el<HTMLElement>('btnMore')?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    el<HTMLElement>('more')?.classList.toggle('open');
-  });
-  document.addEventListener('click', (e) => {
-    const target = e.target;
-    if (!(target instanceof Element) || !target.closest('.more')) closePops();
-  });
-
-  el<HTMLElement>('btnUndo')?.addEventListener('click', () => {
-    closePops();
-    undo();
-  });
-  el<HTMLElement>('btnRedo')?.addEventListener('click', () => {
-    closePops();
-    redo();
-  });
-  el<HTMLElement>('btnDup')?.addEventListener('click', () => {
-    closePops();
-    duplicateMenu();
-  });
-  el<HTMLElement>('btnDelMenu')?.addEventListener('click', () => {
-    closePops();
-    deleteCurrentMenu();
-  });
-  el<HTMLElement>('btnSaveTpl')?.addEventListener('click', () => {
-    closePops();
-    saveLayoutAsTemplate();
-  });
-  el<HTMLElement>('btnSettings')?.addEventListener('click', () => {
-    closePops();
-    openSettings();
-  });
 }
 
 /* ================= rail show/hide + resize handles ================= */
@@ -820,7 +788,6 @@ export function initEditor(): void {
   }
 
   wireHeadControls();
-  wireMorePopover();
   wireRailToggle();
   wireRailResize();
   wireEditorResize();

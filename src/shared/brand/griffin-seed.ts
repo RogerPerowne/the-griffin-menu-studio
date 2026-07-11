@@ -2,7 +2,7 @@
 // with a fresh document. Ported from mockup.script.js seedState() (~lines 47-224).
 //
 // Model differences from the mockup, mapped here:
-// - mockup item() -> newDish() (adds productId:null, hidden:false)
+// - mockup item() -> newDish() (adds hidden:false and a generated id)
 // - mockup sec() -> newSection()
 // - the mockup's in-section rule() (only in "Lunch Set Menu" -> "To Start") is
 //   promoted to a menu-level Rule in `rootRules`, matching how the mockup's own
@@ -642,7 +642,6 @@ export function griffinSeed(): AppState {
     version: 1,
     currentMenuId: menus[0].id,
     menus,
-    products: [],
     userTemplates: [],
     boilerplate: [],
     settings: {

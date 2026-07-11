@@ -15,24 +15,16 @@ import { BUILTIN_TEMPLATES } from '@shared/templates/builtins';
 import { getActiveBrand } from '@shared/brand';
 import { assetUrl } from '../brand-assets';
 import { commit, getState, snapshot } from '../store';
-import { setWorkspace } from '../workspace';
+import { setWorkspace } from '../workspaces';
+import { confirmDialog } from '../ui/confirm';
+import { toast } from '../ui/toast';
 
 const brand = getActiveBrand();
 const ASSETS = { crest: assetUrl(brand.assetKeys.crest), lockup: assetUrl(brand.assetKeys.lockup) };
 
 const ICON_X = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>';
 
-const ESCAPE_MAP: Record<string, string> = {
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  '"': '&quot;',
-  "'": '&#39;',
-};
-
-function esc(value: string | undefined | null): string {
-  return String(value ?? '').replace(/[&<>"']/g, (c) => ESCAPE_MAP[c] ?? c);
-}
+import { escapeHtml as esc } from '../util/escape';
 
 /** Mirror of the editor's setTab for the mobile layout (kept local — views may
  *  not import each other's render entry points). */
@@ -136,13 +128,20 @@ function onGridClick(e: Event): void {
   if (!(target instanceof Element)) return;
   const del = target.closest<HTMLElement>('[data-del]');
   if (del) {
-    if (window.confirm('Delete this template? Menus made from it are unaffected.')) {
+    void confirmDialog({
+      title: 'Delete this template?',
+      body: 'Menus you already made from it are unaffected.',
+      confirmLabel: 'Delete template',
+      danger: true,
+    }).then((ok) => {
+      if (!ok) return;
       snapshot();
       const state = getState();
       state.userTemplates = state.userTemplates.filter((t) => t.id !== del.dataset.del);
       commit(['editor', 'preview', 'rail']);
       renderTplGrid();
-    }
+      toast('Template deleted.', { kind: 'info' });
+    });
     return;
   }
   const card = target.closest<HTMLElement>('.tpl-card');

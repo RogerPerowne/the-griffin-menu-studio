@@ -8,7 +8,7 @@ export function T(c: string, r?: boolean | number): Tag {
 }
 
 export function newDish(name = '', desc = '', price = '', tags: Tag[] = [], note = ''): Dish {
-  return { id: uid(), productId: null, name, desc, price, tags, note, hidden: false };
+  return { id: uid(), name, desc, price, tags, note, hidden: false };
 }
 
 export function newSection(name: string, items: Dish[] = [], opts: Partial<Section> = {}): Section {

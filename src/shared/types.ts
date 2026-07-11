@@ -18,14 +18,9 @@ export type HeaderStyle = 'title' | 'crest' | 'lockup';
 export type DescMode = 'inline' | 'below';
 export type RulePosition = 'top' | 'between' | 'bottom';
 
-/**
- * A dish on a menu. When linked to a catalogue product (`productId`), the
- * optional content fields act as per-menu OVERRIDES — absent fields inherit
- * from the product. Unlinked dishes carry their own content directly.
- */
+/** A dish on a menu. Dishes are independent editable content. */
 export interface Dish {
   id: string;
-  productId: string | null;
   name?: string;
   desc?: string;
   price?: string;
@@ -87,23 +82,7 @@ export interface Menu {
   pos: Record<string, { x: number; y: number }>;
 }
 
-/** A catalogue product — the "change once, update everywhere" backbone. */
-export interface Product {
-  id: string;
-  name: string;
-  desc: string;
-  price: string;
-  tags: Tag[];
-  note?: string;
-  /** Global availability; false hides the product across all menus. */
-  available: boolean;
-  /** ISO date to auto-restore availability, or null. */
-  unavailableUntil: string | null;
-  category?: string;
-  aliases?: string[];
-}
-
-/** Reusable boilerplate text (footer, allergy notice, service charge…). */
+/** Reusable boilerplate text (footer, allergy notice, service charge, etc.). */
 export interface Snippet {
   id: string;
   key: string;
@@ -125,6 +104,7 @@ export interface Template {
   name: string;
   builtin?: boolean;
   description?: string;
+  category?: string;
   style: Partial<MenuStyle> & { paper: Paper; header: HeaderStyle };
   headerNote?: string;
   footer?: string;
@@ -132,7 +112,7 @@ export interface Template {
   leadRule?: boolean;
 }
 
-/** Print & layout fine-tuning (the mockup's six sliders). Defaults live in code. */
+/** Print and layout fine-tuning. Defaults live in code. */
 export interface ReleaseSettings {
   sectionGap: number;
   dishGap: number;
@@ -142,17 +122,57 @@ export interface ReleaseSettings {
   colDivider: number;
 }
 
+export interface AppDefaults {
+  paper?: Paper;
+  header?: HeaderStyle;
+  cols?: number;
+  descMode?: DescMode;
+  footer?: string;
+  blush?: string;
+}
+
+export interface StorageLocations {
+  defaultMenuFolder?: string;
+  templatesFolder?: string;
+  recoveryFolder?: string;
+  thumbnailFolder?: string;
+  backupFolder?: string;
+}
+
+export interface RecoverySettings {
+  enabled?: boolean;
+  /** Debounced renderer autosave cadence. Main process enforces snapshot retention. */
+  intervalSeconds?: number;
+}
+
 export interface Settings {
   dietKey: DietKey[];
   /** Preview-only paper tint (exports stay white). */
   blush?: string;
-  /** Print & layout slider values. */
+  /** Print and layout slider values. */
   layout?: ReleaseSettings;
+  defaults?: AppDefaults;
+  storage?: StorageLocations;
   // UI preferences persisted with the document/library.
   railWidth?: number;
   railHidden?: boolean;
   editorWidth?: number;
   tipSeen?: boolean;
+  tipbarHidden?: boolean;
+  /** Set once the first-run welcome tour has been shown/dismissed. */
+  firstRunSeen?: boolean;
+  /** Persisted bounds + open-state for the Photoshop-style floating tool windows. */
+  floatWindows?: Record<string, FloatWindowBounds>;
+  recovery?: RecoverySettings;
+}
+
+/** Position, size and last-open state of one floating tool window. */
+export interface FloatWindowBounds {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  open?: boolean;
 }
 
 export interface AppState {
@@ -160,7 +180,6 @@ export interface AppState {
   /** Id of the currently-open menu. */
   currentMenuId: string | null;
   menus: Menu[];
-  products: Product[];
   userTemplates: Template[];
   boilerplate: Snippet[];
   settings: Settings;

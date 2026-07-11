@@ -1,8 +1,12 @@
+/* Pre-JS fallback tokens — these deliberately mirror the Griffin brand palette
+   (see src/shared/brand/griffin.ts). splash.ts applies the live palette via
+   paletteToCssVars() on load, so these values only cover the first paint and
+   must stay in sync with the palette to avoid any colour flash. */
 :root {
-  --copper: #66584a;
-  --cream: #f6f3ed;
-  --ink: #222222;
-  --muted: #7a7266;
+  --copper: #66584a; /* palette.copper */
+  --cream: #f6f3ed; /* palette.cream */
+  --ink: #222222; /* palette.ink */
+  --muted: #7a7266; /* palette.muted */
 }
 
 * {

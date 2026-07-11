@@ -6,16 +6,21 @@ import './styles/menu.css';
 import { getActiveBrand, paletteToCssVars } from '@shared/brand';
 import { griffinSeed } from '@shared/brand/griffin-seed';
 import { assetUrl } from './brand-assets';
-import { getState, loadFromStorage, on } from './store';
+import { getState, loadFromStorage, on, replaceState } from './store';
 import { initRail, renderRail } from './views/rail';
 import { initEditor, renderEditor } from './views/editor';
 import { initGallery } from './views/gallery';
 import { initDishPicker } from './views/dishpicker';
-import { initSettings } from './views/settings';
 import { initBackup } from './views/backup';
 import { initPreview, renderPreview } from './views/preview';
-import { initCommandDispatch, runCommand } from './commands';
-import { initWorkspaces } from './workspace';
+import { initCommandDispatch, refreshCommandStates, runCommand, type CommandName } from './commands';
+import { openCommandPalette } from './command-palette';
+import { initContextMenus } from './features/context-menu';
+import { maybeShowFirstRun } from './features/welcome';
+import { initWorkspaces, setRecoverySnapshots, setWorkspace } from './workspaces';
+import { initWindowPanels } from './panels/window-panels';
+import { mountAppShell } from './shell/app-shell';
+import { initHelp } from './help/help';
 
 const brand = getActiveBrand();
 
@@ -35,6 +40,8 @@ function applyLayoutPrefs(): void {
   const grid = document.getElementById('mainGrid');
   if (!grid) return;
   const s = getState().settings;
+  // The menus column is hidden by default; reach it via Home > Open or Window > Menus column.
+  if (s.railHidden === undefined) s.railHidden = true;
   grid.style.setProperty('--railw', `${s.railWidth ?? 230}px`);
   grid.style.setProperty('--edw', `${s.editorWidth ?? 380}px`);
   grid.classList.toggle('noRail', !!s.railHidden);
@@ -44,7 +51,8 @@ function initTipbar(): void {
   const tip = document.getElementById('tipbar');
   const close = document.getElementById('tipClose');
   if (!tip) return;
-  if (!getState().settings.tipSeen) tip.style.display = 'flex';
+  const s = getState().settings;
+  if (!s.tipSeen && !s.tipbarHidden) tip.style.display = 'flex';
   close?.addEventListener('click', () => {
     getState().settings.tipSeen = true;
     tip.style.display = 'none';
@@ -52,82 +60,259 @@ function initTipbar(): void {
   });
 }
 
-/** Toggle any top-bar dropdown (File/Edit/Menu/Arrange/View/Help) — one popover open at a time. */
+/**
+ * Mature-desktop menu bar: click or keyboard to open, one popover at a time,
+ * arrow-key navigation, Enter/Escape with correct focus return, ARIA roles.
+ */
 function initTopMenus(): void {
-  document.getElementById('menubar')?.addEventListener('click', (e) => {
-    const target = e.target;
-    if (!(target instanceof Element)) return;
-    const trigger = target.closest<HTMLElement>('[data-act="topmenu"]');
+  const bar = document.getElementById('menubar');
+  if (!bar) return;
+  bar.setAttribute('role', 'menubar');
+
+  const menus = Array.from(bar.querySelectorAll<HTMLElement>('.topmenu'));
+  menus.forEach((menu) => {
+    const btn = menu.querySelector<HTMLElement>('[data-act="topmenu"]');
+    const pop = menu.querySelector<HTMLElement>('.pop');
+    btn?.setAttribute('aria-haspopup', 'true');
+    btn?.setAttribute('aria-expanded', 'false');
+    pop?.setAttribute('role', 'menu');
+    pop?.querySelectorAll<HTMLElement>('.mi').forEach((mi) => {
+      mi.setAttribute('role', 'menuitem');
+      mi.tabIndex = -1;
+    });
+  });
+
+  const items = (menu: HTMLElement): HTMLElement[] =>
+    Array.from(menu.querySelectorAll<HTMLElement>('.pop .mi')).filter((el) => el.getAttribute('aria-disabled') !== 'true');
+
+  function closeAll(): void {
+    menus.forEach((m) => {
+      m.classList.remove('open');
+      m.querySelector('[data-act="topmenu"]')?.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  function open(menu: HTMLElement, focusFirst = false): void {
+    closeAll();
+    menu.classList.add('open');
+    menu.querySelector('[data-act="topmenu"]')?.setAttribute('aria-expanded', 'true');
+    refreshCommandStates(menu);
+    // Never let a dropdown clip past the right window edge.
+    const pop = menu.querySelector<HTMLElement>('.pop');
+    if (pop) {
+      pop.classList.remove('right');
+      if (pop.getBoundingClientRect().right > window.innerWidth - 8) pop.classList.add('right');
+    }
+    if (focusFirst) items(menu)[0]?.focus();
+  }
+
+  bar.addEventListener('click', (e) => {
+    const trigger = (e.target as Element)?.closest?.<HTMLElement>('[data-act="topmenu"]');
     if (!trigger) return;
     e.stopPropagation();
-    const wrap = trigger.closest<HTMLElement>('.more');
-    const wasOpen = wrap?.classList.contains('open') ?? false;
-    document.querySelectorAll('.more.open').forEach((el) => el.classList.remove('open'));
-    if (wrap && !wasOpen) wrap.classList.add('open');
+    const menu = trigger.closest<HTMLElement>('.topmenu')!;
+    if (menu.classList.contains('open')) closeAll();
+    else open(menu);
   });
+
+  // Hover-follow: once one menu is open, moving over another opens it (desktop feel).
+  bar.addEventListener('pointerover', (e) => {
+    if (!menus.some((m) => m.classList.contains('open'))) return;
+    const trigger = (e.target as Element)?.closest?.<HTMLElement>('[data-act="topmenu"]');
+    const menu = trigger?.closest<HTMLElement>('.topmenu');
+    if (menu && !menu.classList.contains('open')) open(menu);
+  });
+
   document.addEventListener('click', (e) => {
-    const target = e.target;
-    if (!(target instanceof Element) || !target.closest('.more')) {
-      document.querySelectorAll('.more.open').forEach((el) => el.classList.remove('open'));
+    if (!(e.target as Element)?.closest?.('.more')) closeAll();
+  });
+
+  bar.addEventListener('keydown', (e) => {
+    const openMenu = menus.find((m) => m.classList.contains('open'));
+    const idx = menus.indexOf((e.target as Element)?.closest?.('.topmenu') as HTMLElement);
+    if (e.key === 'Escape') {
+      if (openMenu) { e.preventDefault(); const btn = openMenu.querySelector<HTMLElement>('[data-act="topmenu"]'); closeAll(); btn?.focus(); }
+      return;
+    }
+    if (!openMenu) {
+      // Focused on a header button, closed: Enter/Down opens, Left/Right move between headers.
+      if (idx >= 0 && (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); open(menus[idx], true); }
+      else if (idx >= 0 && e.key === 'ArrowRight') { e.preventDefault(); menus[(idx + 1) % menus.length].querySelector<HTMLElement>('[data-act="topmenu"]')?.focus(); }
+      else if (idx >= 0 && e.key === 'ArrowLeft') { e.preventDefault(); menus[(idx - 1 + menus.length) % menus.length].querySelector<HTMLElement>('[data-act="topmenu"]')?.focus(); }
+      return;
+    }
+    const list = items(openMenu);
+    const pos = list.indexOf(document.activeElement as HTMLElement);
+    if (e.key === 'ArrowDown') { e.preventDefault(); list[(pos + 1) % list.length]?.focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); list[(pos - 1 + list.length) % list.length]?.focus(); }
+    else if (e.key === 'Home') { e.preventDefault(); list[0]?.focus(); }
+    else if (e.key === 'End') { e.preventDefault(); list[list.length - 1]?.focus(); }
+    else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const cur = menus.indexOf(openMenu);
+      open(menus[(cur + (e.key === 'ArrowRight' ? 1 : menus.length - 1)) % menus.length], true);
     }
   });
 }
 
-/** App-wide keyboard shortcuts, routed through the same command layer as every button. */
+/** App-wide accelerators, all routed through the one command registry. */
 function initKeyboard(): void {
   document.addEventListener('keydown', (e) => {
+    if (e.altKey) return;
     const mod = e.ctrlKey || e.metaKey;
     if (!mod) return;
     const inField = !!(e.target as HTMLElement)?.closest?.('input,textarea,[contenteditable]');
     const key = e.key.toLowerCase();
-    if (key === 'z' && !inField) {
-      e.preventDefault();
-      runCommand(e.shiftKey ? 'redo' : 'undo');
-    } else if (key === 'y' && !inField) {
-      e.preventDefault();
-      runCommand('redo');
-    } else if (key === 's') {
-      e.preventDefault();
-      runCommand(e.shiftKey ? 'save-as' : 'save');
-    } else if (key === 'o') {
-      e.preventDefault();
-      runCommand('open');
-    } else if (key === 'e') {
-      e.preventDefault();
-      runCommand('export-pdf');
-    } else if (key === 'p') {
-      e.preventDefault();
-      runCommand('print');
-    }
+    // Accelerators that must not fire while editing text.
+    const guarded: Record<string, CommandName> = { z: e.shiftKey ? 'redo' : 'undo', y: 'redo' };
+    // Accelerators that work everywhere.
+    const global: Record<string, CommandName> = {
+      k: 'tool-search',
+      s: e.shiftKey ? 'save-as' : 'save',
+      o: 'open',
+      p: 'print',
+      e: 'export-pdf',
+      f: 'toggle-finder-panel',
+      '0': 'actual-size',
+      '=': 'zoom-in',
+      '+': 'zoom-in',
+      '-': 'zoom-out',
+      n: e.shiftKey ? 'new-window' : 'new-blank',
+    };
+    if (e.shiftKey && key === 'd') { e.preventDefault(); runCommand('bulk-add-dishes'); return; }
+    if (key === 'k') { e.preventDefault(); openCommandPalette(); return; }
+    if (!inField && guarded[key]) { e.preventDefault(); runCommand(guarded[key]); return; }
+    if (global[key] && !(guarded[key] && inField)) { e.preventDefault(); runCommand(global[key]); }
   });
 }
 
-function boot(): void {
+type SaveState = 'saved' | 'dirty' | 'saving' | 'failed';
+
+/** Visible, trustworthy document save state driven by store edits + save events. */
+function initSaveState(): void {
+  const chip = document.getElementById('saveState');
+  if (!chip) return;
+  const text = chip.querySelector<HTMLElement>('.savetext');
+  const LABELS: Record<SaveState, string> = { saved: 'Saved', dirty: 'Unsaved changes', saving: 'Saving…', failed: 'Save failed' };
+  const set = (state: SaveState): void => {
+    chip.dataset.state = state;
+    if (text) text.textContent = LABELS[state];
+  };
+  const markDirty = (): void => { if (chip.dataset.state !== 'saving') set('dirty'); };
+  on('editor', markDirty);
+  on('preview', markDirty);
+  window.addEventListener('griffin:saving', () => set('saving'));
+  window.addEventListener('griffin:saved', () => set('saved'));
+  window.addEventListener('griffin:loaded', () => set('saved'));
+  window.addEventListener('griffin:dirty', () => set('dirty'));
+  window.addEventListener('griffin:save-failed', () => set('failed'));
+}
+
+async function loadDesktopTemplates(): Promise<void> {
+  const result = await window.griffin?.listTemplates();
+  if (!result?.templates?.length) return;
+  getState().userTemplates = result.templates;
+}
+
+/** If Windows launched us by double-clicking a .menu file, open it in the Editor. */
+async function openLaunchDocumentIfAny(): Promise<void> {
+  const api = window.griffin;
+  if (!api?.consumeLaunchDocument) return;
+  try {
+    const res = await api.consumeLaunchDocument();
+    if (res && !res.canceled && res.state) {
+      replaceState(res.state as ReturnType<typeof getState>);
+      window.dispatchEvent(new Event('griffin:loaded'));
+      setWorkspace('editor');
+    }
+  } catch {
+    /* non-critical: fall back to the normal Home launch */
+  }
+}
+
+/**
+ * Crash-recovery lifecycle: debounce a recovery snapshot whenever the document
+ * is edited, clear it on save, and mark the session cleanly closed on exit so a
+ * crash can be told apart from a normal quit.
+ */
+function initRecoveryLifecycle(): void {
+  const api = window.griffin;
+  if (!api?.writeRecovery) return;
+  let timer = 0;
+  const scheduleWrite = (): void => {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => void api.writeRecovery?.(getState()), 4000);
+  };
+  on('editor', scheduleWrite);
+  on('preview', scheduleWrite);
+  window.addEventListener('griffin:saved', () => window.clearTimeout(timer));
+  window.addEventListener('pagehide', () => void api.markRecoverySessionClean?.());
+}
+
+/** After a crash, surface recovered snapshots in Home for the user to restore. */
+async function checkRecoveryStatus(): Promise<void> {
+  const api = window.griffin;
+  if (!api?.recoveryStatus) return;
+  try {
+    const status = await api.recoveryStatus();
+    if (status.previousSessionCrashed && status.snapshots.length) {
+      setRecoverySnapshots(status.snapshots);
+    }
+  } catch {
+    /* non-critical */
+  }
+}
+
+async function boot(): Promise<void> {
+  mountAppShell();
   applyBrand();
   loadFromStorage(griffinSeed);
+  await loadDesktopTemplates();
   applyLayoutPrefs();
 
   // Views subscribe to store scopes so any commit re-renders the right panes.
   on('rail', renderRail);
   on('editor', renderEditor);
   on('preview', renderPreview);
+  // Keep the toolbar's enabled/checked states (undo/redo, save, print…) live,
+  // coalesced to one DOM pass per tick even when a commit emits several scopes.
+  let cmdRefreshQueued = false;
+  const queueCommandStateRefresh = (): void => {
+    if (cmdRefreshQueued) return;
+    cmdRefreshQueued = true;
+    queueMicrotask(() => {
+      cmdRefreshQueued = false;
+      refreshCommandStates();
+    });
+  };
+  on('editor', queueCommandStateRefresh);
+  on('preview', queueCommandStateRefresh);
 
   initRail();
   initEditor();
   initGallery();
   initDishPicker();
-  initSettings();
   initBackup();
   initPreview();
   initTipbar();
+  initSaveState();
+  initContextMenus();
   initKeyboard();
   initTopMenus();
   initCommandDispatch();
   initWorkspaces();
+  initWindowPanels();
+  initHelp();
 
   renderRail();
   renderEditor();
   renderPreview();
+  refreshCommandStates();
+
+  initRecoveryLifecycle();
+  await openLaunchDocumentIfAny();
+  void checkRecoveryStatus();
+  maybeShowFirstRun();
 }
 
-boot();
+void boot();
