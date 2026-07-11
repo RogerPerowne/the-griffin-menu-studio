@@ -557,8 +557,9 @@ body.moveMode .moveHint{display:block}
   height:var(--col-divider-length);width:1px;background:#1a1a1a;
 }
 
-/* Preview zoom is a pure visual scale. */
-.pagewrap{will-change:transform;transform-box:border-box;transform-origin:top left}
+/* Preview zoom is a pure visual scale applied to the page; the wrapper just
+   reserves the scaled footprint (one scaling op, matching scroll area). */
+.pagewrap .page{will-change:transform;transform-box:border-box;transform-origin:top left}
 .stage-scroll{overscroll-behaviour:contain}
 
 /* Clearer production status */

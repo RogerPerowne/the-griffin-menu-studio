@@ -34,7 +34,12 @@ export function setFollowFit(value: boolean): void {
   followFit = value;
 }
 
-/** Pure zoom: measure the untransformed paper box once, only scale the wrapper. */
+/**
+ * Zoom the preview with a SINGLE scaling operation: transform the page itself
+ * and size an untransformed wrapper to the scaled dimensions. This makes the
+ * scroll footprint exactly match the visible page (previously the wrapper was
+ * both sized to the scaled box AND transformed, doubling the footprint).
+ */
 export function applyZoom(): void {
   const wrap = document.getElementById('pagewrap');
   const page = wrap?.querySelector<HTMLElement>('.page');
@@ -42,7 +47,9 @@ export function applyZoom(): void {
   zoom = Math.max(0.2, Math.min(3, zoom));
   const pw = page.offsetWidth;
   const ph = page.offsetHeight;
-  wrap.style.transform = `scale(${zoom})`;
+  wrap.style.transform = 'none';
+  page.style.transformOrigin = 'top left';
+  page.style.transform = `scale(${zoom})`;
   wrap.style.width = `${pw * zoom}px`;
   wrap.style.height = `${ph * zoom}px`;
   const label = document.getElementById('zoomPct');
