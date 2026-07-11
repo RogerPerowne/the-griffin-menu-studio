@@ -51,10 +51,33 @@ export function safeFileStem(value: string | undefined, fallback: string): strin
   return RESERVED_WINDOWS_NAMES.has(stem.toUpperCase()) ? `${stem} file` : stem;
 }
 
+const LOCK_ERROR_CODES = new Set(['EBUSY', 'EPERM', 'EACCES']);
+
+/**
+ * Retry an operation that can transiently fail because OneDrive's sync engine or
+ * an antivirus scanner is briefly holding a lock on the target file. Only the
+ * lock-style errors are retried; anything else propagates immediately.
+ */
+async function withLockRetry<T>(operation: () => Promise<T>, attempts = 6, baseDelayMs = 40): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      const code = (error as NodeJS.ErrnoException | undefined)?.code;
+      if (!code || !LOCK_ERROR_CODES.has(code) || attempt === attempts - 1) throw error;
+      await new Promise((resolve) => setTimeout(resolve, baseDelayMs * 2 ** attempt));
+    }
+  }
+  throw lastError;
+}
+
 /**
  * Replace a file only after its complete new contents have been written to a
  * sibling temporary file. Keeping both files in the same directory gives the
- * final rename the strongest replacement semantics available on Windows.
+ * final rename the strongest replacement semantics available on Windows. The
+ * final rename is retried on transient OneDrive/antivirus locks.
  */
 export async function atomicWriteFile(filePath: string, contents: FileContents): Promise<void> {
   const directory = path.dirname(filePath);
@@ -64,12 +87,12 @@ export async function atomicWriteFile(filePath: string, contents: FileContents):
   await fs.mkdir(directory, { recursive: true });
 
   try {
-    handle = await fs.open(tempPath, 'w');
+    handle = await withLockRetry(() => fs.open(tempPath, 'w'));
     await handle.writeFile(contents);
     await handle.sync();
     await handle.close();
     handle = undefined;
-    await fs.rename(tempPath, filePath);
+    await withLockRetry(() => fs.rename(tempPath, filePath));
   } finally {
     if (handle) await handle.close().catch(() => undefined);
     await fs.rm(tempPath, { force: true }).catch(() => undefined);
