@@ -39,6 +39,20 @@ describe('recovery-store', () => {
     expect(await listRecoverySnapshots(directory)).toEqual([]);
   });
 
+  it('keeps recovery content independent of the real menu document', async () => {
+    const directory = await recoveryDirectory();
+    const menuPath = path.join(directory, 'Private Dining.menu');
+    await fs.writeFile(menuPath, '{"real":"document"}', 'utf8');
+
+    const snapshot = createRecoverySnapshot(state, { sessionId: 'session-isolated', documentPath: menuPath });
+    await writeRecoverySnapshot(directory, snapshot);
+    snapshot.state.menus[0].name = 'Mutated after snapshot';
+
+    expect(await fs.readFile(menuPath, 'utf8')).toBe('{"real":"document"}');
+    expect((await readRecoverySnapshot(directory, snapshot.id))?.state.menus[0].name).toBe('Lunch Menu');
+    expect((await fs.readdir(directory)).some((name) => name.endsWith('.recovery.json'))).toBe(true);
+  });
+
   it('keeps retention bounded and removes old snapshots', async () => {
     const directory = await recoveryDirectory();
     const now = new Date('2026-07-10T12:00:00.000Z');
