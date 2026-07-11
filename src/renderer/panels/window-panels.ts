@@ -626,6 +626,13 @@ function onLayerInput(e: Event): void {
 function onLayerChange(e: Event): void {
   const t = e.target;
   if (t instanceof HTMLInputElement && (t.dataset.spacing !== undefined || t.dataset.blush !== undefined)) persist();
+  // Dietary key code/label edits only debounce a 'preview' commit on input (see
+  // onLayerInput) so the focused field survives keystrokes. 'change' fires once
+  // the field is committed (blur, or Enter) — refresh 'editor' too so the
+  // per-dish tag buttons stop carrying a stale/blank data-tag (#1).
+  if (t instanceof HTMLInputElement && t.dataset.dkI !== undefined && (t.dataset.dkF === 'c' || t.dataset.dkF === 'l')) {
+    commit(['editor', 'preview']);
+  }
 }
 
 export function initWindowPanels(): void {

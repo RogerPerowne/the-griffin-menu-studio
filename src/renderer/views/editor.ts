@@ -282,11 +282,12 @@ function onEdScrollClick(e: Event): void {
 
   const tagB = target.closest<HTMLElement>('[data-tag]');
   if (tagB) {
+    const c = tagB.dataset.tag ?? '';
+    if (!c) return; // stale/blank code button (#1) — never create a phantom empty-code tag
     const itemEl = tagB.closest<HTMLElement>('.item');
     const found = itemEl ? findDish(m, itemEl.dataset.iid ?? '') : null;
     if (!found) return;
     snapshot();
-    const c = tagB.dataset.tag ?? '';
     const tags = (found.dish.tags = found.dish.tags ?? []);
     const i = tags.findIndex((t) => t.c === c);
     if (i < 0) tags.push(T(c));
