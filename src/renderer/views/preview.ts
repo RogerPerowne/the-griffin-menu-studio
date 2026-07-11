@@ -75,11 +75,13 @@ export function renderPreview(): void {
   requestAnimationFrame(() => fitPage());
   window.setTimeout(() => fitPage(), 180);
 
-  if (moveMode) {
-    wrap.querySelectorAll<HTMLElement>('[data-edit]').forEach((el) => {
-      el.contentEditable = 'false';
-    });
-  }
+  // moveMode is the single source of truth for whether preview text is
+  // editable — apply it unconditionally on every render (not just while
+  // true) so a render that lands after Arrange mode was turned off doesn't
+  // leave stale contentEditable state around.
+  wrap.querySelectorAll<HTMLElement>('[data-edit]').forEach((el) => {
+    el.contentEditable = moveMode ? 'false' : 'plaintext-only';
+  });
 
   applyReleaseSettings();
   observePagewrapPage();

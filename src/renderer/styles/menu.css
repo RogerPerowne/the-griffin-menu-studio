@@ -139,6 +139,9 @@
   font-weight: 500;
   font-size: 0.86em;
   white-space: nowrap;
+  /* Not a [data-edit] span (edited via the editor's tag buttons instead —
+     see render.ts:71-75). Default cursor so it doesn't read as editable. */
+  cursor: default;
 }
 .m-pr {
   font-weight: 500;
@@ -147,6 +150,8 @@
   font-style: italic;
   font-weight: 300;
   font-size: 0.9em;
+  /* Not a [data-edit] span, same reasoning as .m-tg above. */
+  cursor: default;
 }
 .m-item.stacked .m-nm {
   display: block;
