@@ -2,6 +2,7 @@ import type { ForgeConfig } from '@electron-forge/shared-types';
 import { MakerSquirrel } from '@electron-forge/maker-squirrel';
 import { MakerWix } from '@electron-forge/maker-wix';
 import { MakerZIP } from '@electron-forge/maker-zip';
+import { PublisherGithub } from '@electron-forge/publisher-github';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import path from 'node:path';
 
@@ -73,6 +74,16 @@ const config: ForgeConfig = {
       ...(windowsSign ? { windowsSign } : {}),
     }),
     new MakerZIP({}, ['win32']),
+  ],
+  publishers: [
+    // `npm run publish` uploads the Squirrel Setup.exe + .nupkg + RELEASES (and
+    // the MSI) to a GitHub Release. The installed app auto-updates from these via
+    // update.electronjs.org (see src/main/updater.ts). Needs GITHUB_TOKEN set.
+    new PublisherGithub({
+      repository: { owner: 'RogerPerowne', name: 'the-griffin-menu-studio' },
+      draft: false,
+      prerelease: false,
+    }),
   ],
   plugins: [
     new VitePlugin({

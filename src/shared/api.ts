@@ -108,6 +108,10 @@ export interface GriffinApi {
   onLaunchDocument(handler: () => void): () => void;
   /** OneDrive or another app synced a newer version of the open file onto disk. */
   onExternalChange(handler: (conflict: DocumentConflict) => void): () => void;
+  /** A newer app version has been downloaded in the background and is ready to apply. */
+  onUpdateDownloaded(handler: (info: { releaseName: string }) => void): () => void;
+  /** Apply the downloaded update and relaunch. */
+  installUpdate(): Promise<{ ok: boolean }>;
   confirmClose(): Promise<{ ok: boolean }>;
   newWindow(): Promise<{ ok: boolean }>;
   listTemplates(storage?: StorageLocations): Promise<TemplateListResult>;

@@ -6,6 +6,7 @@ import { ensureMenuFileAssociation } from './file-association';
 import { registerIpc } from './ipc';
 import { beginRecoverySession, markRecoverySessionClean } from './recovery';
 import { stageLaunchDocument, disposeDocumentWatch } from './documents';
+import { initAutoUpdate } from './updater';
 
 // The Squirrel Setup.exe launches the app with --squirrel-install / -updated /
 // -uninstall / -obsolete so it can create or remove Start-menu and desktop
@@ -213,6 +214,9 @@ async function startPrimaryWindow(argv: string[]): Promise<void> {
 
   await Promise.race([critical, timeout]);
   await revealMainWindow(win);
+
+  // Non-blocking: check for updates once the window is up (packaged builds only).
+  initAutoUpdate(() => mainWindow);
 }
 
 ipcMain.on('app:startupStatus', (event, label: unknown) => {

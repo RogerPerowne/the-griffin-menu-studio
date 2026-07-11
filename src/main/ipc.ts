@@ -4,6 +4,7 @@ import * as exp from './export-handlers';
 import * as recovery from './recovery';
 import * as templates from './templates';
 import { assertValidTemplate } from '../shared/template-format';
+import { quitAndInstallUpdate } from './updater';
 import type { StorageLocations } from '../shared/types';
 
 function record(value: unknown): Record<string, unknown> | null {
@@ -128,5 +129,10 @@ export function registerIpc(createWindow: () => BrowserWindow): void {
   ipcMain.handle('recovery:markCleanExit', (e) => {
     requireWin(e.sender);
     return recovery.markRecoverySessionClean();
+  });
+  ipcMain.handle('update:install', (e) => {
+    requireWin(e.sender);
+    quitAndInstallUpdate();
+    return { ok: true };
   });
 }
