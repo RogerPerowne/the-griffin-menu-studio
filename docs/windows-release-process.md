@@ -88,13 +88,15 @@ Then run:
 npm.cmd run make:release
 ```
 
-`make:release` refuses to run without a readable certificate, builds the branded
-MSI and verifies Authenticode status on the generated Windows binaries. The make
-script uses installed WiX v3 tools when available; otherwise it downloads the
+`make:release` refuses to run without a readable certificate, builds both the
+Squirrel `Setup.exe` and the branded MSI, and verifies Authenticode status on the
+generated Windows binaries (both installers plus the packaged app binaries). The
+make script uses installed WiX v3 tools when available; otherwise it downloads the
 official WiX 3.14.1 NuGet package into a local build cache for the current user.
-Verify the final MSI independently before distributing it:
+Verify the final installers independently before distributing them:
 
 ```powershell
+Get-AuthenticodeSignature ".\out\make\squirrel.windows\x64\Griffin Menu Studio Setup.exe"
 Get-AuthenticodeSignature ".\out\make\wix\x64\Griffin Menu Studio.msi"
 ```
 
