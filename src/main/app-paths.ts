@@ -30,3 +30,8 @@ export function templatesDir(storage?: StorageLocations): string {
   if (override && path.isAbsolute(override)) return path.normalize(override);
   return path.join(griffinDocumentsRoot(), 'Templates');
 }
+
+/** Where PDF/PNG exports default to — a browsable Exports subfolder. */
+export function exportsDir(): string {
+  return path.join(griffinDocumentsRoot(), 'Exports');
+}

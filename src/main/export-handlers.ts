@@ -1,6 +1,16 @@
 import { BrowserWindow, dialog, shell } from 'electron';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import type { ExportPdfPayload, ExportPngPayload, PrintDocumentPayload, PrintResult, SaveResult } from '../shared/api';
 import { atomicWriteFile } from './file-storage';
+import { exportsDir } from './app-paths';
+
+/** Default a PDF/PNG export into Documents/Griffin Menu Studio/Exports. */
+async function exportDefaultPath(name: string): Promise<string> {
+  const dir = exportsDir();
+  await fs.mkdir(dir, { recursive: true }).catch(() => undefined);
+  return path.join(dir, name);
+}
 
 function normalisePrintPayload(value: unknown): PrintDocumentPayload {
   const raw = value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
@@ -13,7 +23,7 @@ function normalisePrintPayload(value: unknown): PrintDocumentPayload {
 export async function exportPdf(win: BrowserWindow, payload: ExportPdfPayload): Promise<SaveResult> {
   const res = await dialog.showSaveDialog(win, {
     title: 'Export PDF',
-    defaultPath: payload?.defaultName || 'Griffin Menu.pdf',
+    defaultPath: await exportDefaultPath(payload?.defaultName || 'Griffin Menu.pdf'),
     filters: [{ name: 'PDF', extensions: ['pdf'] }],
   });
   if (res.canceled || !res.filePath) return { canceled: true };
@@ -36,7 +46,7 @@ export async function exportPdf(win: BrowserWindow, payload: ExportPdfPayload): 
 export async function exportPng(win: BrowserWindow, payload: ExportPngPayload): Promise<SaveResult> {
   const res = await dialog.showSaveDialog(win, {
     title: 'Export PNG',
-    defaultPath: payload?.defaultName || 'Griffin Menu.png',
+    defaultPath: await exportDefaultPath(payload?.defaultName || 'Griffin Menu.png'),
     filters: [{ name: 'PNG image', extensions: ['png'] }],
   });
   if (res.canceled || !res.filePath) return { canceled: true };
