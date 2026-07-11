@@ -68,6 +68,26 @@
   min-height: 210mm;
 }
 
+/* ---------- Typography role baselines ----------
+   Every role's size / weight / align / caps / space-above / space-below is
+   expressed as a CSS custom property, set here to the CURRENT design values so
+   an unset role renders byte-identically to before. render.ts (typographyVars)
+   emits inline --role-* overrides on this same .page element — inline style
+   wins over these — and preparePrintDOM renders the same .page, so exports
+   inherit them with no separate path. Roles → selectors: title→.m-title,
+   section→.m-sech, dish→.m-nm, price→.m-pr, desc→.m-ds, key→.m-key,
+   footer→.m-foot. Non-role-style properties (letter-spacing, text-indent,
+   line-height, font-style, colour) stay literal below. */
+.page {
+  --title-size: 2.15em;   --title-weight: 400; --title-align: center; --title-caps: none; --title-sa: 0; --title-sb: calc(0.4em * var(--dn, 1));
+  --section-size: 1.12em; --section-weight: 500; --section-align: center; --section-caps: none; --section-sa: 0; --section-sb: calc(0.55em * var(--dn, 1));
+  --dish-size: 1em;       --dish-weight: 500; --dish-align: center; --dish-caps: none; --dish-sa: 0; --dish-sb: 0;
+  --price-size: 1em;      --price-weight: 500; --price-align: center; --price-caps: none; --price-sa: 0; --price-sb: 0;
+  --desc-size: 1em;       --desc-weight: 300; --desc-align: center; --desc-caps: none; --desc-sa: 0; --desc-sb: 0;
+  --key-size: 0.82em;     --key-weight: 300; --key-align: center; --key-caps: none; --key-sa: calc(2em * var(--dn, 1)); --key-sb: 0;
+  --footer-size: 0.82em;  --footer-weight: 300; --footer-align: center; --footer-caps: none; --footer-sa: calc(2em * var(--dn, 1) * var(--footer-gap-scale, 1)); --footer-sb: 0;
+}
+
 /* ---------- Menu page typography ---------- */
 .page .inner {
   padding: 17mm 15mm 13mm;
@@ -104,11 +124,14 @@
   height: 20mm;
 }
 .m-title {
-  font-size: 2.15em;
-  font-weight: 400;
+  font-size: var(--title-size);
+  font-weight: var(--title-weight);
+  text-align: var(--title-align);
+  text-transform: var(--title-caps);
   letter-spacing: 0.2em;
   text-indent: 0.2em;
-  margin-bottom: calc(0.4em * var(--dn, 1));
+  margin-top: var(--title-sa);
+  margin-bottom: var(--title-sb);
 }
 .m-hnote {
   font-size: 1.02em;
@@ -123,11 +146,14 @@
   position: relative;
 }
 .m-sech {
-  font-weight: 500;
-  font-size: 1.12em;
+  font-size: var(--section-size);
+  font-weight: var(--section-weight);
+  text-align: var(--section-align);
+  text-transform: var(--section-caps);
   letter-spacing: 0.2em;
   text-indent: 0.2em;
-  margin-bottom: calc(0.55em * var(--dn, 1));
+  margin-top: var(--section-sa);
+  margin-bottom: var(--section-sb);
 }
 .m-secnote {
   font-style: italic;
@@ -145,11 +171,21 @@
   margin-bottom: calc(0.85em * var(--dn, 1));
 }
 .m-nm {
-  font-weight: 500;
+  font-size: var(--dish-size);
+  font-weight: var(--dish-weight);
+  text-align: var(--dish-align);
+  text-transform: var(--dish-caps);
+  margin-top: var(--dish-sa);
+  margin-bottom: var(--dish-sb);
 }
 .m-ds {
+  font-size: var(--desc-size);
+  font-weight: var(--desc-weight);
+  text-align: var(--desc-align);
+  text-transform: var(--desc-caps);
   font-style: italic;
-  font-weight: 300;
+  margin-top: var(--desc-sa);
+  margin-bottom: var(--desc-sb);
 }
 .m-tg {
   font-style: italic;
@@ -161,7 +197,12 @@
   cursor: default;
 }
 .m-pr {
-  font-weight: 500;
+  font-size: var(--price-size);
+  font-weight: var(--price-weight);
+  text-align: var(--price-align);
+  text-transform: var(--price-caps);
+  margin-top: var(--price-sa);
+  margin-bottom: var(--price-sb);
 }
 .m-nt {
   font-style: italic;
@@ -212,20 +253,26 @@
   min-height: 1em;
 }
 .m-foot {
-  padding-top: calc(2em * var(--dn, 1));
-  font-weight: 300;
-  font-size: 0.82em;
+  padding-top: var(--footer-sa);
+  font-size: var(--footer-size);
+  font-weight: var(--footer-weight);
+  text-align: var(--footer-align);
+  text-transform: var(--footer-caps);
   line-height: 1.55;
   letter-spacing: 0.02em;
   color: #3a3a3a; /* deliberately lighter than --ink; no natural app.css var match */
+  margin-bottom: var(--footer-sb);
   white-space: pre-line;
 }
 .m-key {
-  font-weight: 300;
-  font-size: 0.82em;
+  font-size: var(--key-size);
+  font-weight: var(--key-weight);
+  text-align: var(--key-align);
+  text-transform: var(--key-caps);
   letter-spacing: 0.02em;
   color: #3a3a3a; /* see .m-foot note above */
-  padding-top: calc(2em * var(--dn, 1));
+  padding-top: var(--key-sa);
+  margin-bottom: var(--key-sb);
 }
 .m-key + .m-foot {
   padding-top: 0.5em;
@@ -356,7 +403,10 @@ body.moveMode .moveHint {
   max-width: none;
 }
 .m-foot {
-  padding-top: calc(2em * var(--dn, 1) * var(--footer-gap-scale));
+  /* --footer-sa baseline already folds in --footer-gap-scale (see role
+     baselines above), so this stays byte-identical while letting a footer
+     space-above override flow through. */
+  padding-top: var(--footer-sa);
 }
 
 /* Equal visual column geometry. Divider lives in the gap so no column is
@@ -418,4 +468,38 @@ body.moveMode .moveHint {
 }
 .page.A5 {
   page: a5;
+}
+
+/* ================= Landscape booklet sheet (folded A4 → A5) =================
+   A single landscape-A4 sheet (297 × 210mm) that folds once into an A5
+   booklet. The .sheet box carries the .page class too (see plan §3) so the
+   ~10 `.querySelector('.page')` call sites keep working; the two logical
+   panels are laid out 2-up inside it. Selected for landscape @page geometry
+   via `.page.booklet`. Appends to — never overrides — the portrait
+   baselines above. */
+.sheet {
+  width: 297mm;
+  height: 210mm;
+  min-height: 210mm;
+  max-height: 210mm;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: 100%;
+}
+.sheet .panel {
+  position: relative;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+@page booklet {
+  size: 297mm 210mm;
+  margin: 0;
+}
+.page.booklet {
+  page: booklet;
 }

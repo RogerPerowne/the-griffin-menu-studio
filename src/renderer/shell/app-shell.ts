@@ -96,13 +96,18 @@ const appShellMarkup = String.raw`
       <button class="topmenu-btn" data-act="topmenu"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M4 10h16M10 10v9"/></svg><span>Window</span></button>
       <div class="pop">
         <button class="mi" data-cmd="toggle-menus-panel">Menus</button>
+        <button class="mi" data-cmd="toggle-editmenu-panel">Edit Menu</button>
         <button class="mi" data-cmd="toggle-dishes-panel">Dishes</button>
-        <button class="mi" data-cmd="toggle-find-replace-panel">Find &amp; Replace</button>
-        <button class="mi" data-cmd="toggle-reuse-panel">Reuse</button>
+        <hr>
         <button class="mi" data-cmd="toggle-colour-panel">Colour &amp; Spacing</button>
         <button class="mi" data-cmd="toggle-typography-panel">Typography</button>
+        <button class="mi" data-cmd="toggle-page-panel">Page</button>
         <button class="mi" data-cmd="toggle-dietkey-panel">Dietary Key</button>
         <button class="mi" data-cmd="toggle-arrange-panel">Arrange</button>
+        <hr>
+        <button class="mi" data-cmd="toggle-find-replace-panel">Find &amp; Replace</button>
+        <button class="mi" data-cmd="toggle-reuse-panel">Reuse</button>
+        <button class="mi" data-cmd="toggle-previewctl-panel">Preview Controls</button>
         <hr>
         <button class="mi" data-cmd="reset-window-layout">Reset Window Layout</button>
         <button class="mi" data-cmd="new-window">New App Window</button>
@@ -134,6 +139,9 @@ const appShellMarkup = String.raw`
   </nav>
 
   <div class="main" id="mainGrid">
+    <!-- Left DockArea (System 3): filled by dock-render from the WorkspaceLayout;
+         an auto grid track that collapses to zero width while empty. -->
+    <div class="dockarea dock-left" id="dockLeft" hidden></div>
     <aside class="rail" id="rail">
       <div class="cap">MENUS</div>
       <div class="rail-scroll" id="railScroll"></div>
@@ -184,6 +192,9 @@ const appShellMarkup = String.raw`
         <button class="zoomb zoompct" id="zoomPct" data-cmd="actual-size" title="Current zoom — click for 100%">100%</button>
       </div>
     </section>
+    <!-- Right DockArea (System 3): the default tool column (Colour & Spacing /
+         Typography / Page · Dietary Key · Arrange) renders here. -->
+    <div class="dockarea dock-right" id="dockRight" hidden></div>
   </div>
 
   <div id="homeWorkspace" class="workspace"></div>

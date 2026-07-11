@@ -3,6 +3,8 @@
 
 export interface ExportPdfPayload {
   paper: 'A4' | 'A5';
+  /** Landscape sheet (e.g. a folded-booklet A4 sheet, 297×210mm). Defaults to portrait. */
+  landscape?: boolean;
   defaultName?: string;
 }
 
@@ -15,7 +17,7 @@ export interface ExportPngPayload {
 export interface PrintDocumentPayload {
   copies: number;
   paper: 'A4' | 'A5';
-  landscape: false;
+  landscape: boolean;
 }
 
 export interface PrintResult {

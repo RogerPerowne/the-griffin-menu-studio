@@ -416,6 +416,27 @@ export function measureFit(menu: Menu): ProductionInfo {
   return productionInfo(scratch);
 }
 
+/**
+ * Booklet fit: a landscape `.sheet` holds two inside A5 panels that can overflow
+ * independently, so measure each `.sheet .panel` that carries a menu `.page`
+ * (scoping `productionInfo` to the panel, not the whole sheet) and return the
+ * worst case. Additive + guarded: with no landscape sheet present this is a
+ * plain single-page measurement, so normal menus are completely unaffected.
+ */
+export function measureSheetFit(root: HTMLElement): ProductionInfo {
+  const sheet = root.querySelector<HTMLElement>('.sheet');
+  if (!sheet) return productionInfo(root);
+  const panels = Array.from(sheet.querySelectorAll<HTMLElement>('.panel')).filter((p) => p.querySelector('.page'));
+  if (!panels.length) return productionInfo(root);
+  let worst = productionInfo(panels[0]);
+  for (let i = 1; i < panels.length; i++) {
+    const info = productionInfo(panels[i]);
+    // Prefer an overflowing panel, then the tightest fit (least spare room).
+    if ((info.over && !worst.over) || info.spare < worst.spare) worst = info;
+  }
+  return worst;
+}
+
 /* ================= print / export DOM preflight ================= */
 
 export interface PrintPreflight {

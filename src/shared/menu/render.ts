@@ -80,10 +80,14 @@ import type {
   DietKey,
   Menu,
   MenuStyle,
+  MenuTypoRoleStyle,
   Rule,
   RuleItem,
   Section,
   SectionItem,
+  TypographySettings,
+  TypoRole,
+  TypoRoleStyle,
 } from '../types';
 import { tagsStr, usedCodes } from './tags';
 import { rootAfter, rootBottom, rootTop, type RootEntry } from './root-order';
@@ -94,8 +98,52 @@ export interface RenderOptions {
   dietKey: DietKey[];
   /** Resolved image URLs. Never base64, never a global — always supplied by the caller. */
   assets: { crest: string; lockup: string };
-  /** Coordinated font pairing (settings.typography.fontSet); 'griffin' is the default look. */
+  /** Coordinated font pairing (settings.typography.fontSet); 'griffin' is the default look.
+   *  A per-menu `menu.typography.fontSet` overrides this when present. */
   fontSet?: 'griffin' | 'classic' | 'modern';
+  /** Typography *defaults* (settings.typography). `menu.typography` is the per-document
+   *  truth and is merged over these; supply this so menus lacking their own typography
+   *  still pick up the user's defaults. Optional — the menu already carries seeded values. */
+  typography?: TypographySettings;
+}
+
+/** The seven typographic roles, in panel order. Each is also the CSS var prefix
+ *  (`title` → `--title-size` etc.) and maps 1:1 to a `.page` role selector. */
+const TYPO_ROLES: readonly TypoRole[] = ['title', 'section', 'dish', 'price', 'desc', 'key', 'footer'];
+
+/** TypoRoleStyle.caps → CSS `text-transform` value. */
+const CAPS_CSS: Record<NonNullable<TypoRoleStyle['caps']>, string> = {
+  none: 'none',
+  upper: 'uppercase',
+  title: 'capitalize',
+};
+
+/**
+ * Pure mapping from a menu's typography (merged over the settings defaults) to the
+ * inline `--role-*` custom-property declarations emitted on `.page`. The Typography
+ * Master panel and the export preflight reuse this exact mapping so the live preview,
+ * PDF and PNG stay in lock-step.
+ *
+ * Only emits a var when the merged role actually overrides that field — every unset
+ * field falls through to the baseline `--role-*` values in `menu.css`, so a menu with
+ * no typography renders byte-identically to before. Returns a `;`-joined declaration
+ * string with no leading/trailing separator (empty string when nothing is overridden).
+ */
+export function typographyVars(menu: Menu, settingsTypography?: TypographySettings): string {
+  const menuRoles = menu.typography?.roles;
+  const defRoles = settingsTypography?.roles;
+  if (!menuRoles && !defRoles) return '';
+  const out: string[] = [];
+  for (const role of TYPO_ROLES) {
+    const merged: MenuTypoRoleStyle = { ...defRoles?.[role], ...menuRoles?.[role] };
+    if (merged.size != null) out.push(`--${role}-size:${merged.size}px`);
+    if (merged.weight != null) out.push(`--${role}-weight:${merged.weight}`);
+    if (merged.align) out.push(`--${role}-align:${merged.align}`);
+    if (merged.caps) out.push(`--${role}-caps:${CAPS_CSS[merged.caps]}`);
+    if (merged.spaceAbove != null) out.push(`--${role}-sa:${merged.spaceAbove}px`);
+    if (merged.spaceBelow != null) out.push(`--${role}-sb:${merged.spaceBelow}px`);
+  }
+  return out.join(';');
 }
 
 type Pos = { x: number; y: number };
@@ -342,7 +390,12 @@ export function renderMenuHTML(menu: Menu, opts: RenderOptions): string {
   );
 
   const paperClass = style.paper === 'A5' ? 'A5' : '';
-  const fontClass = opts.fontSet && opts.fontSet !== 'griffin' ? ` font-${opts.fontSet}` : '';
+  // Per-menu font set (menu.typography.fontSet) is the document truth; opts.fontSet
+  // (settings default) is the fallback. Resolved through the existing font-* classes.
+  const fontSet = menu.typography?.fontSet ?? opts.fontSet;
+  const fontClass = fontSet && fontSet !== 'griffin' ? ` font-${fontSet}` : '';
   const scaleStyle = `--sc:${style.sc || 1};--dn:${style.dn || 1}`;
-  return `<div class="page ${paperClass}${fontClass}" style="${scaleStyle}"><div class="inner">${h}<div class="print-footer-zone">${foot}</div></div></div>`;
+  const typoStyle = typographyVars(menu, opts.typography);
+  const pageStyle = typoStyle ? `${scaleStyle};${typoStyle}` : scaleStyle;
+  return `<div class="page ${paperClass}${fontClass}" style="${pageStyle}"><div class="inner">${h}<div class="print-footer-zone">${foot}</div></div></div>`;
 }

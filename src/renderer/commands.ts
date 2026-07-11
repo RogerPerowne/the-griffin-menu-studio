@@ -19,11 +19,11 @@ import {
 import { fitPage, getZoom, setFollowFit, setZoom } from './layout-runtime';
 import { createBlankMenu, getWorkspace, goHomePane, setWorkspace } from './workspaces';
 import {
+  activatePanel,
   alignSelectedMove,
-  isPanelOpen,
-  resetFloatWindows,
+  isPanelDocked,
+  resetDockLayout,
   resetSelectedMove,
-  toggleWindowPanel,
 } from './panels/window-panels';
 import { openHelp } from './help/help';
 import { openCommandPalette } from './command-palette';
@@ -47,9 +47,11 @@ export type CommandName =
   | 'center-page-h' | 'center-page-v' | 'reset-selected-position' | 'reset-all-positions'
   | 'zoom-in' | 'zoom-out' | 'fit-width' | 'actual-size' | 'auto-size'
   | 'toggle-rail' | 'toggle-tipbar'
-  | 'toggle-menus-panel' | 'toggle-dishes-panel' | 'toggle-find-replace-panel' | 'toggle-reuse-panel'
-  | 'toggle-colour-panel' | 'toggle-typography-panel'
-  | 'toggle-dietkey-panel' | 'toggle-arrange-panel' | 'reset-window-layout'
+  | 'toggle-menus-panel' | 'toggle-editmenu-panel' | 'toggle-dishes-panel'
+  | 'toggle-find-replace-panel' | 'toggle-reuse-panel'
+  | 'toggle-colour-panel' | 'toggle-typography-panel' | 'toggle-page-panel'
+  | 'toggle-dietkey-panel' | 'toggle-arrange-panel' | 'toggle-previewctl-panel'
+  | 'reset-window-layout'
   | 'go-home' | 'go-editor' | 'go-export'
   | 'help-tutorial' | 'help-tips' | 'help-shortcuts' | 'help-saving' | 'help-tools' | 'tool-search' | 'about';
 
@@ -376,16 +378,20 @@ export const COMMANDS: Command[] = [
   { id: 'toggle-rail', label: 'Menus Column', group: 'View', keywords: 'sidebar rail list', checked: railShown, run: toggleRail },
   { id: 'toggle-tipbar', label: 'Tips Bar', group: 'View', keywords: 'hint help', checked: tipShown, run: toggleTipbar },
 
-  // Window
-  { id: 'toggle-menus-panel', label: 'Menus', group: 'Window', keywords: 'library switch', checked: () => isPanelOpen('menus'), run: () => toggleWindowPanel('menus') },
-  { id: 'toggle-dishes-panel', label: 'Dishes', group: 'Window', keywords: 'items current', checked: () => isPanelOpen('dishes'), run: () => toggleWindowPanel('dishes') },
-  { id: 'toggle-find-replace-panel', label: 'Find & Replace', group: 'Window', hint: 'Ctrl+F', keywords: 'find replace search across menus', checked: () => isPanelOpen('find-replace'), run: () => toggleWindowPanel('find-replace') },
-  { id: 'toggle-reuse-panel', label: 'Reuse', group: 'Window', keywords: 'reuse dish copy clone across menus', checked: () => isPanelOpen('reuse'), run: () => toggleWindowPanel('reuse') },
-  { id: 'toggle-colour-panel', label: 'Colour & Spacing', group: 'Window', keywords: 'paper blush tint gap layout print sliders lines', checked: () => isPanelOpen('colour'), run: () => toggleWindowPanel('colour') },
-  { id: 'toggle-typography-panel', label: 'Typography', group: 'Window', keywords: 'font text size header', checked: () => isPanelOpen('typography'), run: () => toggleWindowPanel('typography') },
-  { id: 'toggle-dietkey-panel', label: 'Dietary Key', group: 'Window', keywords: 'allergen vegetarian codes', checked: () => isPanelOpen('dietkey'), run: () => toggleWindowPanel('dietkey') },
-  { id: 'toggle-arrange-panel', label: 'Arrange', group: 'Window', keywords: 'align position move', checked: () => isPanelOpen('arrange'), run: () => toggleWindowPanel('arrange') },
-  { id: 'reset-window-layout', label: 'Reset Window Layout', group: 'Window', keywords: 'default panels position', run: () => { resetFloatWindows(); toast('Tool windows reset to their default layout.'); } },
+  // Window — every tool is a dockable panel; selecting one docks/activates it
+  // (and toggles it closed when it is already the front tab).
+  { id: 'toggle-menus-panel', label: 'Menus', group: 'Window', keywords: 'library switch', checked: () => isPanelDocked('menus'), run: () => activatePanel('menus') },
+  { id: 'toggle-editmenu-panel', label: 'Edit Menu', group: 'Window', keywords: 'editor sections dishes name date paper header', checked: () => isPanelDocked('edit-menu'), run: () => activatePanel('edit-menu') },
+  { id: 'toggle-dishes-panel', label: 'Dishes', group: 'Window', keywords: 'items current', checked: () => isPanelDocked('dishes'), run: () => activatePanel('dishes') },
+  { id: 'toggle-find-replace-panel', label: 'Find & Replace', group: 'Window', hint: 'Ctrl+F', keywords: 'find replace search across menus', checked: () => isPanelDocked('find-replace'), run: () => activatePanel('find-replace') },
+  { id: 'toggle-reuse-panel', label: 'Reuse', group: 'Window', keywords: 'reuse dish copy clone across menus', checked: () => isPanelDocked('reuse'), run: () => activatePanel('reuse') },
+  { id: 'toggle-colour-panel', label: 'Colour & Spacing', group: 'Window', keywords: 'paper blush tint gap layout print sliders lines', checked: () => isPanelDocked('colour'), run: () => activatePanel('colour') },
+  { id: 'toggle-typography-panel', label: 'Typography', group: 'Window', keywords: 'font text size header', checked: () => isPanelDocked('typography'), run: () => activatePanel('typography') },
+  { id: 'toggle-page-panel', label: 'Page', group: 'Window', keywords: 'paper size a4 a5 margins booklet', checked: () => isPanelDocked('page'), run: () => activatePanel('page') },
+  { id: 'toggle-dietkey-panel', label: 'Dietary Key', group: 'Window', keywords: 'allergen vegetarian codes', checked: () => isPanelDocked('dietkey'), run: () => activatePanel('dietkey') },
+  { id: 'toggle-arrange-panel', label: 'Arrange', group: 'Window', keywords: 'align position move', checked: () => isPanelDocked('arrange'), run: () => activatePanel('arrange') },
+  { id: 'toggle-previewctl-panel', label: 'Preview Controls', group: 'Window', keywords: 'zoom fit width rulers page background', checked: () => isPanelDocked('preview-controls'), run: () => activatePanel('preview-controls') },
+  { id: 'reset-window-layout', label: 'Reset Window Layout', group: 'Window', keywords: 'default panels position dock workspace', run: () => { resetDockLayout(); toast('Panels reset to their default layout.'); } },
 
   // Go
   { id: 'go-home', label: 'Home', group: 'Go', keywords: 'start backstage', checked: () => getWorkspace() === 'home', run: () => setWorkspace('home') },

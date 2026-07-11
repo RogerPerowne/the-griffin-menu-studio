@@ -17,7 +17,7 @@ function normalisePrintPayload(value: unknown): PrintDocumentPayload {
   const copiesValue = Number(raw.copies);
   const copies = Number.isInteger(copiesValue) ? Math.min(99, Math.max(1, copiesValue)) : 1;
   const paper = raw.paper === 'A5' ? 'A5' : 'A4';
-  return { copies, paper, landscape: false };
+  return { copies, paper, landscape: raw.landscape === true };
 }
 
 export async function exportPdf(win: BrowserWindow, payload: ExportPdfPayload): Promise<SaveResult> {
@@ -33,7 +33,13 @@ export async function exportPdf(win: BrowserWindow, payload: ExportPdfPayload): 
       preferCSSPageSize: true,
       displayHeaderFooter: false,
       margins: { marginType: 'none' },
-      pageSize: payload?.paper === 'A5' ? { width: 148000, height: 210000 } : { width: 210000, height: 297000 },
+      // Landscape (folded-booklet A4 sheet) rotates the A4 box to 297×210mm; preferCSSPageSize
+      // above still lets the .page.booklet @page rule win when the DOM declares it.
+      pageSize: payload?.landscape
+        ? { width: 297000, height: 210000 }
+        : payload?.paper === 'A5'
+          ? { width: 148000, height: 210000 }
+          : { width: 210000, height: 297000 },
     });
     await atomicWriteFile(res.filePath, pdf);
     shell.showItemInFolder(res.filePath);
@@ -79,7 +85,7 @@ export function printDocument(win: BrowserWindow, value: unknown): Promise<Print
         silent: false,
         copies: payload.copies,
         pageSize: payload.paper,
-        landscape: false,
+        landscape: payload.landscape,
         scaleFactor: 100,
         margins: { marginType: 'none' },
         header: '',

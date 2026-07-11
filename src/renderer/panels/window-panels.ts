@@ -5,7 +5,7 @@
 // Each window's body is plain HTML; all interaction is delegated on #floatLayer
 // so re-rendering a body never drops a handler.
 
-import type { Dish, Menu, Section, Tag } from '@shared/types';
+import type { Dish, DockArea, Menu, PanelGroup, Section, Tag, WorkspaceLayout } from '@shared/types';
 import { newDish } from '@shared/menu/factories';
 import {
   applyReplacementPreviews,
@@ -33,6 +33,21 @@ import {
   restoreOpenWindows,
   toggleWindow,
 } from './float-windows';
+import type { Panel } from './registry';
+import { registerPanel } from './registry';
+import { loadLayout, resetLayout, saveLayout } from './layout-tree';
+import { refreshDocks, renderDocks, setDockLayout } from './dock-render';
+import { menusPanel } from './defs/menus';
+import { editMenuPanel } from './defs/edit-menu';
+import { dishesPanel } from './defs/dishes';
+import { colourPanel } from './defs/colour';
+import { typographyPanel } from './defs/typography';
+import { pagePanel } from './defs/page';
+import { dietkeyPanel } from './defs/dietkey';
+import { arrangePanel } from './defs/arrange';
+import { findReplacePanel } from './defs/find-replace';
+import { reusePanel } from './defs/reuse';
+import { previewControlsPanel } from './defs/preview-controls';
 
 export type WindowPanel =
   | 'menus'
@@ -83,7 +98,9 @@ function cloneDish(source: Dish): Dish {
 
 /* ============================ list windows ============================ */
 
-function menuList(): string {
+// The panel BODY render functions below are exported so the per-panel Panel defs
+// (registration seam near the bottom of this file) can wrap them for the dock.
+export function menuList(): string {
   const currentId = getState().currentMenuId;
   const rows = getState()
     .menus.map(
@@ -94,7 +111,7 @@ function menuList(): string {
   return rows || '<p class="dock-empty">No menus yet. Create one from Home or File ▸ New.</p>';
 }
 
-function currentDishList(menu: Menu): string {
+export function currentDishList(menu: Menu): string {
   if (!menu) return '<p class="dock-empty">Open a menu to see its dishes.</p>';
   return menu.sections
     .map((section) => {
@@ -185,7 +202,7 @@ function replacePreviewHtml(): string {
     .join('');
 }
 
-function reuseBody(): string {
+export function reuseBody(): string {
   return `<div class="finder-tabs">
       <section>
         <h4>Reuse from another menu</h4>
@@ -196,7 +213,7 @@ function reuseBody(): string {
     </div>`;
 }
 
-function findReplaceBody(): string {
+export function findReplaceBody(): string {
   return `<div class="finder-tabs">
       <section>
         <h4>Find across menus</h4>
@@ -237,7 +254,7 @@ const SPACING_ROWS: SliderRow[] = [
   { key: 'colDivider', label: 'Column divider length', hint: 'Length of vertical column rules', min: 40, max: 100, step: 2 },
 ];
 
-function colourSpacingBody(): string {
+export function colourSpacingBody(): string {
   const s = getState().settings;
   const x = releaseSettings();
   const rows = SPACING_ROWS.map(
@@ -260,7 +277,7 @@ function colourSpacingBody(): string {
     </div>`;
 }
 
-function typographyBody(): string {
+export function typographyBody(): string {
   const menu = currentMenu();
   if (!menu) return '<p class="dock-empty">Open a menu to adjust its typography.</p>';
   const st = menu.style;
@@ -288,7 +305,7 @@ function typographyBody(): string {
 
 const ICON_X = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>';
 
-function dietkeyBody(): string {
+export function dietkeyBody(): string {
   const rows = getState()
     .settings.dietKey.map(
       (k, i) => `<div class="keyrow">
@@ -307,7 +324,7 @@ function dietkeyBody(): string {
 
 /* ============================== arrange ============================== */
 
-function arrangeBody(): string {
+export function arrangeBody(): string {
   return `<div class="tool-form">
       <button class="dock-action" data-cmd="arrange-toggle">Toggle Arrange mode</button>
       <p class="dock-note">Turn Arrange on, click a title, logo, line or text block, then align it.</p>
@@ -345,6 +362,150 @@ function registerAll(): void {
   registerFloatWindow({ id: 'typography', title: 'Typography', icon: I.typography, defaultW: 280, defaultH: 340, body: typographyBody });
   registerFloatWindow({ id: 'dietkey', title: 'Dietary Key', icon: I.dietkey, defaultW: 300, defaultH: 320, body: dietkeyBody });
   registerFloatWindow({ id: 'arrange', title: 'Arrange', icon: I.arrange, defaultW: 250, defaultH: 300, body: arrangeBody });
+}
+
+/* ==========================================================================
+ * PANEL REGISTRATION SEAM  (System 3 · dockable workspace)
+ * --------------------------------------------------------------------------
+ * Every tool that today ships as a float window (plus Page and Preview Controls,
+ * which are reparented live nodes) is registered as a first-class dock Panel here.
+ * Each def lives in ./defs/*.ts and wraps one of the *Body() render functions
+ * exported above (or reparents a live node). The array is built inside the init
+ * call so the def bindings are resolved at runtime — sidestepping any evaluation
+ * ordering concern from the def ⇄ window-panels import cycle.
+ *
+ * The default layout (layout-tree.ts · defaultLayout) fills the RIGHT dock with
+ * Colour & Spacing / Typography / Page (tabs) · Dietary Key · Arrange. The LEFT
+ * dock stays empty so the Menus rail and Edit-Menu column keep their familiar
+ * centre positions (today's arrangement); Menus, Edit Menu, Dishes, Find &
+ * Replace, Reuse and Preview Controls are registered but open on demand from the
+ * Window menu (activatePanel below). dock-render silently skips any unregistered
+ * id, so a panel simply doesn't appear until its def is registered here.
+ * ======================================================================== */
+function registerDockPanels(): void {
+  const defs: Panel[] = [
+    menusPanel,
+    editMenuPanel,
+    dishesPanel,
+    colourPanel,
+    typographyPanel,
+    pagePanel,
+    dietkeyPanel,
+    arrangePanel,
+    findReplacePanel,
+    reusePanel,
+    previewControlsPanel,
+  ];
+  for (const def of defs) registerPanel(def);
+}
+
+/* ------------------------- dock layout state ------------------------- */
+
+// The live workspace layout dock-render is drawing from. We hold the same object
+// reference so activate/close/reset mutate exactly what the renderer re-reads.
+let dockLayout: WorkspaceLayout | null = null;
+
+// Panels that belong on the left (document-adjacent list/editor) when opened
+// on demand; everything else joins the right tool dock.
+const LEFT_PANELS = new Set(['menus', 'edit-menu', 'dishes']);
+
+interface GroupHit {
+  group: PanelGroup;
+}
+
+function findPanelGroup(layout: WorkspaceLayout, id: string): GroupHit | null {
+  for (const side of ['left', 'right'] as const) {
+    for (const col of layout[side].columns) {
+      for (const cell of col.stack.cells) {
+        if (cell.group.panels.includes(id)) return { group: cell.group };
+      }
+    }
+  }
+  return null;
+}
+
+/** True when a panel id is currently placed in either dock. */
+export function isPanelDocked(id: string): boolean {
+  return !!dockLayout && !!findPanelGroup(dockLayout, id);
+}
+
+function pruneArea(area: DockArea): void {
+  for (const col of area.columns) {
+    col.stack.cells = col.stack.cells.filter((cell) => cell.group.panels.length > 0);
+  }
+  area.columns = area.columns.filter((col) => col.stack.cells.length > 0);
+}
+
+function removePanelFromLayout(layout: WorkspaceLayout, id: string): void {
+  for (const side of ['left', 'right'] as const) {
+    for (const col of layout[side].columns) {
+      for (const cell of col.stack.cells) {
+        const g = cell.group;
+        const i = g.panels.indexOf(id);
+        if (i >= 0) {
+          g.panels.splice(i, 1);
+          if (g.activeTab === id) g.activeTab = g.panels[0] ?? '';
+        }
+      }
+    }
+    pruneArea(layout[side]);
+  }
+}
+
+function addPanelToLayout(layout: WorkspaceLayout, id: string): void {
+  const side: 'left' | 'right' = LEFT_PANELS.has(id) ? 'left' : 'right';
+  const area = layout[side];
+  const cell = { heightPct: 30, group: { panels: [id], activeTab: id, collapsed: false } };
+  if (area.columns.length === 0) {
+    area.columns.push({ widthPct: side === 'left' ? 24 : 22, stack: { cells: [cell] } });
+  } else {
+    area.columns[area.columns.length - 1].stack.cells.push(cell);
+  }
+}
+
+/**
+ * Open / bring-to-front a panel from the Window menu. If the panel is already the
+ * active tab of its group it is closed (toggle); if it is docked but behind other
+ * tabs it is activated and its dock expanded; if it is not docked at all it is
+ * added to its home dock. The mutated layout is persisted and both docks redraw.
+ */
+export function activatePanel(id: string): void {
+  if (!dockLayout) return;
+  const hit = findPanelGroup(dockLayout, id);
+  if (hit) {
+    if (hit.group.activeTab === id) {
+      removePanelFromLayout(dockLayout, id);
+    } else {
+      hit.group.activeTab = id;
+      hit.group.collapsed = false;
+    }
+  } else {
+    addPanelToLayout(dockLayout, id);
+  }
+  saveLayout(dockLayout, getState().settings);
+  refreshDocks();
+  window.dispatchEvent(new Event('resize'));
+}
+
+/** Restore the default workspace layout (and reset any float windows too). */
+export function resetDockLayout(): void {
+  dockLayout = resetLayout(getState().settings);
+  setDockLayout(dockLayout);
+  resetWindowLayout();
+  window.dispatchEvent(new Event('resize'));
+}
+
+/** Mount the left/right dock areas and draw the persisted workspace layout. */
+function mountDocks(): void {
+  const left = document.getElementById('dockLeft');
+  const right = document.getElementById('dockRight');
+  if (!left || !right) return;
+  dockLayout = loadLayout(getState().settings);
+  renderDocks({ left, right }, dockLayout, {
+    onChange: (next) => saveLayout(next, getState().settings),
+    // Re-fit the menu page whenever a dock column / stack is resized.
+    onResize: () => window.dispatchEvent(new Event('resize')),
+  });
 }
 
 export function toggleWindowPanel(panel: WindowPanel): void {
@@ -567,6 +728,7 @@ function onLayerClick(e: MouseEvent): void {
     getState().settings.dietKey.splice(Number(dkDel.dataset.dkDel), 1);
     commit(['editor', 'preview']);
     refreshWindow('dietkey');
+    refreshDocks();
     return;
   }
   if (t.closest('[data-dk-add]')) {
@@ -574,6 +736,7 @@ function onLayerClick(e: MouseEvent): void {
     getState().settings.dietKey.push({ c: '', l: '' });
     commit(['editor']);
     refreshWindow('dietkey');
+    refreshDocks();
     return;
   }
 }
@@ -658,20 +821,34 @@ function onLayerChange(e: Event): void {
 export function initWindowPanels(): void {
   initFloatLayer();
   registerAll();
+  registerDockPanels();
 
   const layerEl = document.getElementById('floatLayer');
   layerEl?.addEventListener('click', onLayerClick);
   layerEl?.addEventListener('input', onLayerInput);
   layerEl?.addEventListener('change', onLayerChange);
 
+  // The same delegated handlers drive docked panels too, so a panel body renders
+  // identically whether it lives in a float window or a dock cell.
+  for (const host of [document.getElementById('dockLeft'), document.getElementById('dockRight')]) {
+    host?.addEventListener('click', onLayerClick);
+    host?.addEventListener('input', onLayerInput);
+    host?.addEventListener('change', onLayerChange);
+  }
+  mountDocks();
+
   document.addEventListener('dragstart', handleDragStart);
   document.addEventListener('dragover', handleDragOver);
   document.addEventListener('drop', handleDrop);
   document.getElementById('pagewrap')?.addEventListener('click', handleMoveSelection, true);
 
-  // Keep data-driven windows current when the library/menu changes.
+  // Keep data-driven windows AND docked panels current when the library/menu
+  // changes. refreshDocks re-renders only each visible group's active tab, so a
+  // docked Menus / Dishes / Colour / Typography panel tracks the current menu the
+  // same way its float twin does.
   on('rail', () => {
     if (isOpen('menus')) refreshWindow('menus');
+    refreshDocks();
   });
   on('all', () => {
     if (isOpen('dishes')) refreshWindow('dishes');
@@ -679,6 +856,7 @@ export function initWindowPanels(): void {
     if (isOpen('reuse')) refreshWindow('reuse');
     if (isOpen('typography')) refreshWindow('typography');
     if (isOpen('colour')) refreshWindow('colour');
+    refreshDocks();
   });
 
   restoreOpenWindows();

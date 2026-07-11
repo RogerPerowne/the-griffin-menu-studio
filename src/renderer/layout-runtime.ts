@@ -114,13 +114,16 @@ export function renderRulers(target: StageTarget = EDITOR_STAGE): void {
   const pr = page.getBoundingClientRect();
   if (pr.width < 1) return;
   const a5 = page.classList.contains('A5');
+  // A booklet sheet (.sheet) is a landscape A4 (29.7 × 21cm); it also carries
+  // the `.page` class, so branch on `.sheet` before the portrait A4/A5 sizes.
+  const landscape = page.classList.contains('sheet');
   // Anchor each ruler's 0-origin to its OWN canvas rect (not the scroll's),
   // so ticks track the page edge regardless of grid/scrollbar offsets and at
   // every zoom level (pr is the live transformed rect).
   const topRect = top.getBoundingClientRect();
   const rightRect = right.getBoundingClientRect();
-  drawRuler(top, 'x', pr.width, pr.left - topRect.left, a5 ? 14.8 : 21);
-  drawRuler(right, 'y', pr.height, pr.top - rightRect.top, a5 ? 21 : 29.7);
+  drawRuler(top, 'x', pr.width, pr.left - topRect.left, landscape ? 29.7 : a5 ? 14.8 : 21);
+  drawRuler(right, 'y', pr.height, pr.top - rightRect.top, landscape ? 21 : a5 ? 21 : 29.7);
 }
 
 /** Coalesce high-frequency ruler redraws (e.g. trackpad scroll) into one frame. */

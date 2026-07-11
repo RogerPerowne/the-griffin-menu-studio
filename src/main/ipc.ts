@@ -18,10 +18,10 @@ function filename(value: unknown): string | undefined {
   return typeof value === 'string' && value.length <= 180 ? value : undefined;
 }
 
-function exportPdfPayload(value: unknown): { paper: 'A4' | 'A5'; defaultName?: string } {
+function exportPdfPayload(value: unknown): { paper: 'A4' | 'A5'; landscape?: boolean; defaultName?: string } {
   const input = record(value);
   if (!input || (input.paper !== 'A4' && input.paper !== 'A5')) throw new Error('Invalid PDF export request.');
-  return { paper: input.paper, defaultName: filename(input.defaultName) };
+  return { paper: input.paper, landscape: input.landscape === true, defaultName: filename(input.defaultName) };
 }
 
 function exportPngPayload(value: unknown): { rect: { x: number; y: number; width: number; height: number }; defaultName?: string } {
@@ -36,12 +36,12 @@ function exportPngPayload(value: unknown): { rect: { x: number; y: number; width
   };
 }
 
-function printPayload(value: unknown): { copies: number; paper: 'A4' | 'A5'; landscape: false } {
+function printPayload(value: unknown): { copies: number; paper: 'A4' | 'A5'; landscape: boolean } {
   const input = record(value);
-  if (!input || !Number.isInteger(input.copies) || Number(input.copies) < 1 || Number(input.copies) > 99 || (input.paper !== 'A4' && input.paper !== 'A5') || input.landscape !== false) {
+  if (!input || !Number.isInteger(input.copies) || Number(input.copies) < 1 || Number(input.copies) > 99 || (input.paper !== 'A4' && input.paper !== 'A5') || typeof input.landscape !== 'boolean') {
     throw new Error('Invalid print request.');
   }
-  return { copies: Number(input.copies), paper: input.paper, landscape: false };
+  return { copies: Number(input.copies), paper: input.paper, landscape: input.landscape };
 }
 
 function recoveryId(value: unknown): string {

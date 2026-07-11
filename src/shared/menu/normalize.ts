@@ -1,5 +1,8 @@
-import type { Menu, Section } from '@shared/types';
+import type { Menu, Section, TypoRole } from '@shared/types';
 import { newRootNote, uid } from './factories';
+
+const TYPO_ROLE_SET = new Set<TypoRole>(['title', 'section', 'dish', 'price', 'desc', 'key', 'footer']);
+const FONT_SETS = new Set(['griffin', 'classic', 'modern']);
 
 // Ported from the mockup's normaliseSectionColumns / ensureRootRules / normaliseMenuColumns.
 // In the current model dishes live in section.items and divider rules live in menu.rootRules;
@@ -127,10 +130,40 @@ export function migrateHeaderNote(m: Menu): Menu {
   return m;
 }
 
+/**
+ * Tolerate/normalise `menu.typography` so the renderer never crashes on an
+ * absent, partial or malformed blob (older `.menu` files, hand-edited JSON).
+ * Drops non-object typography, an unknown `fontSet`, a non-object `roles`, and
+ * any stray keys in `roles` that aren't real roles. Leaves valid data untouched
+ * and never invents typography where none existed (absent stays absent).
+ */
+export function normaliseTypography(m: Menu): Menu {
+  const t = m.typography;
+  if (t == null) return m;
+  if (typeof t !== 'object') {
+    delete m.typography;
+    return m;
+  }
+  if (t.fontSet != null && !FONT_SETS.has(t.fontSet)) delete t.fontSet;
+  if (t.roles != null) {
+    if (typeof t.roles !== 'object') {
+      delete t.roles;
+    } else {
+      for (const key of Object.keys(t.roles)) {
+        if (!TYPO_ROLE_SET.has(key as TypoRole)) {
+          delete (t.roles as Record<string, unknown>)[key];
+        }
+      }
+    }
+  }
+  return m;
+}
+
 export function normaliseMenuColumns(m: Menu): Menu {
   migrateHeaderNote(m);
   ensureRootRules(m);
   (m.sections || []).forEach(normaliseSectionColumns);
   normaliseRootRules(m);
+  normaliseTypography(m);
   return m;
 }
