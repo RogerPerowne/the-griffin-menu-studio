@@ -41,8 +41,6 @@ function applyLayoutPrefs(): void {
   const grid = document.getElementById('mainGrid');
   if (!grid) return;
   const s = getState().settings;
-  // The menus column is hidden by default; reach it via Home > Open or Window > Menus column.
-  if (s.railHidden === undefined) s.railHidden = true;
   grid.style.setProperty('--railw', `${s.railWidth ?? 230}px`);
   grid.style.setProperty('--edw', `${s.editorWidth ?? 380}px`);
   grid.classList.toggle('noRail', !!s.railHidden);

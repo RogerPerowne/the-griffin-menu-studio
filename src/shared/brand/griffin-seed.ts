@@ -655,7 +655,7 @@ export function griffinSeed(): AppState {
       ],
       blush: '#F5E4DF',
       railWidth: 230,
-      railHidden: false,
+      railHidden: true,
       layout: {
         sectionGap: 100,
         dishGap: 100,

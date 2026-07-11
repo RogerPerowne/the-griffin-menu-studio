@@ -27,7 +27,7 @@ export const DEFAULT_SETTINGS: Settings = {
   defaults: { paper: 'A4', header: 'title', cols: 1, descMode: 'inline', footer: '' },
   storage: {},
   railWidth: 230,
-  railHidden: false,
+  railHidden: true,
   editorWidth: 380,
   tipSeen: false,
   tipbarHidden: false,
