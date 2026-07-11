@@ -71,12 +71,16 @@ export function renderRulers(): void {
   const top = document.getElementById('rulerTop') as HTMLCanvasElement | null;
   const right = document.getElementById('rulerRight') as HTMLCanvasElement | null;
   if (!scroll || !page || !top || !right) return;
-  const sr = scroll.getBoundingClientRect();
   const pr = page.getBoundingClientRect();
   if (pr.width < 1) return;
   const a5 = page.classList.contains('A5');
-  drawRuler(top, 'x', pr.width, pr.left - sr.left, a5 ? 14.8 : 21);
-  drawRuler(right, 'y', pr.height, pr.top - sr.top, a5 ? 21 : 29.7);
+  // Anchor each ruler's 0-origin to its OWN canvas rect (not the scroll's),
+  // so ticks track the page edge regardless of grid/scrollbar offsets and at
+  // every zoom level (pr is the live transformed rect).
+  const topRect = top.getBoundingClientRect();
+  const rightRect = right.getBoundingClientRect();
+  drawRuler(top, 'x', pr.width, pr.left - topRect.left, a5 ? 14.8 : 21);
+  drawRuler(right, 'y', pr.height, pr.top - rightRect.top, a5 ? 21 : 29.7);
 }
 
 let rulerRaf = 0;
