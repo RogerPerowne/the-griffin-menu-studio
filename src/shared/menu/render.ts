@@ -182,16 +182,23 @@ function splitSectionColumns(items: SectionItem[], cols: number): SectionItem[][
 }
 
 /** Mirrors the mockup's `itemHTML`. */
-function renderDish(dish: Dish, section: Section, edit: boolean, dietKey: DietKey[]): string {
+function renderDish(
+  dish: Dish,
+  section: Section,
+  edit: boolean,
+  dietKey: DietKey[],
+  showPricesGlobal: boolean,
+): string {
   const tg = tagsStr(dish.tags, dietKey);
   const below = section.descMode === 'below';
   const name = dish.name ?? '';
   const desc = dish.desc ?? '';
   const price = dish.price ?? '';
+  const pricesOn = section.prices && showPricesGlobal;
 
   if (below) {
     let x = `<div class="m-item stacked"><span class="m-nm">${editableSpan(edit, `item:${dish.id}.name`, name)}`;
-    if (section.prices && price) {
+    if (pricesOn && price) {
       x += ` <span class="m-pr">${editableSpan(edit, `item:${dish.id}.price`, price)}</span>`;
     }
     x += '</span>';
@@ -209,7 +216,7 @@ function renderDish(dish: Dish, section: Section, edit: boolean, dietKey: DietKe
   }
   if (tg) x += ` <span class="m-tg">${escapeHtml(tg)}</span>`;
   if (dish.note) x += ` <span class="m-nt">(${escapeHtml(dish.note)})</span>`;
-  if (section.prices && (price || edit)) {
+  if (pricesOn && (price || edit)) {
     x += ` <span class="m-pr">${editableSpan(edit, `item:${dish.id}.price`, price)}</span>`;
   }
   return x + '</div>';
@@ -220,12 +227,19 @@ function renderSectionItem(
   section: Section,
   edit: boolean,
   dietKey: DietKey[],
+  showPricesGlobal: boolean,
 ): string {
-  return isRuleItem(item) ? renderRule(item) : renderDish(item, section, edit, dietKey);
+  return isRuleItem(item) ? renderRule(item) : renderDish(item, section, edit, dietKey, showPricesGlobal);
 }
 
 /** Mirrors the section-building portion of the mockup's `menuHTML`. Returns the `.m-sec` markup only — the caller decides whether to wrap/emit it. */
-function sectionHTML(section: Section, list: SectionItem[], edit: boolean, dietKey: DietKey[]): string {
+function sectionHTML(
+  section: Section,
+  list: SectionItem[],
+  edit: boolean,
+  dietKey: DietKey[],
+  showPricesGlobal: boolean,
+): string {
   let sec = `<div class="m-sech">${editableSpan(edit, `sec:${section.id}.name`, section.name)}</div>`;
   if (section.note || edit) {
     sec += `<div class="m-secnote">${editableSpan(edit, `sec:${section.id}.note`, section.note || '')}</div>`;
@@ -240,12 +254,12 @@ function sectionHTML(section: Section, list: SectionItem[], edit: boolean, dietK
         if (colName.trim()) {
           inner += `<div class="m-subh">${editableSpan(edit, `col:${section.id}.${ci}`, colName)}</div>`;
         }
-        for (const it of arr) inner += renderSectionItem(it, section, edit, dietKey);
+        for (const it of arr) inner += renderSectionItem(it, section, edit, dietKey, showPricesGlobal);
         return `<div class="m-col">${inner}</div>`;
       })
       .join('')}</div>`;
   } else {
-    sec += `<div class="m-items">${list.map((it) => renderSectionItem(it, section, edit, dietKey)).join('')}</div>`;
+    sec += `<div class="m-items">${list.map((it) => renderSectionItem(it, section, edit, dietKey, showPricesGlobal)).join('')}</div>`;
   }
   return `<div class="m-sec ${cols > 1 ? 'multi' : ''}">${sec}</div>`;
 }
@@ -260,6 +274,7 @@ export function renderMenuHTML(menu: Menu, opts: RenderOptions): string {
   const dietKey = opts.dietKey;
   const pos = menu.pos ?? {};
   const style: MenuStyle = menu.style;
+  const showPricesGlobal = style.showPrices !== false;
 
   let head = '';
   if (style.header === 'crest') {
@@ -294,7 +309,7 @@ export function renderMenuHTML(menu: Menu, opts: RenderOptions): string {
     const list: SectionItem[] = section.items.filter((it) => !isDish(it) || !it.hidden);
     if (list.length === 0 && !edit) continue;
 
-    h += block(`sec:${section.id}`, sectionHTML(section, list, edit, dietKey), edit, pos);
+    h += block(`sec:${section.id}`, sectionHTML(section, list, edit, dietKey, showPricesGlobal), edit, pos);
 
     for (const r of menu.rootRules.filter(
       (rule) => rule.afterSectionId === section.id && rule.position !== 'top',

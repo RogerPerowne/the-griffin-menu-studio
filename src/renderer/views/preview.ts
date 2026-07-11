@@ -134,6 +134,10 @@ function applyEdit(path: string, rawVal: string): void {
     const found = findDish(menu, id);
     if (found && (field === 'name' || field === 'desc' || field === 'price' || field === 'note')) {
       found.dish[field] = val;
+      if (field === 'price' && val) {
+        found.section.prices = true;
+        menu.style.showPrices = true;
+      }
     }
     return;
   }

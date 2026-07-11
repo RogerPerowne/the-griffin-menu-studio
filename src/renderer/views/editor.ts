@@ -176,7 +176,7 @@ export function renderEditor(): void {
   (m.rootRules ?? [])
     .filter((r) => !r.afterSectionId && r.position !== 'top')
     .forEach((r) => (h += rootRuleRow(r)));
-  h += `<div class="root-actions"><button class="addsec" id="btnAddSec">+ ADD SECTION</button><button class="addrootline" data-act="addrootrule">+ ADD LINE AT END</button></div><div class="foot-ed"><div class="cap">FOOTER - PRINTED AT THE BOTTOM OF THE PAGE</div><textarea id="edFooter" placeholder="Footer lines…">${esc(m.footer || '')}</textarea><label class="chkline"><input type="checkbox" id="edShowKey" ${m.style.showKey ? 'checked' : ''}> Print the dietary key automatically (only the codes used on this menu)</label></div>`;
+  h += `<div class="root-actions"><button class="addsec" id="btnAddSec">+ ADD SECTION</button><button class="addrootline" data-act="addrootrule">+ ADD LINE AT END</button></div><div class="foot-ed"><div class="cap">FOOTER - PRINTED AT THE BOTTOM OF THE PAGE</div><textarea id="edFooter" placeholder="Footer lines…">${esc(m.footer || '')}</textarea><label class="chkline"><input type="checkbox" id="edShowPrices" ${m.style.showPrices !== false ? 'checked' : ''}> Show prices on the menu</label><label class="chkline"><input type="checkbox" id="edShowKey" ${m.style.showKey ? 'checked' : ''}> Print the dietary key automatically (only the codes used on this menu)</label></div>`;
 
   sc.innerHTML = h;
 }
@@ -218,6 +218,21 @@ function onEdScrollInput(e: Event): void {
     const found = findDish(m, itEl.dataset.iid ?? '');
     if (found && (f === 'name' || f === 'desc' || f === 'price' || f === 'note')) {
       found.dish[f] = input.value;
+      if (f === 'price' && input.value.trim()) {
+        let flipped = false;
+        if (!found.section.prices) {
+          found.section.prices = true;
+          flipped = true;
+        }
+        if (m.style.showPrices === false) {
+          m.style.showPrices = true;
+          flipped = true;
+        }
+        if (flipped) {
+          commit(['editor', 'preview', 'rail']);
+          return;
+        }
+      }
       debPreview();
     }
   } else if (secEl) {
@@ -234,6 +249,10 @@ function onEdScrollChange(e: Event): void {
   if (target.id === 'edShowKey') {
     snapshot();
     currentMenu().style.showKey = (target as HTMLInputElement).checked;
+    commit(); // preview + rail; the checkbox itself already shows the new state
+  } else if (target.id === 'edShowPrices') {
+    snapshot();
+    currentMenu().style.showPrices = (target as HTMLInputElement).checked;
     commit(); // preview + rail; the checkbox itself already shows the new state
   } else if (target instanceof HTMLSelectElement && target.dataset.secCols != null) {
     const secEl = target.closest<HTMLElement>('.sec');

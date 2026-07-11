@@ -62,6 +62,10 @@ export interface MenuStyle {
   paper: Paper;
   header: HeaderStyle;
   showKey: boolean;
+  /** Global "show prices" switch. Absent/true = shown; only an explicit
+   *  `false` hides prices menu-wide (per-section `Section.prices` still
+   *  applies on top of this). */
+  showPrices?: boolean;
   /** Font scale for shrink-to-fit (1 = default). */
   sc: number;
   /** Density/leading scale for shrink-to-fit (1 = default). */

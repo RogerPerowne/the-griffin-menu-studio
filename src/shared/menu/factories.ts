@@ -29,7 +29,7 @@ export function newRule(position: RulePosition = 'between', afterSectionId: stri
   return { id: uid(), rule: true, position, afterSectionId };
 }
 
-const DEFAULT_STYLE: MenuStyle = { paper: 'A4', header: 'title', showKey: true, sc: 1, dn: 1 };
+const DEFAULT_STYLE: MenuStyle = { paper: 'A4', header: 'title', showKey: true, showPrices: true, sc: 1, dn: 1 };
 
 export function newMenu(name = 'New Menu', style: Partial<MenuStyle> = {}): Menu {
   return {
