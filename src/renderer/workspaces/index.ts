@@ -8,6 +8,7 @@ import { assetUrl } from '../brand-assets';
 import { commit, currentMenu, getState, on, persist, snapshot } from '../store';
 import { fmtDate } from '../views/rail';
 import { preparePrintDOM } from '../views/preview';
+import { EXPORT_STAGE, fitPage, getZoom, scheduleRulers, setFollowFit, setZoom } from '../layout-runtime';
 import { toast } from '../ui/toast';
 import { confirmDialog } from '../ui/confirm';
 import type { RecoverySummary } from '@shared/api';
@@ -23,6 +24,7 @@ type ExportPane = 'print' | 'pdf' | 'png' | 'save';
 let current: Workspace = 'home';
 let homePane: HomePane = 'open';
 let exportPane: ExportPane = 'print';
+let exportLastMenuId: string | null = null;
 let recoverySnapshots: RecoverySummary[] = [];
 
 /** Called at boot with crash-recovery snapshots to surface as a modal dialog. */
@@ -563,6 +565,17 @@ function initExportWorkspace(): void {
       renderExportWorkspace();
       return;
     }
+    const zoomBtn = target.closest<HTMLElement>('[data-export-zoom]');
+    if (zoomBtn?.dataset.exportZoom) {
+      const action = zoomBtn.dataset.exportZoom;
+      if (action === 'in') setZoom(getZoom(EXPORT_STAGE) * 1.18, EXPORT_STAGE);
+      else if (action === 'out') setZoom(getZoom(EXPORT_STAGE) / 1.18, EXPORT_STAGE);
+      else if (action === 'fit-width') {
+        setFollowFit(true, EXPORT_STAGE);
+        fitPage(EXPORT_STAGE);
+      } else if (action === 'actual-size') setZoom(1, EXPORT_STAGE);
+      return;
+    }
     const step = target.closest<HTMLElement>('[data-copy-step]');
     if (step?.dataset.copyStep) {
       const input = document.getElementById('printCopies') as HTMLInputElement | null;
@@ -571,6 +584,33 @@ function initExportWorkspace(): void {
       input.value = String(next);
     }
   });
+  // Keep the export stage's rulers/zoom-to-fit correct if the window is
+  // resized while the Export workspace is the visible one.
+  window.addEventListener('resize', () => {
+    if (current === 'export') fitPage(EXPORT_STAGE);
+  });
+}
+
+/**
+ * Wires the export stage's scroll (ruler redraw), Ctrl/Cmd+wheel zoom and
+ * zoom-slider — mirrors initPreview's editor-stage wiring (views/preview.ts)
+ * but targets the Export workspace's ids. Re-run after every
+ * renderExportWorkspace() because that call replaces this DOM wholesale.
+ */
+function bindExportStage(): void {
+  const scroll = document.getElementById('exportStageScroll');
+  scroll?.addEventListener('scroll', () => scheduleRulers(EXPORT_STAGE), { passive: true });
+  scroll?.addEventListener(
+    'wheel',
+    (e) => {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      e.preventDefault();
+      setZoom(getZoom(EXPORT_STAGE) * (e.deltaY < 0 ? 1.1 : 1 / 1.1), EXPORT_STAGE);
+    },
+    { passive: false },
+  );
+  const slider = document.getElementById('exportZoomSlider') as HTMLInputElement | null;
+  slider?.addEventListener('input', () => setZoom(Number(slider.value) / 100, EXPORT_STAGE));
 }
 
 function exportNavButton(pane: ExportPane, label: string): string {
@@ -641,6 +681,14 @@ function renderExportWorkspace(): void {
   const dietKey = getState().settings.dietKey;
   const html = renderMenuHTML(menu, { edit: false, dietKey, assets: assets() });
 
+  // Mirrors renderPreview()'s lastMenuId tracking (views/preview.ts): only
+  // reset zoom-to-fit when the open menu actually changes, not on every
+  // pane switch, so a manual zoom survives flipping between Print/PDF/PNG.
+  if (menu.id !== exportLastMenuId) {
+    exportLastMenuId = menu.id;
+    setFollowFit(true, EXPORT_STAGE);
+  }
+
   root.innerHTML = `<div class="export-room">
     <aside class="export-nav" role="navigation" aria-label="Export options">
       ${exportNavButton('print', 'Print')}
@@ -650,8 +698,29 @@ function renderExportWorkspace(): void {
       <button data-cmd="go-editor">Back to Editor</button>
     </aside>
     ${renderExportSettings(menu)}
-    <section class="export-canvas"><header class="export-preview-toolbar"><div><b>${esc(menu.name)}</b><span>${esc(menu.style.paper || 'A4')} - white print preview</span></div></header><div class="export-page-shell"><div class="export-preview-page">${html}</div></div></section>
+    <section class="export-canvas">
+      <header class="export-preview-toolbar"><div><b>${esc(menu.name)}</b><span>${esc(menu.style.paper || 'A4')} - white print preview</span></div></header>
+      <div class="stage-body">
+        <canvas class="ruler ruler-top" id="exportRulerTop" aria-hidden="true"></canvas>
+        <div class="ruler-corner" aria-hidden="true"></div>
+        <div class="stage-scroll" id="exportStageScroll"><div class="pagewrap" id="exportPagewrap">${html}</div></div>
+        <canvas class="ruler ruler-right" id="exportRulerRight" aria-hidden="true"></canvas>
+      </div>
+      <div class="stage-zoombar" role="toolbar" aria-label="Export preview zoom">
+        <button class="zoomb wide" data-export-zoom="fit-width" title="Fit the page to the window width">Fit width</button>
+        <button class="zoomb wide" data-export-zoom="actual-size" title="Show the page at 100%">Actual size</button>
+        <span class="sp"></span>
+        <button class="zoomb icon" data-export-zoom="out" title="Zoom out" aria-label="Zoom out"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+        <input type="range" class="zoom-slider" id="exportZoomSlider" min="20" max="300" step="1" value="100" title="Zoom" aria-label="Zoom level">
+        <button class="zoomb icon" data-export-zoom="in" title="Zoom in" aria-label="Zoom in"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button class="zoomb zoompct" id="exportZoomPct" data-export-zoom="actual-size" title="Current zoom — click for 100%">100%</button>
+      </div>
+    </section>
   </div>`;
+
+  bindExportStage();
+  fitPage(EXPORT_STAGE);
+  requestAnimationFrame(() => fitPage(EXPORT_STAGE));
 
   refreshExportStatus();
 }

@@ -126,13 +126,17 @@ svg{stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-l
 .export-field{display:grid;grid-template-columns:82px 1fr;gap:9px;align-items:center;margin-bottom:9px;font-size:12px}
 .export-field label{color:#6F655A}
 .export-field input,.export-field select{background:#fff;border:1px solid var(--line2);border-radius:8px;padding:8px 9px;color:var(--ink);min-width:0}
-.export-canvas{min-width:0;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:0;background:linear-gradient(180deg,#EFE8DD,#E7DED2)}
+/* Same stage-body/ruler/stage-zoombar apparatus as the editor's live preview
+   (.stage-body/.stage-scroll/.pagewrap etc. below, ~line 382) — the Export
+   workspace reuses those classes with exportRulerTop/exportRulerRight/
+   exportStageScroll/exportPagewrap/exportZoomSlider/exportZoomPct ids (#15),
+   so it gets the same rulers, zoom and centring for free. */
+.export-canvas{min-width:0;min-height:0;overflow:hidden;display:flex;flex-direction:column;padding:0;background:linear-gradient(180deg,#EFE8DD,#E7DED2)}
 .export-preview-toolbar{position:sticky;top:0;z-index:2;width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px 22px;background:rgba(251,248,242,.92);border-bottom:1px solid var(--line);backdrop-filter:blur(6px)}
 .export-preview-toolbar b{display:block;font-size:13px;font-weight:600}
 .export-preview-toolbar span{display:block;font-size:11px;color:var(--mut);margin-top:2px}
-.export-page-shell{min-width:780px;display:flex;justify-content:center}
-.export-preview-page{transform:scale(.68);transform-origin:top center}
-.export-preview-page .page{background:#fff !important;box-shadow:0 0 0 1px #999}
+/* Export's page is the white production page, not the blush live-preview one. */
+.export-canvas .stage-scroll .page{background:#fff !important;box-shadow:0 0 0 1px #999}
 .export-status{font-size:12.5px;color:#3E7A5C;background:#EEF6F0;border-radius:8px;padding:9px 11px}
 .export-status.warn{color:var(--warn);background:#FBEDEA}
 .export-buttons{display:flex;flex-direction:column;gap:8px;margin-top:8px}

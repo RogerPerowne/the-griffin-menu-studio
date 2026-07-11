@@ -4,8 +4,8 @@
 // (reference/griffin-menu-studio.html) — the OVERRIDDEN versions of
 // applyZoom/fitPage/overflowInfo/checkOverflow/scheduleOverflowCheck that
 // supersede the earlier ones in that file. DOM-touching but state-light: the
-// only mutable module state here is the zoom/follow-fit trio, mirrored 1:1
-// from the mockup's globals.
+// only mutable state here is the zoom/baseZoom/follow-fit/ruler-raf quartet
+// per StageTarget, mirrored 1:1 from the mockup's globals (see EDITOR_STAGE).
 //
 // This module intentionally does not import from views/preview.ts (no
 // circular dependency) — callers that need a re-render after a settings
@@ -16,22 +16,62 @@ import { footerCollision, pageOverflow } from '@shared/layout-math';
 import { currentMenu, getState, persist } from './store';
 
 /* ================= zoom ================= */
-// Mirrors the mockup's `baseZoom`, `zoom`, `followFit` module-level state.
+// Mirrors the mockup's `baseZoom`, `zoom`, `followFit` module-level state —
+// now generalised to a `StageTarget` so the same apparatus can drive more
+// than one preview stage (the editor's live preview AND, for #15, the
+// Export workspace's preview) without the two stages fighting over one
+// shared zoom level.
 
-let baseZoom = 1;
-let zoom = 1;
-let followFit = true;
-
-export function getZoom(): number {
-  return zoom;
+/** A DOM/id contract plus per-stage mutable zoom state for one preview stage. */
+export interface StageTarget {
+  readonly pagewrapId: string;
+  readonly scrollId: string;
+  readonly rulerTopId: string;
+  readonly rulerRightId: string;
+  readonly zoomLabelId: string;
+  readonly zoomSliderId: string;
+  baseZoom: number;
+  zoom: number;
+  followFit: boolean;
+  rulerRaf: number;
 }
 
-export function getFollowFit(): boolean {
-  return followFit;
+function makeStageTarget(
+  ids: Pick<StageTarget, 'pagewrapId' | 'scrollId' | 'rulerTopId' | 'rulerRightId' | 'zoomLabelId' | 'zoomSliderId'>,
+): StageTarget {
+  return { ...ids, baseZoom: 1, zoom: 1, followFit: true, rulerRaf: 0 };
 }
 
-export function setFollowFit(value: boolean): void {
-  followFit = value;
+/** The editor's live preview stage — the default target for every function below. */
+export const EDITOR_STAGE: StageTarget = makeStageTarget({
+  pagewrapId: 'pagewrap',
+  scrollId: 'stageScroll',
+  rulerTopId: 'rulerTop',
+  rulerRightId: 'rulerRight',
+  zoomLabelId: 'zoomPct',
+  zoomSliderId: 'zoomSlider',
+});
+
+/** The Export workspace's preview stage (see #15) — same apparatus, different DOM ids. */
+export const EXPORT_STAGE: StageTarget = makeStageTarget({
+  pagewrapId: 'exportPagewrap',
+  scrollId: 'exportStageScroll',
+  rulerTopId: 'exportRulerTop',
+  rulerRightId: 'exportRulerRight',
+  zoomLabelId: 'exportZoomPct',
+  zoomSliderId: 'exportZoomSlider',
+});
+
+export function getZoom(target: StageTarget = EDITOR_STAGE): number {
+  return target.zoom;
+}
+
+export function getFollowFit(target: StageTarget = EDITOR_STAGE): boolean {
+  return target.followFit;
+}
+
+export function setFollowFit(value: boolean, target: StageTarget = EDITOR_STAGE): void {
+  target.followFit = value;
 }
 
 /**
@@ -40,23 +80,23 @@ export function setFollowFit(value: boolean): void {
  * scroll footprint exactly match the visible page (previously the wrapper was
  * both sized to the scaled box AND transformed, doubling the footprint).
  */
-export function applyZoom(): void {
-  const wrap = document.getElementById('pagewrap');
+export function applyZoom(target: StageTarget = EDITOR_STAGE): void {
+  const wrap = document.getElementById(target.pagewrapId);
   const page = wrap?.querySelector<HTMLElement>('.page');
   if (!wrap || !page) return;
-  zoom = Math.max(0.2, Math.min(3, zoom));
+  target.zoom = Math.max(0.2, Math.min(3, target.zoom));
   const pw = page.offsetWidth;
   const ph = page.offsetHeight;
   wrap.style.transform = 'none';
   page.style.transformOrigin = 'top left';
-  page.style.transform = `scale(${zoom})`;
-  wrap.style.width = `${pw * zoom}px`;
-  wrap.style.height = `${ph * zoom}px`;
-  const label = document.getElementById('zoomPct');
-  if (label) label.textContent = `${Math.round(zoom * 100)}%`;
-  const slider = document.getElementById('zoomSlider') as HTMLInputElement | null;
-  if (slider && document.activeElement !== slider) slider.value = String(Math.round(zoom * 100));
-  renderRulers();
+  page.style.transform = `scale(${target.zoom})`;
+  wrap.style.width = `${pw * target.zoom}px`;
+  wrap.style.height = `${ph * target.zoom}px`;
+  const label = document.getElementById(target.zoomLabelId);
+  if (label) label.textContent = `${Math.round(target.zoom * 100)}%`;
+  const slider = document.getElementById(target.zoomSliderId) as HTMLInputElement | null;
+  if (slider && document.activeElement !== slider) slider.value = String(Math.round(target.zoom * 100));
+  renderRulers(target);
 }
 
 /**
@@ -65,11 +105,11 @@ export function applyZoom(): void {
  * mark pinned to the page's top-left edge (so they track zoom + scroll). Tick
  * spacing is derived from the ACTUAL rendered page rect, correct at any zoom/DPI.
  */
-export function renderRulers(): void {
-  const scroll = document.getElementById('stageScroll');
-  const page = document.querySelector<HTMLElement>('#pagewrap .page');
-  const top = document.getElementById('rulerTop') as HTMLCanvasElement | null;
-  const right = document.getElementById('rulerRight') as HTMLCanvasElement | null;
+export function renderRulers(target: StageTarget = EDITOR_STAGE): void {
+  const scroll = document.getElementById(target.scrollId);
+  const page = document.querySelector<HTMLElement>(`#${target.pagewrapId} .page`);
+  const top = document.getElementById(target.rulerTopId) as HTMLCanvasElement | null;
+  const right = document.getElementById(target.rulerRightId) as HTMLCanvasElement | null;
   if (!scroll || !page || !top || !right) return;
   const pr = page.getBoundingClientRect();
   if (pr.width < 1) return;
@@ -83,13 +123,12 @@ export function renderRulers(): void {
   drawRuler(right, 'y', pr.height, pr.top - rightRect.top, a5 ? 21 : 29.7);
 }
 
-let rulerRaf = 0;
 /** Coalesce high-frequency ruler redraws (e.g. trackpad scroll) into one frame. */
-export function scheduleRulers(): void {
-  if (rulerRaf) return;
-  rulerRaf = requestAnimationFrame(() => {
-    rulerRaf = 0;
-    renderRulers();
+export function scheduleRulers(target: StageTarget = EDITOR_STAGE): void {
+  if (target.rulerRaf) return;
+  target.rulerRaf = requestAnimationFrame(() => {
+    target.rulerRaf = 0;
+    renderRulers(target);
   });
 }
 
@@ -140,25 +179,25 @@ function drawRuler(canvas: HTMLCanvasElement, axis: 'x' | 'y', pageLenPx: number
   }
 }
 
-export function fitPage(): void {
-  const wrap = document.getElementById('pagewrap');
+export function fitPage(target: StageTarget = EDITOR_STAGE): void {
+  const wrap = document.getElementById(target.pagewrapId);
   const page = wrap?.querySelector<HTMLElement>('.page');
-  const stageScroll = document.getElementById('stageScroll');
+  const stageScroll = document.getElementById(target.scrollId);
   if (!page || !stageScroll) return;
   const cs = getComputedStyle(stageScroll);
   const padX = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
   const availW = Math.max(1, stageScroll.clientWidth - padX);
   const pw = page.offsetWidth;
   if (pw < 10) return;
-  baseZoom = Math.min(availW / pw, 1.6);
-  if (followFit) zoom = baseZoom;
-  applyZoom();
+  target.baseZoom = Math.min(availW / pw, 1.6);
+  if (target.followFit) target.zoom = target.baseZoom;
+  applyZoom(target);
 }
 
-export function setZoom(z: number): void {
-  followFit = false;
-  zoom = z;
-  applyZoom();
+export function setZoom(z: number, target: StageTarget = EDITOR_STAGE): void {
+  target.followFit = false;
+  target.zoom = z;
+  applyZoom(target);
 }
 
 /* ================= overflow / fixed-paper measurement ================= */

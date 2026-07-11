@@ -481,7 +481,7 @@ export function initPreview(): void {
   // Zoom controls now live on the bottom zoom bar as command buttons
   // (data-cmd="zoom-in|zoom-out|fit-width|actual-size"). Keep the rulers in sync
   // as the preview is scrolled.
-  document.getElementById('stageScroll')?.addEventListener('scroll', scheduleRulers, { passive: true });
+  document.getElementById('stageScroll')?.addEventListener('scroll', () => scheduleRulers(), { passive: true });
   const zoomSlider = document.getElementById('zoomSlider') as HTMLInputElement | null;
   zoomSlider?.addEventListener('input', () => setZoom(Number(zoomSlider.value) / 100));
   // Ctrl/Cmd + wheel zooms the preview (Acrobat-style); plain wheel scrolls.
