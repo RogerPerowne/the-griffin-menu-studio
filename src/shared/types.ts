@@ -187,7 +187,20 @@ export interface Settings {
   typography?: TypographySettings;
 }
 
-/** Global typography defaults (the Typography Master panel grows from these). */
+/** The seven typographic roles on a menu. */
+export type TypoRole = 'title' | 'section' | 'dish' | 'price' | 'desc' | 'key' | 'footer';
+
+/** Per-role overrides applied to the menu page via CSS custom properties. */
+export interface TypoRoleStyle {
+  size?: number; // px
+  weight?: number; // 400 | 500 | 600 | 700
+  align?: 'left' | 'center' | 'right';
+  caps?: 'none' | 'upper' | 'title';
+  spaceAbove?: number; // px
+  spaceBelow?: number; // px
+}
+
+/** Global + per-role typography defaults (the Typography Master panel edits these). */
 export interface TypographySettings {
   /** Coordinated font pairing applied to the menu page. */
   fontSet?: 'griffin' | 'classic' | 'modern';
@@ -195,6 +208,8 @@ export interface TypographySettings {
   scale?: number;
   /** Default layout density for new menus (maps to style.dn). */
   density?: 'compact' | 'balanced' | 'spacious';
+  /** Per-role style overrides. */
+  roles?: Partial<Record<TypoRole, TypoRoleStyle>>;
 }
 
 /** Position, size and last-open state of one floating tool window. */

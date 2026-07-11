@@ -155,10 +155,27 @@ function typography(value: unknown): Settings['typography'] {
   const input = record(value);
   const fontSet = input?.fontSet;
   const density = input?.density;
+  const rolesIn = record(input?.roles);
+  const roles: NonNullable<Settings['typography']>['roles'] = {};
+  if (rolesIn) {
+    for (const key of ['title', 'section', 'dish', 'price', 'desc', 'key', 'footer'] as const) {
+      const r = record(rolesIn[key]);
+      if (!r) continue;
+      const st: Record<string, unknown> = {};
+      if (typeof r.size === 'number') st.size = Math.max(6, Math.min(72, r.size));
+      if (typeof r.weight === 'number') st.weight = Math.max(300, Math.min(800, r.weight));
+      if (r.align === 'left' || r.align === 'center' || r.align === 'right') st.align = r.align;
+      if (r.caps === 'none' || r.caps === 'upper' || r.caps === 'title') st.caps = r.caps;
+      if (typeof r.spaceAbove === 'number') st.spaceAbove = Math.max(0, Math.min(80, r.spaceAbove));
+      if (typeof r.spaceBelow === 'number') st.spaceBelow = Math.max(0, Math.min(80, r.spaceBelow));
+      if (Object.keys(st).length) (roles as Record<string, unknown>)[key] = st;
+    }
+  }
   return {
     fontSet: fontSet === 'classic' || fontSet === 'modern' ? fontSet : 'griffin',
     scale: number(input?.scale, 1, 0.7, 1.4),
     density: density === 'compact' || density === 'spacious' ? density : 'balanced',
+    roles,
   };
 }
 

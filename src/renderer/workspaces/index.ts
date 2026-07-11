@@ -40,9 +40,63 @@ function fmtTimestamp(iso: string): string {
   return d.toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
-/** One row in the Typography Master roles preview (name + sample in the font set). */
-function typoRole(cls: string, name: string, sample: string): string {
-  return `<div class="typo-role"><span class="typo-role-name">${esc(name)}</span><span class="typo-sample typo-${cls}">${esc(sample)}</span></div>`;
+type TypoRoleKey = 'title' | 'section' | 'dish' | 'price' | 'desc' | 'key' | 'footer';
+let selectedTypoRole: TypoRoleKey = 'dish';
+
+const TYPO_ROLE_LABELS: Record<TypoRoleKey, string> = {
+  title: 'Menu title', section: 'Section header', dish: 'Dish name', price: 'Dish price',
+  desc: 'Dish description', key: 'Dietary key', footer: 'Footer',
+};
+const TYPO_ROLE_DEFAULT_SIZE: Record<TypoRoleKey, number> = { title: 22, section: 14, dish: 15, price: 15, desc: 13, key: 12, footer: 11 };
+
+function roleStyle(role: TypoRoleKey): import('@shared/types').TypoRoleStyle {
+  return getState().settings.typography?.roles?.[role] ?? {};
+}
+
+function setRoleStyle(prop: string, value: string | number): void {
+  const t = (getState().settings.typography = getState().settings.typography ?? {});
+  const roles = (t.roles = t.roles ?? {});
+  const st = (roles[selectedTypoRole] = roles[selectedTypoRole] ?? {});
+  (st as Record<string, unknown>)[prop] = value;
+  commit(['preview']);
+}
+
+/** Inline style for a role preview sample from its persisted overrides. */
+function roleInline(st: import('@shared/types').TypoRoleStyle): string {
+  let s = '';
+  if (st.size) s += `font-size:${st.size}px;`;
+  if (st.weight) s += `font-weight:${st.weight};`;
+  if (st.align) s += `text-align:${st.align};display:block;`;
+  if (st.caps) s += `text-transform:${st.caps === 'upper' ? 'uppercase' : st.caps === 'title' ? 'capitalize' : 'none'};`;
+  return s;
+}
+
+/** One selectable row in the roles list (name + live sample in the font set). */
+function typoRole(role: TypoRoleKey, sample: string): string {
+  const st = roleStyle(role);
+  const sel = role === selectedTypoRole ? ' sel' : '';
+  return `<button type="button" class="typo-role${sel}" data-typo-role="${role}"><span class="typo-role-name">${esc(TYPO_ROLE_LABELS[role])}</span><span class="typo-sample typo-${role}" style="${roleInline(st)}">${esc(sample)}</span><span class="typo-chev">›</span></button>`;
+}
+
+/** The "Selected role" controls (mockup section 3) for the chosen role. */
+function typoRoleControls(): string {
+  const role = selectedTypoRole;
+  const st = roleStyle(role);
+  const size = st.size ?? TYPO_ROLE_DEFAULT_SIZE[role];
+  const weight = st.weight ?? 400;
+  const align = st.align ?? 'left';
+  const caps = st.caps ?? 'none';
+  const wopt = (v: number, l: string): string => `<option value="${v}" ${weight === v ? 'selected' : ''}>${l}</option>`;
+  const alignBtn = (v: string, ico: string): string => `<button type="button" class="seg-btn ${align === v ? 'on' : ''}" data-typo-align="${v}" title="${v}">${ico}</button>`;
+  const capsBtn = (v: string, l: string): string => `<button type="button" class="seg-btn ${caps === v ? 'on' : ''}" data-typo-caps="${v}">${l}</button>`;
+  return `<div class="typo-block"><span class="typo-step">3</span><b>Selected: ${esc(TYPO_ROLE_LABELS[role])}</b></div>
+    <div class="typo-ctrls">
+      <label>Size <span class="range-row"><input type="range" min="8" max="40" value="${size}" data-typo-ctrl="size"><span class="range-val" data-typo-ctrl-val="size">${size}px</span></span></label>
+      <label>Weight <select data-typo-ctrl="weight">${wopt(400, 'Regular')}${wopt(500, 'Medium')}${wopt(600, 'Semi Bold')}${wopt(700, 'Bold')}</select></label>
+      <div class="typo-ctrl-line"><span>Alignment</span><div class="seg">${alignBtn('left', '⟝')}${alignBtn('center', '≡')}${alignBtn('right', '⟞')}</div></div>
+      <div class="typo-ctrl-line"><span>Capitalisation</span><div class="seg">${capsBtn('none', 'None')}${capsBtn('upper', 'UPPER')}${capsBtn('title', 'Title')}</div></div>
+      <button type="button" class="abtn typo-reset" data-typo-reset>Reset ${esc(TYPO_ROLE_LABELS[role])}</button>
+    </div>`;
 }
 
 let recoveryOverlay: HTMLElement | null = null;
@@ -365,6 +419,19 @@ function renderHomeMain(): string {
     const fontSet = typo.fontSet || 'griffin';
     const density = typo.density || 'balanced';
     const scalePct = Math.round((typo.scale ?? 1) * 100);
+    // Real menu content for the role previews (falls back to representative Griffin samples).
+    const cm = currentMenu();
+    const firstSec = cm?.sections?.[0];
+    const firstDish = (firstSec?.items ?? []).find((it) => !(it as { type?: string }).type) as { name?: string; price?: string; desc?: string } | undefined;
+    const sample = {
+      title: cm?.name || 'Sunday Menu',
+      section: firstSec?.name || 'To Start',
+      dish: firstDish?.name || 'Roast Sirloin of Beef',
+      price: firstDish?.price || '24',
+      desc: firstDish?.desc || 'Yorkshire pudding, roast potatoes, seasonal greens',
+      key: '(gf) gluten free   (v) vegetarian',
+      footer: (cm?.footer || '').split('\n')[0] || 'Please let us know of any allergies or intolerances',
+    };
     const rec = settings.recovery ?? {};
     const recInterval = rec.intervalSeconds ?? 30;
     const opt = (val: string, label: string, on: boolean): string => `<option value="${val}" ${on ? 'selected' : ''}>${label}</option>`;
@@ -385,22 +452,23 @@ function renderHomeMain(): string {
           <label>Preview paper tint <span class="colour-row"><input type="color" data-setting-default="blush" value="${esc(defaults.blush || '#F5E4DF')}"><small>Exports always stay white.</small></span></label>
         </section>
 
-        <section class="settings-card typo-card"><h2><span class="typo-mark">T</span> Default typography</h2>
-          <p class="settings-note">The coordinated look for new menus. Full per-role control (fonts, weights, spacing per element) arrives with the Typography Master panel in the editor.</p>
+        <section class="settings-card typo-card"><h2>Typography</h2>
+          <p class="settings-note">The default look for new menus, previewed with your own menu content. Set the coordinated basics here; every role can be fine-tuned below.</p>
           <div class="typo-block"><span class="typo-step">1</span><b>Global</b></div>
           <label>Font set <select data-setting-typo="fontSet">${opt('griffin', 'Griffin — Georgia + Sans', fontSet === 'griffin')}${opt('classic', 'Classic — Playfair + Inter', fontSet === 'classic')}${opt('modern', 'Modern — Clean Sans', fontSet === 'modern')}</select></label>
           <label>Overall text size <span class="range-row"><input type="range" min="70" max="140" step="1" value="${scalePct}" data-setting-typo="scale"><span class="range-val" id="typoScaleVal">${scalePct}%</span></span></label>
           <div class="seg" role="group" aria-label="Density">${seg('typo-density', 'compact', density, 'Compact')}${seg('typo-density', 'balanced', density, 'Balanced')}${seg('typo-density', 'spacious', density, 'Spacious')}</div>
           <div class="typo-block"><span class="typo-step">2</span><b>Roles</b></div>
           <div class="typo-roles font-${fontSet}">
-            ${typoRole('title', 'Menu title', 'Sunday Menu')}
-            ${typoRole('section', 'Section header', 'To Start')}
-            ${typoRole('dish', 'Dish name', 'Roast Sirloin of Beef')}
-            ${typoRole('price', 'Dish price', '24')}
-            ${typoRole('desc', 'Dish description', 'Yorkshire pudding, roast potatoes, seasonal greens')}
-            ${typoRole('key', 'Dietary key', '(gf) gluten free   (v) vegetarian')}
-            ${typoRole('footer', 'Footer', 'Please let us know of any allergies or intolerances')}
+            ${typoRole('title', sample.title)}
+            ${typoRole('section', sample.section)}
+            ${typoRole('dish', sample.dish)}
+            ${typoRole('price', sample.price)}
+            ${typoRole('desc', sample.desc)}
+            ${typoRole('key', sample.key)}
+            ${typoRole('footer', sample.footer)}
           </div>
+          ${typoRoleControls()}
         </section>
 
         <section class="settings-card"><h2>Storage locations</h2>
@@ -568,6 +636,31 @@ function initHomeWorkspace(): void {
       density.parentElement?.querySelectorAll('.seg-btn').forEach((b) => b.classList.toggle('on', b === density));
       return;
     }
+    const roleBtn = target.closest<HTMLElement>('[data-typo-role]');
+    if (roleBtn?.dataset.typoRole) {
+      selectedTypoRole = roleBtn.dataset.typoRole as TypoRoleKey;
+      renderHomeWorkspace();
+      return;
+    }
+    const alignBtn = target.closest<HTMLElement>('[data-typo-align]');
+    if (alignBtn?.dataset.typoAlign) {
+      setRoleStyle('align', alignBtn.dataset.typoAlign);
+      renderHomeWorkspace();
+      return;
+    }
+    const capsBtn = target.closest<HTMLElement>('[data-typo-caps]');
+    if (capsBtn?.dataset.typoCaps) {
+      setRoleStyle('caps', capsBtn.dataset.typoCaps);
+      renderHomeWorkspace();
+      return;
+    }
+    if (target.closest('[data-typo-reset]')) {
+      const roles = getState().settings.typography?.roles;
+      if (roles) delete roles[selectedTypoRole];
+      commit(['preview']);
+      renderHomeWorkspace();
+      return;
+    }
     const browse = target.closest<HTMLElement>('[data-browse-storage]');
     if (browse?.dataset.browseStorage) {
       const key = browse.dataset.browseStorage as 'defaultMenuFolder' | 'templatesFolder' | 'recoveryFolder';
@@ -629,6 +722,17 @@ function initHomeWorkspace(): void {
           document.querySelector('.typo-roles')?.classList.add(`font-${t.fontSet}`);
         }
         commit(['preview']);
+        return;
+      }
+      const typoCtrl = input.dataset.typoCtrl as 'size' | 'weight' | undefined;
+      if (typoCtrl) {
+        setRoleStyle(typoCtrl, Number(input.value));
+        if (typoCtrl === 'size') {
+          const valEl = document.querySelector('[data-typo-ctrl-val="size"]');
+          if (valEl) valEl.textContent = `${input.value}px`;
+        }
+        const sampleEl = document.querySelector<HTMLElement>(`.typo-role[data-typo-role="${selectedTypoRole}"] .typo-sample`);
+        if (sampleEl) sampleEl.setAttribute('style', roleInline(roleStyle(selectedTypoRole)));
         return;
       }
       const recKey = input.dataset.settingRecovery as 'enabled' | 'intervalSeconds' | undefined;

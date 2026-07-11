@@ -115,8 +115,16 @@ svg{stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-l
 .typo-block{display:flex;align-items:center;gap:8px;margin-top:4px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
 .typo-step{width:18px;height:18px;border-radius:50%;background:var(--brand-green);color:var(--brand-pink);display:inline-flex;align-items:center;justify-content:center;font-size:11px}
 .typo-roles{display:flex;flex-direction:column;gap:1px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.typo-role{display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px;align-items:center;padding:9px 12px;background:#fff;border-bottom:1px solid var(--line)}
+.typo-role{width:100%;display:grid;grid-template-columns:104px minmax(0,1fr) 14px;gap:10px;align-items:center;padding:9px 12px;background:#fff;border:none;border-bottom:1px solid var(--line);text-align:left;font:inherit;cursor:pointer}
 .typo-role:last-child{border-bottom:none}
+.typo-role:hover{background:var(--cream)}
+.typo-role.sel{background:#EEE9DC;box-shadow:inset 3px 0 0 var(--brand-green)}
+.typo-chev{color:var(--mut);font-size:15px;text-align:center}
+.typo-ctrls{display:flex;flex-direction:column;gap:10px;border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--cream)}
+.typo-ctrl-line{display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;align-items:center}
+.typo-ctrl-line>span{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.typo-ctrls .seg-btn{font-size:11px;padding:7px 4px}
+.typo-reset{align-self:flex-start;margin-top:2px}
 .typo-role-name{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
 .typo-sample{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}
 .typo-title{font-size:17px;letter-spacing:.06em;text-transform:uppercase}
