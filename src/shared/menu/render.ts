@@ -290,10 +290,10 @@ export function renderMenuHTML(menu: Menu, opts: RenderOptions): string {
   }
   let h = block('header', head, edit, pos);
 
-  if (menu.headerNote || edit) {
+  if (menu.headerNote && menu.headerNote.trim()) {
     h += block(
       'hnote',
-      `<div class="m-hnote">${editableSpan(edit, 'menu.headerNote', menu.headerNote || '')}</div>`,
+      `<div class="m-hnote">${editableSpan(edit, 'menu.headerNote', menu.headerNote)}</div>`,
       edit,
       pos,
     );

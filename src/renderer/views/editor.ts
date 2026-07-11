@@ -43,6 +43,22 @@ export function setSelectedSectionId(id: string | null): void {
   selectedSectionId = id;
 }
 
+// Transient "a subtitle exists / is being added" flag. The subtitle (menu
+// headerNote) shows as a removable row in the column while this is true or the
+// text is non-empty; removing it clears both, so an empty subtitle disappears.
+let addingSubtitle = false;
+
+export function startAddSubtitle(): void {
+  addingSubtitle = true;
+  renderEditor();
+  document.querySelector<HTMLInputElement>('#edScroll .subtitle-in')?.focus();
+}
+
+/** A subtitle row for the Edit Menu column, styled like a menu-line row. */
+function subtitleRow(m: Menu): string {
+  return `<div class="rootrule subtitlerow"><span class="handle" title="Subtitle — shown under the menu title">${ICONS.grip}</span><input class="subtitle-in" data-f="subtitle" value="${esc(m.headerNote || '')}" placeholder="Subtitle — under the menu title"><button class="iconb danger" data-act="subtitledel" title="Remove subtitle">${ICONS.x}</button></div>`;
+}
+
 /* ================= helpers ================= */
 
 const ESCAPE_MAP: Record<string, string> = {
@@ -129,12 +145,14 @@ export function renderEditor(): void {
   const headerSel = el<HTMLSelectElement>('edHeader');
   if (headerSel) headerSel.value = m.style.header || 'title';
   const addSubtitleBtn = el<HTMLButtonElement>('btnAddSubtitle');
-  if (addSubtitleBtn) addSubtitleBtn.style.display = m.headerNote ? 'none' : 'inline-block';
+  if (addSubtitleBtn) addSubtitleBtn.style.display = (m.headerNote || addingSubtitle) ? 'none' : 'inline-block';
 
   const sc = el<HTMLElement>('edScroll');
   if (!sc) return;
 
-  let h = `<button class="addrootline" data-act="addrootrule" data-pos="top">+ ADD LINE AT TOP</button><div class="rootdropzone edge" data-rootpos="top"></div>`;
+  let h = '';
+  if (addingSubtitle || m.headerNote) h += subtitleRow(m);
+  h += `<button class="addrootline" data-act="addrootrule" data-pos="top">+ ADD LINE AT TOP</button><div class="rootdropzone edge" data-rootpos="top"></div>`;
   (m.rootRules ?? []).filter((r) => r.position === 'top').forEach((r) => (h += rootRuleRow(r)));
 
   const selSecId = selectedSectionId ?? m.sections[0]?.id ?? null;
@@ -205,6 +223,11 @@ function onEdScrollInput(e: Event): void {
     return;
   }
   const input = target as HTMLInputElement;
+  if (input.dataset.f === 'subtitle') {
+    m.headerNote = input.value;
+    debPreview();
+    return;
+  }
   const secEl = target.closest<HTMLElement>('.sec');
   const itEl = target.closest<HTMLElement>('.item');
   if (input.dataset.colname != null && secEl) {
@@ -377,6 +400,13 @@ function onEdScrollClick(e: Event): void {
     if (!rr) return;
     snapshot();
     m.rootRules = (m.rootRules ?? []).filter((r) => r.id !== rr.dataset.rid);
+    commit(SCOPES_ALL);
+    return;
+  }
+  if (act === 'subtitledel') {
+    snapshot();
+    m.headerNote = '';
+    addingSubtitle = false;
     commit(SCOPES_ALL);
     return;
   }
@@ -649,7 +679,7 @@ function wireHeadControls(): void {
     currentMenu().style.header = (e.target as HTMLSelectElement).value as HeaderStyle;
     commit(SCOPES_ALL);
   });
-  el<HTMLButtonElement>('btnAddSubtitle')?.addEventListener('click', () => focusHeaderNote());
+  el<HTMLButtonElement>('btnAddSubtitle')?.addEventListener('click', () => startAddSubtitle());
 }
 
 /* ================= ⋯ More popover ================= */

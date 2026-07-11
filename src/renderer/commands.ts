@@ -8,10 +8,9 @@ import { fmtDate } from './views/rail';
 import { canRedo, canUndo, commit, currentMenu, getState, persist, redo, snapshot, undo } from './store';
 import { openDishPicker } from './views/dishpicker';
 import { downloadBackup, openRestoreDialog } from './views/backup';
-import { deleteCurrentMenu, duplicateMenu, getSelectedSectionId, saveLayoutAsTemplate } from './views/editor';
+import { deleteCurrentMenu, duplicateMenu, getSelectedSectionId, saveLayoutAsTemplate, startAddSubtitle } from './views/editor';
 import {
   autoFitOnePage,
-  focusHeaderNote,
   isArrangeMode,
   preparePrintDOM,
   resetAllPositions,
@@ -277,7 +276,7 @@ function toggleTipbar(): void {
 }
 
 function insertSubtitle(): void {
-  focusHeaderNote();
+  startAddSubtitle();
 }
 
 function insertSection(): void {
