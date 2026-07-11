@@ -22,8 +22,8 @@ function template(): Template {
 }
 
 describe('template-format', () => {
-  it('uses the standard .menu extension for individual templates', () => {
-    expect(TEMPLATE_EXTENSION).toBe('.menu');
+  it('uses the dedicated .template extension for individual templates', () => {
+    expect(TEMPLATE_EXTENSION).toBe('.template');
   });
 
   it('serializes a versioned Griffin template document', () => {

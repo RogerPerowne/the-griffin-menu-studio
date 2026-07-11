@@ -86,6 +86,7 @@ import type {
   SectionItem,
 } from '../types';
 import { tagsStr, usedCodes } from './tags';
+import { rootAfter, rootBottom, rootTop, type RootEntry } from './root-order';
 
 export interface RenderOptions {
   /** Emit inline-edit hooks (data-edit, movable-block wrappers) as the mockup does in edit mode. Omit/false for the clean print/export DOM. */
@@ -292,19 +293,18 @@ export function renderMenuHTML(menu: Menu, opts: RenderOptions): string {
   }
   let h = block('header', head, edit, pos);
 
-  const notes = menu.rootNotes ?? [];
   const noteBlock = (n: { id: string; text: string }): string =>
     !edit && !n.text.trim()
       ? ''
       : block(`note:${n.id}`, `<div class="m-hnote">${editableSpan(edit, `note:${n.id}`, n.text)}</div>`, edit, pos);
+  const emitRoot = (entry: RootEntry): string =>
+    entry.kind === 'note' ? noteBlock(entry.item) : block(`rule:${entry.id}`, renderRule(entry.item), edit, pos);
 
-  for (const n of notes.filter((note) => note.position === 'top')) h += noteBlock(n);
+  // Top subtitles + lines share one ordered flow, rendered above the body so a
+  // line can sit above or below a subtitle (see root-order.ts).
+  for (const entry of rootTop(menu)) h += emitRoot(entry);
 
   h += '<div class="body">';
-
-  for (const r of menu.rootRules.filter((rule) => rule.position === 'top')) {
-    h += block(`rule:${r.id}`, renderRule(r), edit, pos);
-  }
 
   for (const section of menu.sections) {
     const list: SectionItem[] = section.items.filter((it) => !isDish(it) || !it.hidden);
@@ -312,18 +312,10 @@ export function renderMenuHTML(menu: Menu, opts: RenderOptions): string {
 
     h += block(`sec:${section.id}`, sectionHTML(section, list, edit, dietKey, showPricesGlobal), edit, pos);
 
-    for (const n of notes.filter((note) => note.afterSectionId === section.id && note.position !== 'top')) h += noteBlock(n);
-    for (const r of menu.rootRules.filter(
-      (rule) => rule.afterSectionId === section.id && rule.position !== 'top',
-    )) {
-      h += block(`rule:${r.id}`, renderRule(r), edit, pos);
-    }
+    for (const entry of rootAfter(menu, section.id)) h += emitRoot(entry);
   }
 
-  for (const n of notes.filter((note) => !note.afterSectionId && note.position !== 'top')) h += noteBlock(n);
-  for (const r of menu.rootRules.filter((rule) => !rule.afterSectionId && rule.position !== 'top')) {
-    h += block(`rule:${r.id}`, renderRule(r), edit, pos);
-  }
+  for (const entry of rootBottom(menu)) h += emitRoot(entry);
 
   h += '</div>';
 

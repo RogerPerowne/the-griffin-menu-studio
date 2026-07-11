@@ -18,6 +18,7 @@ import { toast } from '../ui/toast';
 import {
   applyReleaseSettings,
   bindReleaseSettings,
+  dismissOverflowWarning,
   fitPage,
   getZoom,
   observePagewrapPage,
@@ -319,17 +320,21 @@ export function resetAllPositions(): void {
   commit();
 }
 
-/* ================= one-page auto-fit ================= */
+/* ================= one-page auto-size ================= */
 
 const round2 = (n: number): number => Number(n.toFixed(2));
 
 /**
- * Gentle one-page fitting: spacing first, typography only as a last resort.
- * Calibrates sc/dn against measureFit() — the canonical print-mode (edit:false)
- * measurement — not the edit-mode #pagewrap, so a shrink that "fits" here also
- * fits the export preflight below (see #6 / P2).
+ * "Auto size" — fit the menu to exactly one page, in either direction:
+ *   • Overflowing → shrink: spacing first, then type size (the proven-accurate
+ *     method), until it fits.
+ *   • Room to spare → grow: relax spacing back to normal, then enlarge type,
+ *     stepping back the instant it would overflow (a mirror of the shrink).
+ * Every decision is calibrated against the canonical print-mode measureFit(),
+ * so the result always agrees with the export preflight — it can never leave a
+ * false "doesn't fit". Returns true if the final layout fits one page.
  */
-export function autoFitOnePage(): boolean {
+export function autoSizeToFit(): boolean {
   const menu = currentMenu();
   if (!menu) return false;
   snapshot();
@@ -337,21 +342,49 @@ export function autoFitOnePage(): boolean {
   style.sc = Number(style.sc) || 1;
   style.dn = Number(style.dn) || 1;
 
-  let info = measureFit(menu);
+  const over = (): boolean => {
+    const info = measureFit(menu);
+    return info.over || info.footerCollision;
+  };
+
   let guard = 0;
-  while ((info.over || info.footerCollision) && guard++ < 80) {
-    if (style.dn > 0.78) style.dn = round2(style.dn - 0.02);
-    else if (style.sc > 0.86) style.sc = round2(style.sc - 0.01);
-    else break;
-    info = measureFit(menu);
+  if (over()) {
+    // SHRINK — spacing first, type size last (unchanged from the proven method).
+    while (over() && guard++ < 200) {
+      if (style.dn > 0.78) style.dn = round2(style.dn - 0.02);
+      else if (style.sc > 0.86) style.sc = round2(style.sc - 0.01);
+      else break;
+    }
+  } else {
+    // GROW — the mirror image: first ease spacing back to normal, then enlarge
+    // the type, reverting the last step the moment it would tip over one page.
+    while (style.dn < 1 && guard++ < 60) {
+      const prev = style.dn;
+      const next = round2(Math.min(1, style.dn + 0.02));
+      style.dn = next;
+      if (over()) {
+        style.dn = prev;
+        break;
+      }
+      if (next >= 1) break;
+    }
+    guard = 0;
+    while (style.sc < 1.6 && guard++ < 160) {
+      const prev = style.sc;
+      style.sc = round2(style.sc + 0.01);
+      if (over()) {
+        style.sc = prev;
+        break;
+      }
+    }
   }
 
   commit(['editor', 'preview', 'rail']);
-  return !(info.over || info.footerCollision);
+  return !over();
 }
 
 /* ================= canonical fit measurement ================= */
-// A single "does it fit" measurement shared by autoFitOnePage() above, the
+// A single "does it fit" measurement shared by autoSizeToFit() above, the
 // editor's live overflow chip (checkOverflow, registered via setFitMeasurer
 // below), and the export preflight (preparePrintDOM) just under it — all
 // three now measure the same print-mode (edit:false, unscaled) DOM shape, so
@@ -508,14 +541,15 @@ export function initPreview(): void {
   }
 
   document.getElementById('btnAutoFit')?.addEventListener('click', () => {
-    const ok = autoFitOnePage();
+    const ok = autoSizeToFit();
     if (!ok) {
       toast(
-        'This menu still needs a little editing to print cleanly on one page. Shorten a description, reduce a section, or move content to another menu.',
+        'Auto-size shrank this menu as far as it sensibly can, but it still needs a little editing to print on one page — shorten a description, reduce a section, or move content to another menu. You can dismiss the warning to keep this size.',
         { kind: 'warn' },
       );
     }
   });
+  document.getElementById('btnWarnDismiss')?.addEventListener('click', () => dismissOverflowWarning());
   document.getElementById('btnResetFit')?.addEventListener('click', () => {
     snapshot();
     const style = currentMenu().style;

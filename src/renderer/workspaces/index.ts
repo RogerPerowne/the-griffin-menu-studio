@@ -936,7 +936,7 @@ let exportPreflightSeq = 0;
 /**
  * Canonical Export/Print readiness: measure the unscaled white production page
  * (fonts + images awaited) via preparePrintDOM — never the scaled visible canvas,
- * which can falsely report "does not fit" after Shrink to Fit already succeeded.
+ * which can falsely report "does not fit" after Auto size already succeeded.
  */
 function refreshExportStatus(): void {
   const statusEl = document.getElementById('exportStatus');
@@ -958,7 +958,7 @@ function refreshExportStatus(): void {
     } else if (pre.reason === 'footer') {
       msg = 'Text reaches the footer. Return to the Editor and shorten the menu or reduce spacing.';
     } else {
-      msg = 'Does not fit on one page. Use Shrink to Fit in the Editor, or shorten the menu.';
+      msg = 'Does not fit on one page. Use Auto size in the Editor, or shorten the menu.';
     }
     live.textContent = msg;
     live.classList.toggle('warn', warn);

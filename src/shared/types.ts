@@ -56,6 +56,9 @@ export interface Rule {
   rule: true;
   position: RulePosition;
   afterSectionId?: string | null;
+  /** Sort order within a position group (top / after-section / bottom), shared
+   *  with RootNote so lines and subtitles can be interleaved and reordered. */
+  order?: number;
 }
 
 /** A free subtitle / note line positioned relative to the menu body — like a
@@ -66,6 +69,8 @@ export interface RootNote {
   text: string;
   position: RulePosition;
   afterSectionId?: string | null;
+  /** Sort order within a position group — shared with Rule (see above). */
+  order?: number;
 }
 
 export interface MenuStyle {

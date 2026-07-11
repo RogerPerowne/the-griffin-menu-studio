@@ -282,7 +282,7 @@ function typographyBody(): string {
       </label>
       <label class="tool-check"><input type="checkbox" data-type-showkey ${st.showKey ? 'checked' : ''}> Show dietary key on the menu — turn off to write the key yourself</label>
       <button class="dock-action" data-type-reset>Reset text size &amp; spacing</button>
-      <p class="dock-note">Text size and spacing also change when you use Shrink to fit.</p>
+      <p class="dock-note">Text size and spacing also change when you use Auto size.</p>
     </div>`;
 }
 

@@ -86,7 +86,7 @@ const appShellMarkup = String.raw`
         <button class="mi" data-cmd="fit-width">Fit to Width</button>
         <button class="mi" data-cmd="actual-size">Actual Size</button>
         <hr>
-        <button class="mi" data-cmd="auto-fit">Shrink to Fit One Page</button>
+        <button class="mi" data-cmd="auto-size">Auto Size to Fit One Page</button>
         <hr>
         <button class="mi" data-cmd="toggle-rail">Menus Column</button>
         <button class="mi" data-cmd="toggle-tipbar">Tips Bar</button>
@@ -122,6 +122,7 @@ const appShellMarkup = String.raw`
       </div>
     </div>
     <span class="sp"></span>
+    <button class="autosize-pill" data-cmd="auto-size" title="Auto-size the menu — grow to fill the page, or shrink to fit one page"><svg viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg><span>Auto size</span></button>
     <div class="quickrow">
       <button class="iconb" data-cmd="undo" title="Undo (Ctrl+Z)"><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
       <button class="iconb" data-cmd="redo" title="Redo (Ctrl+Y)"><svg viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
@@ -162,7 +163,7 @@ const appShellMarkup = String.raw`
       </div>
       <div class="stage-bar">
         <span class="lbl" id="stPaper"></span>
-        <span class="warnchip" id="warnChip"><strong id="warnText">Doesn't fit on one page</strong><button id="btnAutoFit">Shrink to fit</button></span>
+        <span class="warnchip" id="warnChip"><strong id="warnText">Doesn't fit on one page</strong><button id="btnAutoFit">Auto size</button><button id="btnWarnDismiss" class="warn-dismiss" title="Keep this size anyway — hide the warning" aria-label="Dismiss warning">✕</button></span>
         <button class="chiplink" id="btnResetFit" style="display:none">Reset sizing</button>
         <span class="sp"></span>
         <button class="abtn" id="btnMove" title="Drag titles, logos, lines and text freely on the page"><svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20M12 2 9 5m3-3 3 3M12 22l-3-3m3 3 3-3M2 12l3-3m-3 3 3 3M22 12l-3-3m3 3-3 3"/></svg>Arrange</button>

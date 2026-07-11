@@ -19,6 +19,7 @@
 import type { Dish, HeaderStyle, Menu, Paper, RootNote, Rule, SectionItem, Template } from '@shared/types';
 import { newDish, newRootNote, newRule, newSection, T, todayISO, uid, newMenu } from '@shared/menu/factories';
 import { normaliseMenuColumns, normaliseRootRules, normaliseSectionColumns } from '@shared/menu/normalize';
+import { appendOrder, rootAfter, rootBottom, rootTop, type RootEntry } from '@shared/menu/root-order';
 import { usedCodes } from '@shared/menu/tags';
 import { commit, currentMenu, findDish, getState, persist, snapshot } from '../store';
 import type { Scope } from '../store';
@@ -51,7 +52,9 @@ function addNoteAt(pos: 'top' | 'between' | 'bottom', after: string | null): voi
   const m = currentMenu();
   if (!m) return;
   m.rootNotes = m.rootNotes ?? [];
+  const group = pos === 'top' ? rootTop(m) : after ? rootAfter(m, after) : rootBottom(m);
   const note = newRootNote('', pos, after);
+  note.order = appendOrder(group);
   snapshot();
   m.rootNotes.push(note);
   commit(SCOPES_ALL);
@@ -115,6 +118,27 @@ function rootRuleRow(r: Rule): string {
   return `<div class="rootrule" data-rid="${r.id}"><span class="handle rulehandle" title="Drag line above, between or below sections">${ICONS.grip}</span><div class="rulebody"><span class="ruleline"></span><span class="rulelabel">menu line</span><span class="ruleline"></span></div><button class="iconb danger" data-act="delrootrule" title="Delete line">${ICONS.x}</button></div>`;
 }
 
+function rootRow(entry: RootEntry): string {
+  return entry.kind === 'note' ? rootNoteRow(entry.item) : rootRuleRow(entry.item);
+}
+
+/** A drop target sitting in the gap before a given root item (or at the end of
+ *  the group when `beforeRoot` is empty). Carries the group it belongs to. */
+function dropGap(pos: 'top' | 'after' | 'bottom', after: string, beforeRoot: string): string {
+  return `<div class="rootdropzone" data-rootpos="${pos}" data-after="${esc(after)}" data-before-root="${esc(beforeRoot)}"></div>`;
+}
+
+/** Render a whole position group (subtitles + lines interleaved by order) with a
+ *  drop gap before every item and one at the end, so anything can be reordered. */
+function rootGroupHtml(entries: RootEntry[], pos: 'top' | 'after' | 'bottom', after: string): string {
+  let h = dropGap(pos, after, entries[0]?.id ?? '');
+  entries.forEach((e, i) => {
+    h += rootRow(e);
+    h += dropGap(pos, after, entries[i + 1]?.id ?? '');
+  });
+  return h;
+}
+
 function itemRow(it: Dish): string {
   const dietKey = getState().settings.dietKey;
   return `<div class="item ${it.hidden ? 'hid' : ''}" data-iid="${it.id}">
@@ -155,9 +179,8 @@ export function renderEditor(): void {
   if (!sc) return;
 
   let h = '';
-  h += `<div class="root-add-row"><button class="addrootline" data-act="addrootrule" data-pos="top">+ Line at top</button><button class="addrootline" data-act="addsubtitle" data-pos="top">+ Subtitle at top</button></div><div class="rootdropzone edge" data-rootpos="top"></div>`;
-  (m.rootNotes ?? []).filter((n) => n.position === 'top').forEach((n) => (h += rootNoteRow(n)));
-  (m.rootRules ?? []).filter((r) => r.position === 'top').forEach((r) => (h += rootRuleRow(r)));
+  h += `<div class="root-add-row"><button class="addrootline" data-act="addrootrule" data-pos="top">+ Line at top</button><button class="addrootline" data-act="addsubtitle" data-pos="top">+ Subtitle at top</button></div>`;
+  h += rootGroupHtml(rootTop(m), 'top', '');
 
   const selSecId = selectedSectionId ?? m.sections[0]?.id ?? null;
   for (const s of m.sections) {
@@ -191,20 +214,12 @@ export function renderEditor(): void {
       h += `<div class="quickhint"><b>Fast edit:</b> drag dishes by the dots. Switch to 2+ columns to create named subsections automatically.</div><div class="items" data-sid="${s.id}" data-col="0">${dishes.map(itemRow).join('')}</div><div class="addrow"><button data-act="add">+ Add a dish</button><button data-act="copy">Copy a dish from another menu…</button></div>`;
     }
     h += `</div>`;
-    h += `<div class="rootdropzone" data-rootpos="after" data-after="${s.id}"></div>`;
-    (m.rootNotes ?? []).filter((n) => n.afterSectionId === s.id && n.position !== 'top').forEach((n) => (h += rootNoteRow(n)));
-    (m.rootRules ?? [])
-      .filter((r) => r.afterSectionId === s.id && r.position !== 'top')
-      .forEach((r) => (h += rootRuleRow(r)));
+    h += rootGroupHtml(rootAfter(m, s.id), 'after', s.id);
     h += `<div class="root-add-row"><button class="addrootline" data-act="addrootrule" data-after="${s.id}">+ Line below</button><button class="addrootline" data-act="addsubtitle" data-after="${s.id}">+ Subtitle below</button></div>`;
   }
 
-  h += `<div class="rootdropzone edge" data-rootpos="bottom"></div>`;
-  (m.rootNotes ?? []).filter((n) => !n.afterSectionId && n.position !== 'top').forEach((n) => (h += rootNoteRow(n)));
-  (m.rootRules ?? [])
-    .filter((r) => !r.afterSectionId && r.position !== 'top')
-    .forEach((r) => (h += rootRuleRow(r)));
-  h += `<div class="root-actions"><button class="addsec" id="btnAddSec">+ ADD SECTION</button><button class="addrootline" data-act="addrootrule">+ Line at end</button><button class="addrootline" data-act="addsubtitle">+ Subtitle at end</button></div><div class="foot-ed"><div class="cap">FOOTER - PRINTED AT THE BOTTOM OF THE PAGE</div><textarea id="edFooter" placeholder="Footer lines…">${esc(m.footer || '')}</textarea><label class="chkline"><input type="checkbox" id="edShowPrices" ${m.style.showPrices !== false ? 'checked' : ''}> Show prices on the menu</label><label class="chkline"><input type="checkbox" id="edShowKey" ${m.style.showKey ? 'checked' : ''}> Print the dietary key automatically (only the codes used on this menu) — turn off to write the key yourself</label></div>`;
+  h += rootGroupHtml(rootBottom(m), 'bottom', '');
+  h += `<div class="root-actions"><button class="addsec" id="btnAddSec">+ ADD SECTION</button><button class="addrootline" data-act="addrootrule">+ Line at end</button></div><div class="foot-ed"><div class="cap">FOOTER - PRINTED AT THE BOTTOM OF THE PAGE</div><textarea id="edFooter" placeholder="Footer lines…">${esc(m.footer || '')}</textarea><label class="chkline"><input type="checkbox" id="edShowPrices" ${m.style.showPrices !== false ? 'checked' : ''}> Show prices on the menu</label><label class="chkline"><input type="checkbox" id="edShowKey" ${m.style.showKey ? 'checked' : ''}> Print the dietary key automatically (only the codes used on this menu) — turn off to write the key yourself</label></div>`;
 
   sc.innerHTML = h;
 }
@@ -395,12 +410,12 @@ function onEdScrollClick(e: Event): void {
   if (act === 'addrootrule') {
     snapshot();
     m.rootRules = m.rootRules ?? [];
-    if (b.dataset.pos === 'top') {
-      m.rootRules.push(newRule('top', null));
-    } else {
-      const after = b.dataset.after || null;
-      m.rootRules.push(newRule(after ? 'between' : 'bottom', after));
-    }
+    const top = b.dataset.pos === 'top';
+    const after = top ? null : b.dataset.after || null;
+    const rule = top ? newRule('top', null) : newRule(after ? 'between' : 'bottom', after);
+    const group = top ? rootTop(m) : after ? rootAfter(m, after) : rootBottom(m);
+    rule.order = appendOrder(group);
+    m.rootRules.push(rule);
     commit(SCOPES_ALL);
     return;
   }
@@ -494,6 +509,8 @@ interface RuleTarget {
   kind: 'rule';
   pos: string;
   after: string | null;
+  /** id of the root item this drop should land *before* (empty = end of group). */
+  beforeRoot: string | null;
 }
 
 interface DragCtx {
@@ -589,7 +606,12 @@ function onDragMove(e: PointerEvent): void {
     const zone = under?.closest<HTMLElement>('.rootdropzone');
     if (!zone) return;
     zone.classList.add('hot');
-    drag.target = { kind: 'rule', pos: zone.dataset.rootpos ?? '', after: zone.dataset.after || null };
+    drag.target = {
+      kind: 'rule',
+      pos: zone.dataset.rootpos ?? '',
+      after: zone.dataset.after || null,
+      beforeRoot: zone.dataset.beforeRoot || null,
+    };
     return;
   }
 
@@ -637,6 +659,18 @@ function applyDrop(m: Menu, d: DragCtx, target: DishTarget | RuleTarget): void {
       positioned.position = 'between';
       positioned.afterSectionId = target.after || null;
     }
+    // Re-sequence the destination group so the item lands exactly in the gap
+    // it was dropped into (before `beforeRoot`, or at the end).
+    const group =
+      target.pos === 'top'
+        ? rootTop(m)
+        : target.pos === 'bottom'
+          ? rootBottom(m)
+          : rootAfter(m, target.after ?? '');
+    const items = group.map((e) => e.item).filter((it) => it.id !== positioned.id);
+    const at = target.beforeRoot ? items.findIndex((it) => it.id === target.beforeRoot) : -1;
+    items.splice(at >= 0 ? at : items.length, 0, positioned);
+    items.forEach((it, i) => (it.order = i));
     return;
   }
   const from = findDish(m, d.iid);

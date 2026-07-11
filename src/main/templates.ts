@@ -156,7 +156,7 @@ export async function importTemplate(win: BrowserWindow, storage?: StorageLocati
   const res = await dialog.showOpenDialog(win, {
     title: 'Import Griffin Template',
     properties: ['openFile', 'multiSelections'],
-    filters: [{ name: 'Griffin Menu Studio Template', extensions: ['menu'] }],
+    filters: [{ name: 'Griffin Menu Studio Template', extensions: ['template'] }],
   });
   if (res.canceled) return listUserTemplates(storage);
   const dir = userTemplatesDir(storage);

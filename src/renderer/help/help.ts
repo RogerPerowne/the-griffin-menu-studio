@@ -47,7 +47,7 @@ function topicContent(topic: HelpTopic): string {
         <p><b>Edit directly on the page.</b> Click menu text in the preview to make quick corrections.</p>
         <p><b>Use section menus.</b> The three dots on each section hold section-specific options, including columns.</p>
         <p><b>Use Export for output.</b> Editor preview is blush; Print/PDF/PNG use a white output page.</p>
-        <p><b>Check the warning chip.</b> If the page does not fit, shorten content or use Shrink to fit before printing.</p>
+        <p><b>Check the warning chip.</b> If the page does not fit, shorten content or use Auto size before printing.</p>
         <p><b>Reuse dishes safely.</b> Open Window > Find across menus and drag a copied dish into a section.</p>
       </div>`;
   }

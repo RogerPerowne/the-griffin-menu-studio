@@ -34,6 +34,10 @@ svg{stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-l
 .topmenu.open .topmenu-btn svg{color:var(--brand-pink)}
 .topmenu .pop{top:calc(100% + 4px)}
 .quickrow{display:flex;align-items:center;gap:2px;padding-left:8px;border-left:1px solid var(--line)}
+.autosize-pill{display:inline-flex;align-items:center;align-self:center;gap:7px;height:34px;padding:0 16px;margin-right:8px;border-radius:999px;border:1.5px solid var(--copper);background:rgba(180,118,59,.08);color:var(--copper);font-size:12px;letter-spacing:.05em;font-weight:500;white-space:nowrap;transition:.12s}
+.autosize-pill svg{width:15px;height:15px}
+.autosize-pill:hover{background:var(--copper);color:#fff}
+.autosize-pill:active{transform:translateY(1px)}
 #app:not([data-workspace="editor"]) .menubar{display:none}
 
 /* ---------- Workspaces ---------- */
@@ -342,8 +346,11 @@ input.mname:focus{outline:none;border-bottom-color:var(--copper)}
 .pill select,.pill input{border:none;background:none;font-size:11.5px;color:var(--ink);letter-spacing:.06em}
 .pill select:focus,.pill input:focus{outline:none}
 .pill input[type=date]{width:112px}
-.ed-scroll{flex:1 1 0;overflow-y:auto;min-height:0;padding:4px 16px 40px}
+.ed-scroll{flex:1 1 0;overflow-y:auto;min-height:0;padding:12px 16px 40px}
 .sec{background:var(--panel);border:1px solid var(--line);border-radius:11px;margin-bottom:13px;overflow:hidden;box-shadow:0 1px 2px rgba(27,26,30,.04)}
+/* While the section-options menu is open, let it spill past the (short) section
+   box so Delete section is never clipped; clipping resumes when it closes. */
+.sec:has(.sec-more.open){overflow:visible}
 .sec.selected{border-color:var(--copper);box-shadow:0 0 0 2px var(--copper)}
 .sec-h{display:flex;align-items:center;gap:4px;padding:10px 10px 10px 14px;border-bottom:1px solid #F0EADF}
 .sec-h input.sname{flex:1;border:none;background:none;font-weight:500;letter-spacing:.16em;font-size:12.5px;text-transform:uppercase;min-width:0}
@@ -403,8 +410,8 @@ input.idesc:focus{outline:none;box-shadow:0 1px 0 var(--copper)}
 .rootrule{display:flex;align-items:center;gap:8px;margin:0 2px 10px;padding:6px 8px;border:1px dashed var(--line2);border-radius:9px;background:rgba(255,255,255,.45)}
 .rootrule .handle{width:22px;height:28px;display:flex;align-items:center;justify-content:center;color:#A09688;cursor:grab;touch-action:none;flex:none}
 .rootrule.dragging{opacity:.25}
-.rootdropzone{height:12px;margin:-4px 4px 4px;border-radius:7px;transition:.12s}
-.rootdropzone.hot{height:28px;background:rgba(180,118,59,.10);border:1px dashed var(--copper)}
+.rootdropzone{height:6px;margin:0 4px;border-radius:7px;transition:.12s}
+.rootdropzone.hot{height:28px;margin:2px 4px;background:rgba(180,118,59,.10);border:1px dashed var(--copper)}
 .rootdropzone.edge{height:18px;margin:0 2px 8px}
 .rootdropzone.edge:before{content:'drop line here';display:block;text-align:center;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:transparent;line-height:18px}
 .rootdropzone.edge.hot:before{color:var(--copper)}
@@ -475,6 +482,7 @@ input.idesc:focus{outline:none;box-shadow:0 1px 0 var(--copper)}
 .zoom-slider:focus-visible{outline:2px solid var(--brand-green);outline-offset:3px}
 .warnchip button{background:rgba(255,255,255,.9);color:var(--warn);border-radius:999px;padding:2px 10px;font-size:10.5px;letter-spacing:.05em;margin-left:8px}
 .warnchip button:hover{background:#fff}
+.warnchip .warn-dismiss{margin-left:6px;padding:2px 8px;font-size:11px;line-height:1}
 .chiplink{font-size:11.5px;color:var(--copper);letter-spacing:.04em;text-decoration:underline;text-underline-offset:2px}
 .chiplink:hover{color:var(--ink)}
 .page{background:var(--blush);width:210mm;min-height:297mm;box-shadow:0 2px 6px rgba(27,26,30,.12),0 26px 60px -20px rgba(27,26,30,.35);position:relative;color:#1a1a1a}

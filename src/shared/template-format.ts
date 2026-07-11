@@ -1,10 +1,9 @@
 import type { Template } from './types';
 
 export const CURRENT_TEMPLATE_VERSION = 1;
-// Templates intentionally share the single Griffin document extension. Their
-// versioned wrapper (`kind: 'template'`) and the Templates folder distinguish
-// them from editable menu documents.
-export const TEMPLATE_EXTENSION = '.menu';
+// Templates use their own `.template` extension (distinct from `.menu` menus and
+// `.booklet` booklets) so the Templates folder reads unambiguously.
+export const TEMPLATE_EXTENSION = '.template';
 export const MAX_TEMPLATE_BYTES = 2 * 1024 * 1024;
 
 export interface GriffinTemplateDocument {

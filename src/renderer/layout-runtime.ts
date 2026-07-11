@@ -285,12 +285,34 @@ export function setFitMeasurer(fn: FitMeasurer): void {
   fitMeasurer = fn;
 }
 
+// The overflow warning is overridable: the user can dismiss it to keep an
+// intentionally-oversized menu. The override resets automatically when they
+// switch menus or once the menu fits again (so a later overflow re-warns).
+let warnDismissed = false;
+let warnMenuId: string | null = null;
+
+/** Dismiss the current overflow warning until the menu changes or fits again. */
+export function dismissOverflowWarning(): void {
+  warnDismissed = true;
+  document.getElementById('warnChip')?.classList.remove('show');
+}
+
 export function checkOverflow(): boolean {
   const menu = currentMenu();
   const info = fitMeasurer && menu ? fitMeasurer(menu) : productionInfo(document.getElementById('pagewrap'));
+  const overflowing = info.over || info.footerCollision;
+
+  // Reset the override when the open menu changes, or whenever it fits again.
+  if (menu && menu.id !== warnMenuId) {
+    warnMenuId = menu.id;
+    warnDismissed = false;
+  }
+  if (!overflowing) warnDismissed = false;
+
+  const show = overflowing && !warnDismissed;
   const chip = document.getElementById('warnChip');
   const warnText = document.getElementById('warnText');
-  chip?.classList.toggle('show', info.over || info.footerCollision);
+  chip?.classList.toggle('show', show);
   chip?.classList.toggle('warn-footer', info.footerCollision);
   chip?.classList.toggle('warn-overflow', info.over && !info.footerCollision);
   if (warnText) {
@@ -300,7 +322,7 @@ export function checkOverflow(): boolean {
         ? 'Does not fit on one page'
         : 'Fits on one page';
   }
-  return info.over || info.footerCollision;
+  return overflowing;
 }
 
 let overflowTimer = 0;

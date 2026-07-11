@@ -10,7 +10,7 @@ import { openDishPicker } from './views/dishpicker';
 import { downloadBackup, openRestoreDialog } from './views/backup';
 import { deleteCurrentMenu, duplicateMenu, getSelectedSectionId, saveLayoutAsTemplate, startAddSubtitle } from './views/editor';
 import {
-  autoFitOnePage,
+  autoSizeToFit,
   isArrangeMode,
   preparePrintDOM,
   resetAllPositions,
@@ -45,7 +45,7 @@ export type CommandName =
   | 'arrange-toggle'
   | 'align-left' | 'align-center' | 'align-right' | 'align-top' | 'align-middle' | 'align-bottom'
   | 'center-page-h' | 'center-page-v' | 'reset-selected-position' | 'reset-all-positions'
-  | 'zoom-in' | 'zoom-out' | 'fit-width' | 'actual-size' | 'auto-fit'
+  | 'zoom-in' | 'zoom-out' | 'fit-width' | 'actual-size' | 'auto-size'
   | 'toggle-rail' | 'toggle-tipbar'
   | 'toggle-menus-panel' | 'toggle-dishes-panel' | 'toggle-find-replace-panel' | 'toggle-reuse-panel'
   | 'toggle-colour-panel' | 'toggle-typography-panel'
@@ -83,9 +83,9 @@ function preflightBlocked(verb: string, reason?: string): void {
   }
   toast(
     reason === 'footer'
-      ? `${verb} stopped — text would overlap the footer. Use Shrink to Fit, or shorten the menu.`
-      : `${verb} stopped — this menu does not fit on one page. Use Shrink to Fit, or shorten the menu.`,
-    { kind: 'warn', action: { label: 'Shrink to Fit', run: () => runCommand('auto-fit') } },
+      ? `${verb} stopped — text would overlap the footer. Use Auto size, or shorten the menu.`
+      : `${verb} stopped — this menu does not fit on one page. Use Auto size, or shorten the menu.`,
+    { kind: 'warn', action: { label: 'Auto size', run: () => runCommand('auto-size') } },
   );
 }
 
@@ -309,9 +309,14 @@ function insertRule(): void {
   commit(['all']);
 }
 
-function runAutoFit(): void {
-  const ok = autoFitOnePage();
-  toast(ok ? 'Shrunk to fit one page.' : 'This menu still needs manual trimming to fit on one page.', { kind: ok ? 'success' : 'warn' });
+function runAutoSize(): void {
+  const ok = autoSizeToFit();
+  toast(
+    ok
+      ? 'Auto-sized to fill one page.'
+      : 'Auto-sized as far as it sensibly can — this menu still needs a little editing to fit on one page. You can dismiss the warning to keep this size.',
+    { kind: ok ? 'success' : 'warn' },
+  );
 }
 
 /* ------------------------------ registry ------------------------------ */
@@ -367,7 +372,7 @@ export const COMMANDS: Command[] = [
   { id: 'zoom-out', label: 'Zoom Out', group: 'View', hint: 'Ctrl+-', run: () => setZoom(getZoom() / 1.18) },
   { id: 'fit-width', label: 'Fit to Width', group: 'View', keywords: 'zoom fit', run: () => { setFollowFit(true); fitPage(); } },
   { id: 'actual-size', label: 'Actual Size', group: 'View', hint: 'Ctrl+0', keywords: 'zoom 100', run: () => setZoom(1) },
-  { id: 'auto-fit', label: 'Shrink to Fit One Page', group: 'View', keywords: 'fit overflow shrink', enabled: hasMenu, run: runAutoFit },
+  { id: 'auto-size', label: 'Auto Size to Fit One Page', group: 'View', keywords: 'fit overflow shrink grow fill size auto', enabled: hasMenu, run: runAutoSize },
   { id: 'toggle-rail', label: 'Menus Column', group: 'View', keywords: 'sidebar rail list', checked: railShown, run: toggleRail },
   { id: 'toggle-tipbar', label: 'Tips Bar', group: 'View', keywords: 'hint help', checked: tipShown, run: toggleTipbar },
 
