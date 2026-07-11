@@ -44,6 +44,13 @@ function printPayload(value: unknown): { copies: number; paper: 'A4' | 'A5'; lan
   return { copies: Number(input.copies), paper: input.paper, landscape: input.landscape };
 }
 
+function bookletSaveOptions(value: unknown): { saveAs: boolean; filePath?: string; storage?: StorageLocations } {
+  const input = record(value);
+  if (!input) return { saveAs: false };
+  const filePath = typeof input.filePath === 'string' && input.filePath.length <= 1024 ? input.filePath : undefined;
+  return { saveAs: input.saveAs === true, filePath, storage: storage(input.storage) };
+}
+
 function recoveryId(value: unknown): string {
   if (typeof value !== 'string' || !/^[a-f0-9-]{36}$/i.test(value)) throw new Error('Invalid recovery snapshot request.');
   return value;
@@ -73,6 +80,8 @@ export function registerIpc(createWindow: () => BrowserWindow): void {
   ipcMain.handle('document:saveCopy', (e, state: unknown, locations) => docs.saveDocumentCopy(requireWin(e.sender), state, storage(locations)));
   ipcMain.handle('document:overwrite', (e, state: unknown, locations) => docs.overwriteDocument(requireWin(e.sender), state, storage(locations)));
   ipcMain.handle('document:open', (e) => docs.openDocument(requireWin(e.sender)));
+  ipcMain.handle('booklet:save', (e, booklet: unknown, options) => docs.saveBookletDocument(requireWin(e.sender), booklet, bookletSaveOptions(options)));
+  ipcMain.handle('booklet:open', (e) => docs.openBookletDocument(requireWin(e.sender)));
   ipcMain.handle('document:consumeLaunch', (e) => docs.consumeLaunchDocument(requireWin(e.sender)));
   ipcMain.handle('document:reload', (e) => docs.reloadDocument(requireWin(e.sender)));
   ipcMain.handle('document:new', (e) => docs.newDocument(requireWin(e.sender)));

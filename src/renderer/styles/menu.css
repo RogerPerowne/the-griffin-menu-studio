@@ -139,7 +139,8 @@
   font-weight: var(--title-weight);
   text-align: var(--title-align);
   text-transform: var(--title-caps);
-  letter-spacing: 0.2em;
+  letter-spacing: var(--title-ls, 0.2em);
+  line-height: var(--title-lh, inherit);
   text-indent: 0.2em;
   margin-top: var(--title-sa);
   margin-bottom: var(--title-sb);
@@ -162,7 +163,8 @@
   font-weight: var(--section-weight);
   text-align: var(--section-align);
   text-transform: var(--section-caps);
-  letter-spacing: 0.2em;
+  letter-spacing: var(--section-ls, 0.2em);
+  line-height: var(--section-lh, inherit);
   text-indent: 0.2em;
   margin-top: var(--section-sa);
   margin-bottom: var(--section-sb);
@@ -188,6 +190,8 @@
   font-weight: var(--dish-weight);
   text-align: var(--dish-align);
   text-transform: var(--dish-caps);
+  letter-spacing: var(--dish-ls, normal);
+  line-height: var(--dish-lh, inherit);
   margin-top: var(--dish-sa);
   margin-bottom: var(--dish-sb);
 }
@@ -197,6 +201,8 @@
   font-weight: var(--desc-weight);
   text-align: var(--desc-align);
   text-transform: var(--desc-caps);
+  letter-spacing: var(--desc-ls, normal);
+  line-height: var(--desc-lh, inherit);
   font-style: italic;
   margin-top: var(--desc-sa);
   margin-bottom: var(--desc-sb);
@@ -216,6 +222,8 @@
   font-weight: var(--price-weight);
   text-align: var(--price-align);
   text-transform: var(--price-caps);
+  letter-spacing: var(--price-ls, normal);
+  line-height: var(--price-lh, inherit);
   margin-top: var(--price-sa);
   margin-bottom: var(--price-sb);
 }
@@ -274,8 +282,8 @@
   font-weight: var(--footer-weight);
   text-align: var(--footer-align);
   text-transform: var(--footer-caps);
-  line-height: 1.55;
-  letter-spacing: 0.02em;
+  line-height: var(--footer-lh, 1.55);
+  letter-spacing: var(--footer-ls, 0.02em);
   color: #3a3a3a; /* deliberately lighter than --ink; no natural app.css var match */
   margin-bottom: var(--footer-sb);
   white-space: pre-line;
@@ -286,7 +294,8 @@
   font-weight: var(--key-weight);
   text-align: var(--key-align);
   text-transform: var(--key-caps);
-  letter-spacing: 0.02em;
+  letter-spacing: var(--key-ls, 0.02em);
+  line-height: var(--key-lh, inherit);
   color: #3a3a3a; /* see .m-foot note above */
   padding-top: var(--key-sa);
   margin-bottom: var(--key-sb);

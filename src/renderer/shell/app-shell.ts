@@ -17,8 +17,10 @@ const appShellMarkup = String.raw`
       <div class="pop">
         <button class="mi" data-cmd="new-blank">New Blank Menu</button>
         <button class="mi" data-cmd="new-template">New from Template…</button>
+        <button class="mi" data-cmd="new-booklet">New Booklet</button>
         <button class="mi" data-cmd="new-window">New Window</button>
         <button class="mi" data-cmd="open">Open…</button>
+        <button class="mi" data-cmd="open-booklet">Open Booklet…</button>
         <hr>
         <button class="mi" data-cmd="save">Save</button>
         <button class="mi" data-cmd="save-as">Save As…</button>
@@ -84,7 +86,8 @@ const appShellMarkup = String.raw`
         <button class="mi" data-cmd="zoom-in">Zoom In</button>
         <button class="mi" data-cmd="zoom-out">Zoom Out</button>
         <button class="mi" data-cmd="fit-width">Fit to Width</button>
-        <button class="mi" data-cmd="actual-size">Actual Size</button>
+        <button class="mi" data-cmd="fit-page">Fit Page</button>
+        <button class="mi" data-cmd="actual-size">Actual Size (100%)</button>
         <hr>
         <button class="mi" data-cmd="auto-size">Auto Size to Fit One Page</button>
         <hr>
@@ -184,7 +187,7 @@ const appShellMarkup = String.raw`
       </div>
       <div class="stage-zoombar" role="toolbar" aria-label="Preview zoom">
         <button class="zoomb wide" data-cmd="fit-width" title="Fit the page to the window width">Fit width</button>
-        <button class="zoomb wide" data-cmd="actual-size" title="Show the page at 100%">Actual size</button>
+        <button class="zoomb wide" data-cmd="fit-page" title="Fit the whole page in view">Fit page</button>
         <span class="sp"></span>
         <button class="zoomb icon" data-cmd="zoom-out" title="Zoom out" aria-label="Zoom out"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
         <input type="range" class="zoom-slider" id="zoomSlider" min="20" max="300" step="1" value="100" title="Zoom" aria-label="Zoom level">
@@ -199,6 +202,7 @@ const appShellMarkup = String.raw`
 
   <div id="homeWorkspace" class="workspace"></div>
   <div id="exportWorkspace" class="workspace"></div>
+  <div id="bookletWorkspace" class="workspace"></div>
 </div>
 
 <div class="tabbar" id="tabbar">

@@ -1,0 +1,327 @@
+/* Booklet authoring workspace + landscape sheet preview.
+   Scoped to `.bk-*` classes and the `#bookletWorkspace` container so it never
+   touches the menu editor / preview styling. The landscape `.sheet` / `.panel`
+   boxes themselves live in menu.css (shared with export); this file styles the
+   AUTHORING chrome around them plus the light cover/back panel content that
+   booklet.ts renders (`.bk-cover*`, `.bk-blank`). */
+
+/* Show the booklet workspace via the same [data-workspace] mechanism the menu
+   workspaces use (their show-rules live in editor.css, which we do not edit). */
+#app[data-workspace='booklet'] #bookletWorkspace {
+  display: block;
+}
+
+.bk-room {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  height: 100%;
+  min-height: 0;
+  background: var(--cream);
+}
+
+/* ---------------- left: panel editor ---------------- */
+
+.bk-side {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--line);
+  background: #fff;
+}
+
+.bk-doc-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.bk-title {
+  flex: 1;
+  border: 1px solid var(--line2);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 15px;
+  color: var(--ink);
+}
+.bk-title:focus {
+  outline: none;
+  border-color: var(--copper);
+}
+.bk-dirty {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--copper);
+  white-space: nowrap;
+}
+
+.bk-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 10px 14px 0;
+}
+.bk-tab {
+  flex: 1;
+  padding: 8px 6px;
+  border: 1px solid var(--line);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  background: var(--cream);
+  color: var(--ink);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.bk-tab.on {
+  background: #fff;
+  border-color: var(--copper);
+  color: var(--copper);
+  font-weight: 600;
+}
+
+.bk-form-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px 14px;
+}
+
+.bk-panel-form h2 {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-weight: 400;
+  font-size: 20px;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+.bk-panel-form h3 {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--copper);
+  margin: 6px 0;
+}
+.bk-panel-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: var(--ink);
+}
+.bk-panel-form input,
+.bk-panel-form select,
+.bk-panel-form textarea {
+  border: 1px solid var(--line2);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: var(--ink);
+  background: #fff;
+}
+.bk-panel-form input:focus,
+.bk-panel-form select:focus,
+.bk-panel-form textarea:focus {
+  outline: none;
+  border-color: var(--copper);
+}
+.bk-panel-form textarea {
+  min-height: 60px;
+  resize: vertical;
+}
+
+.bk-seg-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: var(--ink);
+}
+.bk-seg {
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 12px;
+  cursor: pointer;
+}
+.bk-seg.on {
+  background: var(--copper);
+  border-color: var(--copper);
+  color: #fff;
+}
+
+.bk-check {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px !important;
+}
+.bk-check input {
+  width: auto;
+}
+
+.bk-two-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* mini inside-menu editor */
+.bk-menu-name {
+  margin-bottom: 12px;
+}
+.bk-section {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 10px;
+  background: var(--cream);
+}
+.bk-section-head {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.bk-section-name {
+  flex: 1;
+}
+.bk-dish {
+  display: grid;
+  grid-template-columns: 1fr 56px auto;
+  grid-template-areas: 'name price del' 'desc desc del';
+  gap: 5px;
+  margin-bottom: 8px;
+}
+.bk-dish-name {
+  grid-area: name;
+}
+.bk-dish-price {
+  grid-area: price;
+}
+.bk-dish-desc {
+  grid-area: desc;
+}
+.bk-dish .bk-icon {
+  grid-area: del;
+  align-self: start;
+}
+.bk-add {
+  border: 1px dashed var(--line2);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--copper);
+  padding: 7px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  width: 100%;
+}
+.bk-add:hover {
+  border-color: var(--copper);
+}
+.bk-add-section {
+  margin-top: 4px;
+}
+.bk-icon {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  line-height: 1;
+}
+.bk-icon.danger:hover {
+  border-color: #b4433b;
+  color: #b4433b;
+}
+
+.bk-actions {
+  display: flex;
+  gap: 8px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--line);
+}
+.bk-actions .abtn {
+  flex: 1;
+}
+
+/* ---------------- right: landscape preview stage ---------------- */
+
+.bk-stage {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+.bk-stage-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+}
+.bk-flip {
+  display: flex;
+  gap: 4px;
+}
+.bk-fold-hint {
+  font-size: 11px;
+  color: var(--ink);
+  opacity: 0.7;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 46ch;
+}
+
+/* Fold guide down the centre of the previewed sheet (screen only). */
+#bookletPagewrap .sheet {
+  box-shadow: 0 10px 34px rgba(60, 54, 46, 0.14);
+  background: #fff;
+}
+#bookletPagewrap .sheet .panel + .panel {
+  border-left: 1px dashed rgba(60, 54, 46, 0.3);
+}
+
+/* ---------------- cover / back panel content (rendered by booklet.ts) ------- */
+
+.bk-cover {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20mm 16mm;
+  box-sizing: border-box;
+  text-align: center;
+}
+.bk-cover-img {
+  max-width: 46mm;
+  max-height: 46mm;
+  object-fit: contain;
+}
+.bk-cover-title {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 30px;
+  color: #2a2620;
+}
+.bk-cover-sub {
+  font-size: 16px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #5b5348;
+}
+.bk-cover-note {
+  font-size: 12px;
+  color: #6b6355;
+  white-space: pre-line;
+}
+.bk-blank {
+  height: 100%;
+  background: repeating-linear-gradient(45deg, #fafafa, #fafafa 8px, #f2efe9 8px, #f2efe9 16px);
+}

@@ -2,8 +2,17 @@ import { app, BrowserWindow, dialog } from 'electron';
 import fs from 'node:fs/promises';
 import { watch, type FSWatcher } from 'node:fs';
 import path from 'node:path';
-import { DOCUMENT_EXTENSION, MAX_DOCUMENT_BYTES, parseDocumentText, serializeDocument } from '../shared/document-format';
-import type { DocumentConflict, OpenResult, SaveResult } from '../shared/api';
+import {
+  BOOKLET_EXTENSION,
+  DOCUMENT_EXTENSION,
+  MAX_BOOKLET_BYTES,
+  MAX_DOCUMENT_BYTES,
+  parseBookletText,
+  parseDocumentText,
+  serializeBooklet,
+  serializeDocument,
+} from '../shared/document-format';
+import type { DocumentConflict, OpenBookletResult, OpenResult, SaveResult } from '../shared/api';
 import { atomicWriteFile, readFileRevision, revisionFor, revisionsMatch, type FileRevision, safeFileStem } from './file-storage';
 import { menusDir } from './app-paths';
 import type { StorageLocations } from '../shared/types';
@@ -263,4 +272,98 @@ export function newDocument(win: BrowserWindow): { ok: boolean } {
 
 export function getCurrentFilePath(win: BrowserWindow): string | null {
   return currentSession(win).filePath;
+}
+
+/* ============================== Booklet documents ============================== */
+// A booklet is a separate document kind (`.booklet`). It gets its own lightweight
+// per-window path memory (so a plain Save writes silently after the first save)
+// but deliberately skips the menu path's external-change watching / conflict
+// detection for this first version — those can be added later if needed.
+
+const bookletPaths = new WeakMap<BrowserWindow, string>();
+
+function bookletFileName(booklet: unknown): string {
+  const name = booklet && typeof booklet === 'object' ? (booklet as { name?: unknown }).name : undefined;
+  return safeFileStem(typeof name === 'string' ? name : undefined, 'Griffin Booklet') + BOOKLET_EXTENSION;
+}
+
+async function chooseBookletSavePath(
+  win: BrowserWindow,
+  booklet: unknown,
+  suggestedPath?: string | null,
+  storage?: StorageLocations,
+): Promise<string | null> {
+  let defaultPath: string;
+  if (suggestedPath) {
+    defaultPath = suggestedPath;
+  } else {
+    const dir = menusDir(storage);
+    await fs.mkdir(dir, { recursive: true }).catch(() => undefined);
+    defaultPath = path.join(dir, bookletFileName(booklet));
+  }
+  const res = await dialog.showSaveDialog(win, {
+    title: 'Save Griffin Booklet',
+    defaultPath,
+    filters: [{ name: 'Griffin Booklet', extensions: ['booklet'] }],
+  });
+  if (res.canceled || !res.filePath) return null;
+  return path.extname(res.filePath).toLowerCase() === BOOKLET_EXTENSION
+    ? res.filePath
+    : `${res.filePath}${BOOKLET_EXTENSION}`;
+}
+
+export async function saveBookletDocument(
+  win: BrowserWindow,
+  booklet: unknown,
+  options: { saveAs?: boolean; filePath?: string; storage?: StorageLocations } = {},
+): Promise<SaveResult> {
+  let contents: string;
+  try {
+    contents = serializeBooklet(booklet);
+  } catch (error) {
+    return { canceled: true, error: error instanceof Error ? error.message : 'The booklet is not valid.' };
+  }
+
+  // The renderer's booklet session is the single source of truth for the path
+  // (null for a fresh New→Booklet). Do NOT fall back to a per-window remembered
+  // path — that would silently overwrite a *previous* booklet after New→Booklet
+  // or Open (the renderer, not the window, knows which booklet is open).
+  let target = options.filePath || null;
+  if (options.saveAs || !target) {
+    target = await chooseBookletSavePath(win, booklet, target, options.storage);
+    if (!target) return { canceled: true };
+  }
+
+  try {
+    await atomicWriteFile(target, contents);
+    bookletPaths.set(win, target);
+    if (process.platform === 'win32') app.addRecentDocument(target);
+    return { canceled: false, filePath: target };
+  } catch (error) {
+    return { canceled: true, error: error instanceof Error ? error.message : 'The booklet could not be saved.' };
+  }
+}
+
+export async function openBookletDocument(win: BrowserWindow): Promise<OpenBookletResult> {
+  const res = await dialog.showOpenDialog(win, {
+    title: 'Open Griffin Booklet',
+    properties: ['openFile'],
+    filters: [{ name: 'Griffin Booklet', extensions: ['booklet'] }],
+  });
+  if (res.canceled || !res.filePaths[0]) return { canceled: true };
+  const filePath = res.filePaths[0];
+  if (path.extname(filePath).toLowerCase() !== BOOKLET_EXTENSION) {
+    return { canceled: true, filePath, error: 'This file is not a Griffin Menu Studio booklet.' };
+  }
+  try {
+    const stat = await fs.stat(filePath);
+    if (stat.size > MAX_BOOKLET_BYTES) throw new Error('This booklet file is too large to open safely.');
+    const contents = await fs.readFile(filePath, 'utf8');
+    const document = parseBookletText(contents);
+    bookletPaths.set(win, filePath);
+    if (process.platform === 'win32') app.addRecentDocument(filePath);
+    return { canceled: false, filePath, booklet: document.booklet };
+  } catch (error) {
+    return { canceled: true, filePath, error: error instanceof Error ? error.message : 'The booklet could not be opened.' };
+  }
 }

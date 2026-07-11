@@ -39,6 +39,24 @@ export interface OpenResult {
   error?: string;
 }
 
+/** Options the renderer passes when saving the open booklet (System 5). */
+export interface SaveBookletOptions {
+  /** Force a "Save As…" dialog even when a path is already known. */
+  saveAs?: boolean;
+  /** The booklet's current on-disk path (lets a plain Save write silently). */
+  filePath?: string;
+  storage?: StorageLocations;
+}
+
+/** Result of opening a `.booklet` document. */
+export interface OpenBookletResult {
+  canceled: boolean;
+  filePath?: string;
+  /** The parsed `Booklet` (typed loosely across the IPC boundary). */
+  booklet?: unknown;
+  error?: string;
+}
+
 export interface DocumentConflict {
   kind: 'modified' | 'missing' | 'unreadable';
   filePath: string;
@@ -127,6 +145,10 @@ export interface GriffinApi {
   saveDocumentCopy(state: unknown, storage?: StorageLocations): Promise<SaveResult>;
   overwriteDocument(state: unknown, storage?: StorageLocations): Promise<SaveResult>;
   openDocument(): Promise<OpenResult>;
+  /** Save the open booklet (System 5). Prompts on first save or when `saveAs`. */
+  saveBooklet(booklet: unknown, options?: SaveBookletOptions): Promise<SaveResult>;
+  /** Open a `.booklet` document from disk. */
+  openBooklet(): Promise<OpenBookletResult>;
   consumeLaunchDocument(): Promise<OpenResult>;
   reloadDocument(): Promise<OpenResult>;
   newDocument(): Promise<{ ok: boolean }>;

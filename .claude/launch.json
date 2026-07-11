@@ -2,7 +2,7 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "renderer",
+      "name": "renderer-dev",
       "runtimeExecutable": "npx",
       "runtimeArgs": ["vite", "--config", "vite.renderer.config.ts", "--port", "5199", "--strictPort"],
       "port": 5199

@@ -95,8 +95,16 @@ export interface BookletImposition {
  * overflow / single without overflow).
  */
 export function imposeBooklet(booklet: Booklet): BookletImposition {
+  // A single vertical centre-fold (landscape A4 → two portrait-A5 halves) needs
+  // NO rotation: on the outer side [back | front] both read upright, and folding
+  // left-over-right puts the front outside and the back behind, both upright.
+  // (This differs from the plan's early §2 sketch, which assumed a rotated back —
+  // pinned by tests/booklet.test.ts and MUST be confirmed by a real duplex
+  // flip-on-short-edge print + fold. If the printed back is upside-down, flip
+  // BACK_COVER_ROTATE to true.)
+  const BACK_COVER_ROTATE = false;
   const outer: [ImposedPanel, ImposedPanel] = [
-    { side: 'outer', role: 'back', panel: booklet.back, rotate: true },
+    { side: 'outer', role: 'back', panel: booklet.back, rotate: BACK_COVER_ROTATE },
     { side: 'outer', role: 'cover', panel: booklet.cover, rotate: false },
   ];
 

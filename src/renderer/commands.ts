@@ -16,7 +16,7 @@ import {
   resetAllPositions,
   toggleMoveMode,
 } from './views/preview';
-import { fitPage, getZoom, setFollowFit, setZoom } from './layout-runtime';
+import { fitPage, fitWholePage, getZoom, setFollowFit, setZoom } from './layout-runtime';
 import { createBlankMenu, getWorkspace, goHomePane, setWorkspace } from './workspaces';
 import {
   activatePanel,
@@ -34,9 +34,24 @@ import { openWelcome } from './features/welcome';
 import type { DocumentConflict } from '@shared/api';
 import type { Menu } from '@shared/types';
 import { confirmDocumentTransition, setDocumentSaveHandler } from './document-session';
+import {
+  canRedoBooklet,
+  canUndoBooklet,
+  isBookletMode,
+  redoBooklet,
+  undoBooklet,
+} from './booklet-session';
+import {
+  createBooklet,
+  exportBookletPdf,
+  openBookletFromDisk,
+  printCurrentBooklet,
+  saveCurrentBooklet,
+} from './views/booklet-editor';
 
 export type CommandName =
   | 'new-blank' | 'new-template' | 'new-window' | 'open'
+  | 'new-booklet' | 'open-booklet'
   | 'save' | 'save-as' | 'save-template'
   | 'duplicate' | 'delete-menu' | 'backup' | 'restore'
   | 'print' | 'print-now' | 'export-pdf' | 'export-png' | 'settings'
@@ -45,7 +60,7 @@ export type CommandName =
   | 'arrange-toggle'
   | 'align-left' | 'align-center' | 'align-right' | 'align-top' | 'align-middle' | 'align-bottom'
   | 'center-page-h' | 'center-page-v' | 'reset-selected-position' | 'reset-all-positions'
-  | 'zoom-in' | 'zoom-out' | 'fit-width' | 'actual-size' | 'auto-size'
+  | 'zoom-in' | 'zoom-out' | 'fit-width' | 'fit-page' | 'actual-size' | 'auto-size'
   | 'toggle-rail' | 'toggle-tipbar'
   | 'toggle-menus-panel' | 'toggle-editmenu-panel' | 'toggle-dishes-panel'
   | 'toggle-find-replace-panel' | 'toggle-reuse-panel'
@@ -99,6 +114,7 @@ function menuFromFileState(value: unknown): Menu | null {
 }
 
 async function exportPdf(): Promise<void> {
+  if (isBookletMode()) return exportBookletPdf();
   const preflight = await preparePrintDOM();
   if (!preflight.ok) {
     preflightBlocked('Export', preflight.reason);
@@ -146,6 +162,7 @@ async function exportPng(): Promise<void> {
 }
 
 export async function printMenu(copies = Number((document.getElementById('printCopies') as HTMLInputElement | null)?.value) || 1): Promise<void> {
+  if (isBookletMode()) return printCurrentBooklet();
   const preflight = await preparePrintDOM();
   if (!preflight.ok) {
     preflightBlocked('Print', preflight.reason);
@@ -155,6 +172,7 @@ export async function printMenu(copies = Number((document.getElementById('printC
 }
 
 async function saveDocument(as = false): Promise<boolean> {
+  if (isBookletMode()) return saveCurrentBooklet(as);
   const api = window.griffin;
   if (!api) return false;
   window.dispatchEvent(new Event('griffin:saving'));
@@ -329,6 +347,8 @@ export const COMMANDS: Command[] = [
   // File
   { id: 'new-blank', label: 'New Blank Menu', group: 'File', hint: 'Ctrl+N', keywords: 'create empty', run: () => void createBlankMenu() },
   { id: 'new-template', label: 'New from Template…', group: 'File', keywords: 'create layout gallery', run: () => goHomePane('new') },
+  { id: 'new-booklet', label: 'New Booklet', group: 'File', keywords: 'folded a5 cover back inside landscape', run: () => createBooklet() },
+  { id: 'open-booklet', label: 'Open Booklet…', group: 'File', keywords: 'folded booklet file document', run: () => void openBookletFromDisk() },
   { id: 'new-window', label: 'New Window', group: 'File', hint: 'Ctrl+Shift+N', keywords: 'app window second', run: () => void window.griffin?.newWindow() },
   { id: 'open', label: 'Open…', group: 'File', hint: 'Ctrl+O', keywords: 'file document menu', run: () => void openDocumentFromDisk() },
   { id: 'save', label: 'Save', group: 'File', hint: 'Ctrl+S', keywords: 'store document', enabled: hasMenu, run: () => void saveDocument(false) },
@@ -338,15 +358,15 @@ export const COMMANDS: Command[] = [
   { id: 'delete-menu', label: 'Delete Menu…', group: 'File', keywords: 'remove trash', enabled: hasMenu, run: () => deleteCurrentMenu() },
   { id: 'backup', label: 'Back up all menus…', group: 'File', keywords: 'export library archive', run: () => downloadBackup() },
   { id: 'restore', label: 'Restore from backup…', group: 'File', keywords: 'import library', run: () => openRestoreDialog() },
-  { id: 'print', label: 'Print…', group: 'File', hint: 'Ctrl+P', keywords: 'paper printer', enabled: hasMenu, run: () => setWorkspace('export') },
+  { id: 'print', label: 'Print…', group: 'File', hint: 'Ctrl+P', keywords: 'paper printer', enabled: hasMenu, run: () => { if (isBookletMode()) void printMenu(); else setWorkspace('export'); } },
   { id: 'print-now', label: 'Print now', group: 'File', keywords: 'print system dialog printer', enabled: hasMenu, run: () => void printMenu() },
   { id: 'export-pdf', label: 'Export as PDF…', group: 'File', hint: 'Ctrl+E', keywords: 'pdf share', enabled: hasMenu, run: () => void exportPdf() },
   { id: 'export-png', label: 'Export as PNG…', group: 'File', keywords: 'png image', enabled: hasMenu, run: () => void exportPng() },
   { id: 'settings', label: 'Settings…', group: 'File', keywords: 'preferences options defaults storage', run: () => goHomePane('settings') },
 
   // Edit
-  { id: 'undo', label: 'Undo', group: 'Edit', hint: 'Ctrl+Z', enabled: canUndo, run: () => undo() },
-  { id: 'redo', label: 'Redo', group: 'Edit', hint: 'Ctrl+Y', enabled: canRedo, run: () => redo() },
+  { id: 'undo', label: 'Undo', group: 'Edit', hint: 'Ctrl+Z', enabled: () => (isBookletMode() ? canUndoBooklet() : canUndo()), run: () => (isBookletMode() ? undoBooklet() : undo()) },
+  { id: 'redo', label: 'Redo', group: 'Edit', hint: 'Ctrl+Y', enabled: () => (isBookletMode() ? canRedoBooklet() : canRedo()), run: () => (isBookletMode() ? redoBooklet() : redo()) },
 
   // Insert
   { id: 'insert-subtitle', label: 'Add Subtitle', group: 'Insert', keywords: 'headernote header note tagline', enabled: hasMenu, run: insertSubtitle },
@@ -373,7 +393,8 @@ export const COMMANDS: Command[] = [
   { id: 'zoom-in', label: 'Zoom In', group: 'View', hint: 'Ctrl+=', run: () => setZoom(getZoom() * 1.18) },
   { id: 'zoom-out', label: 'Zoom Out', group: 'View', hint: 'Ctrl+-', run: () => setZoom(getZoom() / 1.18) },
   { id: 'fit-width', label: 'Fit to Width', group: 'View', keywords: 'zoom fit', run: () => { setFollowFit(true); fitPage(); } },
-  { id: 'actual-size', label: 'Actual Size', group: 'View', hint: 'Ctrl+0', keywords: 'zoom 100', run: () => setZoom(1) },
+  { id: 'fit-page', label: 'Fit Page', group: 'View', hint: 'Ctrl+0', keywords: 'zoom fit whole page height landscape booklet', run: () => fitWholePage() },
+  { id: 'actual-size', label: 'Actual Size (100%)', group: 'View', keywords: 'zoom 100 reset', run: () => setZoom(1) },
   { id: 'auto-size', label: 'Auto Size to Fit One Page', group: 'View', keywords: 'fit overflow shrink grow fill size auto', enabled: hasMenu, run: runAutoSize },
   { id: 'toggle-rail', label: 'Menus Column', group: 'View', keywords: 'sidebar rail list', checked: railShown, run: toggleRail },
   { id: 'toggle-tipbar', label: 'Tips Bar', group: 'View', keywords: 'hint help', checked: tipShown, run: toggleTipbar },

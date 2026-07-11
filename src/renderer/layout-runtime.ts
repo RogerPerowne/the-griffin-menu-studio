@@ -62,6 +62,19 @@ export const EXPORT_STAGE: StageTarget = makeStageTarget({
   zoomSliderId: 'exportZoomSlider',
 });
 
+/** The Booklet workspace's landscape preview stage — same zoom/fit/ruler
+ *  apparatus, its own DOM ids. The landscape `.sheet` (which also carries the
+ *  `.page` class) makes `fitPage`/`renderRulers` size it as a 29.7×21 sheet
+ *  through the `.sheet` branch that already exists in `renderRulers`. */
+export const BOOKLET_STAGE: StageTarget = makeStageTarget({
+  pagewrapId: 'bookletPagewrap',
+  scrollId: 'bookletStageScroll',
+  rulerTopId: 'bookletRulerTop',
+  rulerRightId: 'bookletRulerRight',
+  zoomLabelId: 'bookletZoomPct',
+  zoomSliderId: 'bookletZoomSlider',
+});
+
 export function getZoom(target: StageTarget = EDITOR_STAGE): number {
   return target.zoom;
 }
@@ -200,6 +213,30 @@ export function fitPage(target: StageTarget = EDITOR_STAGE): void {
 export function setZoom(z: number, target: StageTarget = EDITOR_STAGE): void {
   target.followFit = false;
   target.zoom = z;
+  applyZoom(target);
+}
+
+/**
+ * "Fit page" — scale so the WHOLE page sits neatly in the viewport (both width
+ * and height), with the same comfortable padding fit-width uses. Portrait pages
+ * end up height-constrained; a landscape booklet sheet ends up width-constrained
+ * — the min of the two ratios handles either automatically.
+ */
+export function fitWholePage(target: StageTarget = EDITOR_STAGE): void {
+  const wrap = document.getElementById(target.pagewrapId);
+  const page = wrap?.querySelector<HTMLElement>('.page');
+  const stageScroll = document.getElementById(target.scrollId);
+  if (!page || !stageScroll) return;
+  const cs = getComputedStyle(stageScroll);
+  const padX = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+  const padY = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+  const availW = Math.max(1, stageScroll.clientWidth - padX);
+  const availH = Math.max(1, stageScroll.clientHeight - padY);
+  const pw = page.offsetWidth;
+  const ph = page.offsetHeight;
+  if (pw < 10 || ph < 10) return;
+  target.followFit = false; // a discrete fit, like the old Actual Size
+  target.zoom = Math.min(availW / pw, availH / ph, 1.6);
   applyZoom(target);
 }
 

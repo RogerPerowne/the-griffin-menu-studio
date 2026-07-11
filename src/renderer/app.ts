@@ -2,6 +2,7 @@ import './styles/app.css';
 import './styles/fonts.css';
 import './styles/editor.css';
 import './styles/menu.css';
+import './styles/booklet.css';
 
 import { getActiveBrand, paletteToCssVars } from '@shared/brand';
 import { griffinSeed } from '@shared/brand/griffin-seed';
@@ -20,6 +21,7 @@ import { maybeShowFirstRun } from './features/welcome';
 import { initUpdateUI } from './features/update-ui';
 import { initWorkspaces, setRecoverySnapshots, setWorkspace } from './workspaces';
 import { initWindowPanels } from './panels/window-panels';
+import { initBookletEditor } from './views/booklet-editor';
 import { mountAppShell } from './shell/app-shell';
 import { initHelp } from './help/help';
 import { confirmDocumentTransition, markDocumentDirty, markDocumentSaved } from './document-session';
@@ -173,7 +175,7 @@ function initKeyboard(): void {
       p: 'print',
       e: 'export-pdf',
       f: 'toggle-find-replace-panel',
-      '0': 'actual-size',
+      '0': 'fit-page',
       '=': 'zoom-in',
       '+': 'zoom-in',
       '-': 'zoom-out',
@@ -347,6 +349,7 @@ async function boot(): Promise<void> {
   initCommandDispatch();
   initWorkspaces();
   initWindowPanels();
+  initBookletEditor();
   initHelp();
 
   window.griffin?.onCloseRequest(() => {

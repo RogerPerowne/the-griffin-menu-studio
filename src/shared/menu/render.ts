@@ -91,6 +91,7 @@ import type {
 } from '../types';
 import { tagsStr, usedCodes } from './tags';
 import { rootAfter, rootBottom, rootTop, type RootEntry } from './root-order';
+import { fontByFamily } from '../typography/font-catalog';
 
 export interface RenderOptions {
   /** Emit inline-edit hooks (data-edit, movable-block wrappers) as the mockup does in edit mode. Omit/false for the clean print/export DOM. */
@@ -142,9 +143,15 @@ export function typographyVars(menu: Menu, settingsTypography?: TypographySettin
     if (merged.caps) out.push(`--${role}-caps:${CAPS_CSS[merged.caps]}`);
     if (merged.spaceAbove != null) out.push(`--${role}-sa:${merged.spaceAbove}px`);
     if (merged.spaceBelow != null) out.push(`--${role}-sb:${merged.spaceBelow}px`);
-    // Font family (Typography Master override). Sanitised + quoted to a single
-    // family name so it can't break out of the inline style declaration.
-    if (merged.font) out.push(`--${role}-font:'${String(merged.font).replace(/[^\w\s-]/g, '').slice(0, 60)}'`);
+    if (merged.lineHeight != null) out.push(`--${role}-lh:${merged.lineHeight}`);
+    if (merged.letterSpacing != null) out.push(`--${role}-ls:${merged.letterSpacing}em`);
+    // Font family (Typography Master override). Prefer the catalog's full fallback
+    // stack (trusted data → emitted verbatim); otherwise sanitise the raw name to a
+    // single quoted family so it can't break out of the inline style declaration.
+    if (merged.font) {
+      const stack = fontByFamily(merged.font)?.stack;
+      out.push(`--${role}-font:${stack ?? `'${String(merged.font).replace(/[^\w\s-]/g, '').slice(0, 60)}'`}`);
+    }
   }
   return out.join(';');
 }

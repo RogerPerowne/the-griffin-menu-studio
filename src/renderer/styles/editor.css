@@ -139,8 +139,9 @@ svg{stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-l
 .typo-desc{font-size:12.5px;color:var(--mut);font-style:italic}
 .typo-key{font-size:11.5px;letter-spacing:.05em;color:var(--mut);text-transform:uppercase}
 .typo-footer{font-size:11px;letter-spacing:.05em;color:var(--mut);text-transform:uppercase}
-/* font sets */
-.font-griffin .typo-title,.font-griffin .typo-dish{font-family:Georgia,'Times New Roman',serif}
+/* font sets — previews must match the real page fonts (menu.css defaults) */
+.font-griffin .typo-title,.font-griffin .typo-section{font-family:'Aviano Didone','Brandon',serif}
+.font-griffin .typo-dish,.font-griffin .typo-price,.font-griffin .typo-desc,.font-griffin .typo-key,.font-griffin .typo-footer{font-family:'Brandon',ui-sans-serif,system-ui,sans-serif}
 .font-classic .typo-title,.font-classic .typo-section,.font-classic .typo-dish{font-family:'Playfair Display',Georgia,serif}
 .font-classic .typo-desc,.font-classic .typo-price,.font-classic .typo-footer,.font-classic .typo-key{font-family:'Inter','Segoe UI',system-ui,sans-serif}
 .font-modern .typo-title,.font-modern .typo-section,.font-modern .typo-dish,.font-modern .typo-desc,.font-modern .typo-price,.font-modern .typo-footer,.font-modern .typo-key{font-family:'Segoe UI',system-ui,-apple-system,sans-serif}
@@ -915,3 +916,35 @@ body.png-export #printRoot .page{transform:scale(1.5625) !important;transform-or
 .savestate[data-state="saving"] .savedot{animation:save-pulse 1s ease-in-out infinite}
 @keyframes save-pulse{50%{opacity:.25}}
 @media (prefers-reduced-motion:reduce){.savestate[data-state="saving"] .savedot{animation:none}}
+
+/* ============================ Typography Master ============================
+   The full four-section Typography panel (docs/typography-master-panel.md),
+   docked beside the live menu. Calm/spacious, bronze/ivory; reuses the shared
+   .typo-*, .seg / .seg-btn and .range-row control styles from the Settings
+   Typography card and adds the tm-* layout around them. */
+.typography-master .tm-root{display:grid;gap:16px}
+.tm-section{display:grid;gap:10px}
+.tm-head{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.tm-head b{font-weight:500;color:var(--ink)}
+.tm-step{width:18px;height:18px;border-radius:50%;background:var(--brand-green);color:var(--brand-pink);display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex:none}
+.tm-field{display:grid;gap:5px;font-size:12.5px;color:var(--ink)}
+.tm-field-label{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.tm-field select{border:1px solid var(--line2);border-radius:8px;padding:8px 9px;background:#fff;color:var(--ink);font:inherit}
+.tm-field select:focus{outline:none;border-color:var(--copper)}
+/* Roles list — small glyph icon + name + live preview + chevron. */
+.tm-roles .typo-role{grid-template-columns:20px 96px minmax(0,1fr) 14px}
+.tm-role-glyph{width:20px;height:20px;border-radius:6px;background:var(--cream);border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-family:Georgia,'Times New Roman',serif;font-size:12px;color:var(--copper)}
+.tm-role.sel .tm-role-glyph{background:var(--brand-green);color:var(--brand-pink);border-color:var(--brand-green)}
+/* Selected-role + advanced controls share the calm boxed treatment. */
+.tm-ctrls{display:grid;gap:11px;border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--cream)}
+.tm-ctrls .seg-btn{font-size:11px;padding:7px 4px}
+.tm-reset,.tm-reset-all{width:100%;justify-content:center;text-align:center}
+.tm-reset-all{background:#fff}
+.tm-advanced{border:1px solid var(--line);border-radius:10px;background:#fff;overflow:hidden}
+.tm-advanced>summary{list-style:none;cursor:pointer;padding:10px 12px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);display:flex;align-items:center;gap:6px}
+.tm-advanced>summary::-webkit-details-marker{display:none}
+.tm-advanced>summary::before{content:'›';font-size:15px;transition:transform .12s}
+.tm-advanced[open]>summary::before{transform:rotate(90deg)}
+.tm-advanced>summary:hover{color:var(--ink)}
+.tm-advanced .tm-ctrls{border:none;border-top:1px solid var(--line);border-radius:0;background:#FBF8F2}
+.tm-advanced code{font-size:11px;background:var(--cream);border:1px solid var(--line);border-radius:5px;padding:1px 4px}
