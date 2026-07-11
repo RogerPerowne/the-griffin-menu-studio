@@ -49,16 +49,17 @@ extensions **plus** one disciplined, portable, versioned format underneath.
 ```
 Documents/
 └── Griffin Menu Studio/
-    ├── Menus/            *.menu        ← menu documents (seeded with the Griffin's real menus)
-    │   └── (optional user subfolders, e.g. Events/, Seasonal/ — the library mirrors the tree)
-    ├── Templates/        *.template    ← built-in (seeded) + user templates
-    ├── Booklets/         *.booklet     ← folded booklets (later)
-    └── Exports/          *.pdf *.png   ← exported output
+    ├── Menus/       *.menu, *.booklet   ← menu documents AND folded booklets (seeded with the Griffin's real menus)
+    ├── Templates/   *.template          ← built-in (seeded) + user templates
+    └── Exports/     *.pdf *.png         ← exported output
 ```
 
-The base folder defaults to Documents but is overridable in Settings (it follows a
-redirected OneDrive Documents automatically). **The folder *is* the library** — what the
-user sees in the app's Open list is exactly what they see in Explorer.
+Just three folders — flat and obvious. **Menus and booklets live together in `Menus/`**
+(a booklet is just another finished menu the user opens and edits; the `.booklet`
+extension distinguishes them). No per-menu subfolders — the folder is deliberately kept
+simple. The base folder defaults to Documents but is overridable in Settings (it follows
+a redirected OneDrive Documents automatically). **The folder *is* the library** — what
+the user sees in the app's Open list is exactly what they see in Explorer.
 
 ### App-internal (AppData — never in Documents, never synced)
 
@@ -87,9 +88,8 @@ separate import/export concept.
 
 **New model (Word-like):**
 
-- The **Open list = a live listing of `Menus/*.menu`** (via a new `menu:list` IPC,
-  shaped like the existing `template:list`), read from disk, with name + thumbnail +
-  modified date. Not the localStorage blob.
+- The **Open list = a live listing of `Menus/` (`*.menu` + `*.booklet`)** read from disk,
+  with name + thumbnail + modified date. Not the localStorage blob.
 - **Opening** a menu reads that file into the editor; **saving** writes it back to the
   same file (atomic, with the OneDrive retry already in place).
 - The renderer store keeps only the **working document** + preferences + undo history —
@@ -97,6 +97,29 @@ separate import/export concept.
   settings, not the source of truth for all menus.
 - **Templates never appear in the Open list.** Open = `Menus/` only. Templates are
   reached solely through **New → From Template**, listing `Templates/*.template`.
+
+### Plumbing (the IPC surface + store split)
+
+Main process (`src/main/`, a new `menus.ts` mirroring `templates.ts`), all through the
+existing `atomicWriteFile` + directory-watch:
+
+- `menu:list(storage)` → `[{ path, name, kind, modified, thumbnailRef }]` — reads
+  `Menus/`, `.menu` + `.booklet`, from the **index cache** then reconciles with disk.
+- `menu:read(path)` → the document `state` (validated, version-gated).
+- `menu:save(path, state)` → atomic write to `path` (or Save-As dialog when no path).
+- `menu:reveal(path?)` → open the file/folder in Explorer.
+- `menu:delete(path)` → move to the OS recycle bin (never hard-delete).
+
+Renderer store split (`src/renderer/store.ts`):
+
+- Today `AppState.menus[]` holds the whole library. **New:** the store holds the single
+  **open document** (`currentMenu`), its file path, preferences, and undo history.
+- The Home **Open** pane renders `menu:list` results (file cards), not `state.menus`.
+  Clicking a card → `menu:read` → load into the editor (with the dirty guard).
+- Save → `menu:save(currentPath, state)`; New → clears the working document; Save-As →
+  dialog into `Menus/`.
+- `griffinSeed()` stops seeding an in-memory library; the real menus are seeded as files
+  instead (§4). The store's initial working document is the most-recent file (or a blank).
 
 ### Library index + thumbnails (performance)
 
