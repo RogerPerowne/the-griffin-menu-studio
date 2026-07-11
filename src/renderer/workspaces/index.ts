@@ -13,6 +13,7 @@ import { confirmDialog } from '../ui/confirm';
 import type { RecoverySummary } from '@shared/api';
 import { escapeHtml as esc } from '../util/escape';
 import { trapFocus } from '../util/focus-trap';
+import { confirmDocumentTransition } from '../document-session';
 
 export type Workspace = 'home' | 'editor' | 'export';
 
@@ -119,9 +120,11 @@ function tplToSample(t: Template): Menu {
   return menu;
 }
 
-export function createMenuFromTemplateId(templateId: string, name?: string): void {
+export async function createMenuFromTemplateId(templateId: string, name?: string): Promise<void> {
   const template = allTemplates().find((t) => t.id === templateId);
   if (!template) return;
+  if (!await confirmDocumentTransition()) return;
+  await window.griffin?.newDocument?.();
   snapshot();
   const menu = newMenu((name || template.name).trim() || 'New Menu', styleFromTemplate(template));
   menu.headerNote = template.headerNote || '';
@@ -143,10 +146,22 @@ export function createMenuFromTemplateId(templateId: string, name?: string): voi
   commit(['all']);
 }
 
-export function createBlankMenu(): void {
+export async function createBlankMenu(): Promise<void> {
+  if (!await confirmDocumentTransition()) return;
+  await window.griffin?.newDocument?.();
+  const defaults = getState().settings.defaults ?? {};
+  const columns = Math.max(1, Math.min(4, defaults.cols || 1));
   snapshot();
-  const menu = newMenu('New Menu');
-  menu.sections = [newSection('Starters', []), newSection('Mains', []), newSection('Desserts', [])];
+  const menu = newMenu('New Menu', {
+    ...(defaults.paper ? { paper: defaults.paper } : {}),
+    ...(defaults.header ? { header: defaults.header } : {}),
+  });
+  menu.footer = defaults.footer || '';
+  menu.sections = [
+    newSection('Starters', [], { cols: columns, descMode: defaults.descMode || 'inline' }),
+    newSection('Mains', [], { cols: columns, descMode: defaults.descMode || 'inline' }),
+    newSection('Desserts', [], { cols: columns, descMode: defaults.descMode || 'inline' }),
+  ];
   const state = getState();
   state.menus.unshift(menu);
   state.currentMenuId = menu.id;
@@ -215,7 +230,7 @@ function openTemplatePreview(templateId: string): void {
   root.addEventListener('click', (e) => {
     const t = e.target as Element;
     const use = t.closest<HTMLElement>('[data-template-id]');
-    if (use?.dataset.templateId) { close(); createMenuFromTemplateId(use.dataset.templateId); return; }
+    if (use?.dataset.templateId) { close(); void createMenuFromTemplateId(use.dataset.templateId); return; }
     if (t === root || t.closest('[data-tplprev-close]')) close();
   });
 }
@@ -333,7 +348,7 @@ function renderHomeWorkspace(): void {
 async function restoreRecovery(id: string): Promise<void> {
   const api = window.griffin;
   if (!api?.readRecovery) return;
-  const res = await api.readRecovery(id);
+  const res = await api.readRecovery(id, getState().settings.storage);
   if (!res.found || !res.snapshot?.state) {
     toast('That recovered menu could not be read.', { kind: 'error' });
     return;
@@ -342,7 +357,7 @@ async function restoreRecovery(id: string): Promise<void> {
   replaceState(res.snapshot.state as ReturnType<typeof getState>);
   window.dispatchEvent(new Event('griffin:dirty')); // recovered work is unsaved until the user saves it
   recoverySnapshots = recoverySnapshots.filter((s) => s.id !== id);
-  void api.discardRecovery?.(id);
+  void api.discardRecovery?.(id, getState().settings.storage);
   setWorkspace('editor');
   toast('Recovered menu restored — review it and Save to keep it.', { kind: 'success' });
 }
@@ -350,7 +365,7 @@ async function restoreRecovery(id: string): Promise<void> {
 async function discardRecovery(id: string): Promise<void> {
   const ok = await confirmDialog({ title: 'Discard recovered work?', body: 'This recovered snapshot will be permanently removed.', confirmLabel: 'Discard', danger: true });
   if (!ok) return;
-  await window.griffin?.discardRecovery?.(id);
+  await window.griffin?.discardRecovery?.(id, getState().settings.storage);
   recoverySnapshots = recoverySnapshots.filter((s) => s.id !== id);
   renderHomeWorkspace();
 }
@@ -392,7 +407,7 @@ function initHomeWorkspace(): void {
     }
     const template = target.closest<HTMLElement>('[data-template-id]');
     if (template?.dataset.templateId) {
-      createMenuFromTemplateId(template.dataset.templateId);
+      void createMenuFromTemplateId(template.dataset.templateId);
       return;
     }
     const card = target.closest<HTMLElement>('[data-open-menu]');

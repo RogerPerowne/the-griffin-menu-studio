@@ -26,6 +26,8 @@ import { choiceDialog, confirmDialog } from './ui/confirm';
 import { openBulkAddDishes } from './features/bulk-add';
 import { openWelcome } from './features/welcome';
 import type { DocumentConflict } from '@shared/api';
+import type { Menu } from '@shared/types';
+import { confirmDocumentTransition, setDocumentSaveHandler } from './document-session';
 
 export type CommandName =
   | 'new-blank' | 'new-template' | 'new-window' | 'open'
@@ -81,6 +83,13 @@ function preflightBlocked(verb: string, reason?: string): void {
   );
 }
 
+function menuFromFileState(value: unknown): Menu | null {
+  const menu = value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as { menu?: unknown }).menu
+    : null;
+  return menu && typeof menu === 'object' && !Array.isArray(menu) ? menu as Menu : null;
+}
+
 async function exportPdf(): Promise<void> {
   const preflight = await preparePrintDOM();
   if (!preflight.ok) {
@@ -103,14 +112,14 @@ async function exportPng(): Promise<void> {
     return;
   }
 
-  // PNG is captured from the same white production preview shown in Export,
-  // never from the whole editor window. Two frames allow the workspace and
-  // canonical menu markup to settle before its bounds are measured.
-  setWorkspace('export');
+  // Capture the unscaled canonical print DOM at a fixed 150 DPI. The visible
+  // Export workspace is intentionally not the source of raster output.
+  document.body.classList.add('png-export');
   await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
-  const page = document.querySelector<HTMLElement>('#exportWorkspace .export-preview-page .page');
+  const page = document.querySelector<HTMLElement>('#printRoot .page');
   const bounds = page?.getBoundingClientRect();
   if (!bounds || bounds.width < 1 || bounds.height < 1) {
+    document.body.classList.remove('png-export');
     toast('The production preview is not ready yet — please try Export PNG again.', { kind: 'warn' });
     return;
   }
@@ -121,6 +130,7 @@ async function exportPng(): Promise<void> {
     defaultName,
     rect: { x: bounds.left, y: bounds.top, width: bounds.width, height: bounds.height },
   });
+  document.body.classList.remove('png-export');
   if (res && !res.canceled) {
     if (res.error) toast(`PNG export failed: ${res.error}`, { kind: 'error' });
     else toast('PNG exported.', { kind: 'success' });
@@ -136,26 +146,27 @@ export async function printMenu(copies = Number((document.getElementById('printC
   await window.griffin?.print({ copies, paper: preflight.paper, landscape: false });
 }
 
-async function saveDocument(as = false): Promise<void> {
+async function saveDocument(as = false): Promise<boolean> {
   const api = window.griffin;
-  if (!api) return;
+  if (!api) return false;
   window.dispatchEvent(new Event('griffin:saving'));
-  const res = as ? await api.saveDocumentAs(getState()) : await api.saveDocument(getState());
+  const storage = getState().settings.storage;
+  const res = as ? await api.saveDocumentAs(getState(), storage) : await api.saveDocument(getState(), storage);
   if (res.canceled) {
     window.dispatchEvent(new Event('griffin:dirty')); // still unsaved, but not a failure
-    return;
+    return false;
   }
   if (res.error) {
     window.dispatchEvent(new Event('griffin:save-failed'));
     toast(`Save failed: ${res.error}. Your menu is unchanged and still needs saving.`, { kind: 'error' });
-    return;
+    return false;
   }
   if (res.conflict) {
-    await resolveSaveConflict(res.conflict);
-    return;
+    return resolveSaveConflict(res.conflict);
   }
   window.dispatchEvent(new Event('griffin:saved'));
   toast(as ? 'Saved a copy.' : 'Menu saved.', { kind: 'success' });
+  return true;
 }
 
 /**
@@ -163,9 +174,9 @@ async function saveDocument(as = false): Promise<void> {
  * from Codex's document contract: Reload / Save a Copy / Overwrite. Cancelling
  * leaves the document dirty and the on-disk file untouched.
  */
-async function resolveSaveConflict(conflict: DocumentConflict): Promise<void> {
+async function resolveSaveConflict(conflict: DocumentConflict): Promise<boolean> {
   const api = window.griffin;
-  if (!api) return;
+  if (!api) return false;
   const choice = await choiceDialog({
     title: 'This menu changed on disk',
     body: `${conflict.message} How would you like to continue?`,
@@ -175,28 +186,33 @@ async function resolveSaveConflict(conflict: DocumentConflict): Promise<void> {
       { id: 'overwrite', label: 'Overwrite the file on disk', danger: true },
     ],
   });
-  const { replaceState } = await import('./store');
   if (choice === 'reload') {
-    if (conflict.diskState) {
-      replaceState(conflict.diskState as ReturnType<typeof getState>);
+    const diskMenu = menuFromFileState(conflict.diskState);
+    if (diskMenu) {
+      const { openMenu } = await import('./store');
+      openMenu(diskMenu);
     } else {
       const r = await api.reloadDocument();
-      if (r.canceled || !r.state) {
+      const menu = menuFromFileState(r.state);
+      if (r.canceled || !menu) {
         window.dispatchEvent(new Event('griffin:dirty'));
         toast('Could not reload the file from disk.', { kind: 'error' });
-        return;
+        return false;
       }
-      replaceState(r.state as ReturnType<typeof getState>);
+      const { openMenu } = await import('./store');
+      openMenu(menu);
     }
     window.dispatchEvent(new Event('griffin:loaded'));
     toast('Reloaded the version from disk.', { kind: 'success' });
+    return false;
   } else if (choice === 'copy') {
     window.dispatchEvent(new Event('griffin:saving'));
-    const r = await api.saveDocumentCopy(getState());
-    if (r.canceled) { window.dispatchEvent(new Event('griffin:dirty')); return; }
-    if (r.error) { window.dispatchEvent(new Event('griffin:save-failed')); toast(`Save failed: ${r.error}`, { kind: 'error' }); return; }
+    const r = await api.saveDocumentCopy(getState(), getState().settings.storage);
+    if (r.canceled) { window.dispatchEvent(new Event('griffin:dirty')); return false; }
+    if (r.error) { window.dispatchEvent(new Event('griffin:save-failed')); toast(`Save failed: ${r.error}`, { kind: 'error' }); return false; }
     window.dispatchEvent(new Event('griffin:dirty')); // original still unsaved; the copy is safe on disk
     toast('Saved a copy — the file on disk is untouched.', { kind: 'success' });
+    return false;
   } else if (choice === 'overwrite') {
     const sure = await confirmDialog({
       title: 'Overwrite the newer file?',
@@ -204,29 +220,37 @@ async function resolveSaveConflict(conflict: DocumentConflict): Promise<void> {
       confirmLabel: 'Overwrite',
       danger: true,
     });
-    if (!sure) { window.dispatchEvent(new Event('griffin:dirty')); return; }
+    if (!sure) { window.dispatchEvent(new Event('griffin:dirty')); return false; }
     window.dispatchEvent(new Event('griffin:saving'));
-    const r = await api.overwriteDocument(getState());
-    if (r.error) { window.dispatchEvent(new Event('griffin:save-failed')); toast(`Save failed: ${r.error}`, { kind: 'error' }); return; }
+    const r = await api.overwriteDocument(getState(), getState().settings.storage);
+    if (r.error) { window.dispatchEvent(new Event('griffin:save-failed')); toast(`Save failed: ${r.error}`, { kind: 'error' }); return false; }
     window.dispatchEvent(new Event('griffin:saved'));
+    return true;
     toast('Saved — replaced the file on disk.', { kind: 'success' });
   } else {
     window.dispatchEvent(new Event('griffin:dirty'));
+    return false;
   }
 }
 
 async function openDocumentFromDisk(): Promise<void> {
   const api = window.griffin;
   if (!api) return;
+  if (!await confirmDocumentTransition()) return;
   const res = await api.openDocument();
-  if (res && !res.canceled && res.state) {
-    const { replaceState } = await import('./store');
-    replaceState(res.state as ReturnType<typeof getState>);
+  const menu = menuFromFileState(res?.state);
+  if (res && !res.canceled && menu) {
+    const { openMenu } = await import('./store');
+    openMenu(menu);
     window.dispatchEvent(new Event('griffin:loaded'));
     setWorkspace('editor');
     toast('Menu opened.', { kind: 'success' });
+  } else if (res?.error) {
+    toast(`Could not open the menu: ${res.error}`, { kind: 'error' });
   }
 }
+
+setDocumentSaveHandler(() => saveDocument(false));
 
 function toggleRail(): void {
   const settings = getState().settings;
@@ -276,7 +300,7 @@ const align = (mode: Parameters<typeof alignSelectedMove>[0]) => () => alignSele
 
 export const COMMANDS: Command[] = [
   // File
-  { id: 'new-blank', label: 'New Blank Menu', group: 'File', hint: 'Ctrl+N', keywords: 'create empty', run: () => createBlankMenu() },
+  { id: 'new-blank', label: 'New Blank Menu', group: 'File', hint: 'Ctrl+N', keywords: 'create empty', run: () => void createBlankMenu() },
   { id: 'new-template', label: 'New from Template…', group: 'File', keywords: 'create layout gallery', run: () => goHomePane('new') },
   { id: 'new-window', label: 'New Window', group: 'File', hint: 'Ctrl+Shift+N', keywords: 'app window second', run: () => void window.griffin?.newWindow() },
   { id: 'open', label: 'Open…', group: 'File', hint: 'Ctrl+O', keywords: 'file document menu', run: () => void openDocumentFromDisk() },

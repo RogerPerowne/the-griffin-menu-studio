@@ -4,6 +4,7 @@ import * as exp from './export-handlers';
 import * as recovery from './recovery';
 import * as templates from './templates';
 import { assertValidTemplate } from '../shared/template-format';
+import type { StorageLocations } from '../shared/types';
 
 function record(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
@@ -44,6 +45,17 @@ function recoveryId(value: unknown): string {
   return value;
 }
 
+function storage(value: unknown): StorageLocations | undefined {
+  const input = record(value);
+  if (!input) return undefined;
+  const result: StorageLocations = {};
+  for (const key of ['defaultMenuFolder', 'templatesFolder', 'recoveryFolder', 'thumbnailFolder', 'backupFolder'] as const) {
+    const candidate = input[key];
+    if (typeof candidate === 'string' && candidate.length <= 1_024 && candidate.trim()) result[key] = candidate.trim();
+  }
+  return result;
+}
+
 /** Register all IPC handlers. */
 export function registerIpc(createWindow: () => BrowserWindow): void {
   const requireWin = (sender?: WebContents): BrowserWindow => {
@@ -52,10 +64,10 @@ export function registerIpc(createWindow: () => BrowserWindow): void {
     return win;
   };
 
-  ipcMain.handle('document:save', (e, state: unknown) => docs.saveDocument(requireWin(e.sender), state));
-  ipcMain.handle('document:saveAs', (e, state: unknown) => docs.saveDocumentAs(requireWin(e.sender), state));
-  ipcMain.handle('document:saveCopy', (e, state: unknown) => docs.saveDocumentCopy(requireWin(e.sender), state));
-  ipcMain.handle('document:overwrite', (e, state: unknown) => docs.overwriteDocument(requireWin(e.sender), state));
+  ipcMain.handle('document:save', (e, state: unknown, locations) => docs.saveDocument(requireWin(e.sender), state, storage(locations)));
+  ipcMain.handle('document:saveAs', (e, state: unknown, locations) => docs.saveDocumentAs(requireWin(e.sender), state, storage(locations)));
+  ipcMain.handle('document:saveCopy', (e, state: unknown, locations) => docs.saveDocumentCopy(requireWin(e.sender), state, storage(locations)));
+  ipcMain.handle('document:overwrite', (e, state: unknown, locations) => docs.overwriteDocument(requireWin(e.sender), state, storage(locations)));
   ipcMain.handle('document:open', (e) => docs.openDocument(requireWin(e.sender)));
   ipcMain.handle('document:consumeLaunch', (e) => docs.consumeLaunchDocument(requireWin(e.sender)));
   ipcMain.handle('document:reload', (e) => docs.reloadDocument(requireWin(e.sender)));
@@ -64,19 +76,19 @@ export function registerIpc(createWindow: () => BrowserWindow): void {
   ipcMain.handle('export:pdf', (e, payload) => exp.exportPdf(requireWin(e.sender), exportPdfPayload(payload)));
   ipcMain.handle('export:png', (e, payload) => exp.exportPng(requireWin(e.sender), exportPngPayload(payload)));
   ipcMain.handle('export:print', (e, payload) => exp.printDocument(requireWin(e.sender), printPayload(payload)));
-  ipcMain.handle('template:list', (e) => {
+  ipcMain.handle('template:list', (e, locations) => {
     requireWin(e.sender);
-    return templates.listUserTemplates();
+    return templates.listUserTemplates(storage(locations));
   });
-  ipcMain.handle('template:save', (e, template) => {
+  ipcMain.handle('template:save', (e, template, locations) => {
     requireWin(e.sender);
     assertValidTemplate(template);
-    return templates.saveUserTemplate(template);
+    return templates.saveUserTemplate(template, storage(locations));
   });
-  ipcMain.handle('template:import', (e) => templates.importTemplate(requireWin(e.sender)));
-  ipcMain.handle('template:revealFolder', (e) => {
+  ipcMain.handle('template:import', (e, locations) => templates.importTemplate(requireWin(e.sender), storage(locations)));
+  ipcMain.handle('template:revealFolder', (e, locations) => {
     requireWin(e.sender);
-    return templates.revealTemplatesFolder();
+    return templates.revealTemplatesFolder(storage(locations));
   });
   ipcMain.handle('app:chooseFolder', async (e, defaultPath) => {
     const res = await dialog.showOpenDialog(requireWin(e.sender), {
@@ -91,22 +103,27 @@ export function registerIpc(createWindow: () => BrowserWindow): void {
     createWindow();
     return { ok: true };
   });
-  ipcMain.handle('recovery:status', (e) => {
-    requireWin(e.sender);
-    return recovery.getRecoveryStatus();
+  ipcMain.handle('window:confirmClose', (e) => {
+    const win = requireWin(e.sender);
+    win.destroy();
+    return { ok: true };
   });
-  ipcMain.handle('recovery:write', (e, state: unknown) => recovery.writeRecovery(requireWin(e.sender), state));
-  ipcMain.handle('recovery:list', (e) => {
+  ipcMain.handle('recovery:status', (e, locations) => {
     requireWin(e.sender);
-    return recovery.listRecovery();
+    return recovery.getRecoveryStatus(storage(locations));
   });
-  ipcMain.handle('recovery:read', (e, id: unknown) => {
+  ipcMain.handle('recovery:write', (e, state: unknown, locations) => recovery.writeRecovery(requireWin(e.sender), state, storage(locations)));
+  ipcMain.handle('recovery:list', (e, locations) => {
     requireWin(e.sender);
-    return recovery.readRecovery(recoveryId(id));
+    return recovery.listRecovery(storage(locations));
   });
-  ipcMain.handle('recovery:discard', (e, id: unknown) => {
+  ipcMain.handle('recovery:read', (e, id: unknown, locations) => {
     requireWin(e.sender);
-    return recovery.discardRecovery(recoveryId(id));
+    return recovery.readRecovery(recoveryId(id), storage(locations));
+  });
+  ipcMain.handle('recovery:discard', (e, id: unknown, locations) => {
+    requireWin(e.sender);
+    return recovery.discardRecovery(recoveryId(id), storage(locations));
   });
   ipcMain.handle('recovery:markCleanExit', (e) => {
     requireWin(e.sender);

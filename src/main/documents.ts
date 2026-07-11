@@ -4,6 +4,7 @@ import path from 'node:path';
 import { DOCUMENT_EXTENSION, MAX_DOCUMENT_BYTES, parseDocumentText, serializeDocument } from '../shared/document-format';
 import type { DocumentConflict, OpenResult, SaveResult } from '../shared/api';
 import { atomicWriteFile, readFileRevision, revisionFor, revisionsMatch, type FileRevision, safeFileStem } from './file-storage';
+import type { StorageLocations } from '../shared/types';
 
 interface DocumentSession {
   filePath: string | null;
@@ -66,10 +67,14 @@ async function detectConflict(session: DocumentSession): Promise<DocumentConflic
   }
 }
 
-async function chooseSavePath(win: BrowserWindow, state: unknown, suggestedPath?: string | null): Promise<string | null> {
+async function chooseSavePath(win: BrowserWindow, state: unknown, suggestedPath?: string | null, storage?: StorageLocations): Promise<string | null> {
+  const fallback = defaultFileName(state);
+  const defaultPath = suggestedPath || (storage?.defaultMenuFolder && path.isAbsolute(storage.defaultMenuFolder)
+    ? path.join(path.normalize(storage.defaultMenuFolder), fallback)
+    : fallback);
   const res = await dialog.showSaveDialog(win, {
     title: 'Save Griffin Menu',
-    defaultPath: suggestedPath || defaultFileName(state),
+    defaultPath,
     filters: [{ name: 'Griffin Menu', extensions: ['menu'] }],
   });
   if (res.canceled || !res.filePath) return null;
@@ -80,7 +85,7 @@ async function chooseSavePath(win: BrowserWindow, state: unknown, suggestedPath?
 
 type SaveMode = 'save' | 'saveAs' | 'saveCopy' | 'overwrite';
 
-async function writeDocument(win: BrowserWindow, state: unknown, mode: SaveMode): Promise<SaveResult> {
+async function writeDocument(win: BrowserWindow, state: unknown, mode: SaveMode, storage?: StorageLocations): Promise<SaveResult> {
   // Validate and serialise before showing a native save dialog. A broken state
   // should never leave the user with a chosen path and a partially written file.
   let contents: string;
@@ -93,7 +98,7 @@ async function writeDocument(win: BrowserWindow, state: unknown, mode: SaveMode)
   const session = currentSession(win);
   let target = session.filePath;
   if (mode === 'saveAs' || mode === 'saveCopy' || !target) {
-    target = await chooseSavePath(win, state, target);
+    target = await chooseSavePath(win, state, target, storage);
     if (!target) return { canceled: true };
   }
 
@@ -113,20 +118,20 @@ async function writeDocument(win: BrowserWindow, state: unknown, mode: SaveMode)
   }
 }
 
-export function saveDocument(win: BrowserWindow, state: unknown): Promise<SaveResult> {
-  return writeDocument(win, state, 'save');
+export function saveDocument(win: BrowserWindow, state: unknown, storage?: StorageLocations): Promise<SaveResult> {
+  return writeDocument(win, state, 'save', storage);
 }
 
-export function saveDocumentAs(win: BrowserWindow, state: unknown): Promise<SaveResult> {
-  return writeDocument(win, state, 'saveAs');
+export function saveDocumentAs(win: BrowserWindow, state: unknown, storage?: StorageLocations): Promise<SaveResult> {
+  return writeDocument(win, state, 'saveAs', storage);
 }
 
-export function saveDocumentCopy(win: BrowserWindow, state: unknown): Promise<SaveResult> {
-  return writeDocument(win, state, 'saveCopy');
+export function saveDocumentCopy(win: BrowserWindow, state: unknown, storage?: StorageLocations): Promise<SaveResult> {
+  return writeDocument(win, state, 'saveCopy', storage);
 }
 
-export function overwriteDocument(win: BrowserWindow, state: unknown): Promise<SaveResult> {
-  return writeDocument(win, state, 'overwrite');
+export function overwriteDocument(win: BrowserWindow, state: unknown, storage?: StorageLocations): Promise<SaveResult> {
+  return writeDocument(win, state, 'overwrite', storage);
 }
 
 export async function openDocument(win: BrowserWindow): Promise<OpenResult> {

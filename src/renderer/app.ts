@@ -6,7 +6,7 @@ import './styles/menu.css';
 import { getActiveBrand, paletteToCssVars } from '@shared/brand';
 import { griffinSeed } from '@shared/brand/griffin-seed';
 import { assetUrl } from './brand-assets';
-import { getState, loadFromStorage, on, replaceState } from './store';
+import { getState, loadFromStorage, on, openMenu } from './store';
 import { initRail, renderRail } from './views/rail';
 import { initEditor, renderEditor } from './views/editor';
 import { initGallery } from './views/gallery';
@@ -21,6 +21,7 @@ import { initWorkspaces, setRecoverySnapshots, setWorkspace } from './workspaces
 import { initWindowPanels } from './panels/window-panels';
 import { mountAppShell } from './shell/app-shell';
 import { initHelp } from './help/help';
+import { confirmDocumentTransition, markDocumentDirty, markDocumentSaved } from './document-session';
 
 const brand = getActiveBrand();
 
@@ -198,18 +199,18 @@ function initSaveState(): void {
     chip.dataset.state = state;
     if (text) text.textContent = LABELS[state];
   };
-  const markDirty = (): void => { if (chip.dataset.state !== 'saving') set('dirty'); };
+  const markDirty = (): void => { if (chip.dataset.state !== 'saving') { markDocumentDirty(); set('dirty'); } };
   on('editor', markDirty);
   on('preview', markDirty);
   window.addEventListener('griffin:saving', () => set('saving'));
-  window.addEventListener('griffin:saved', () => set('saved'));
-  window.addEventListener('griffin:loaded', () => set('saved'));
-  window.addEventListener('griffin:dirty', () => set('dirty'));
+  window.addEventListener('griffin:saved', () => { markDocumentSaved(); set('saved'); });
+  window.addEventListener('griffin:loaded', () => { markDocumentSaved(); set('saved'); });
+  window.addEventListener('griffin:dirty', () => { markDocumentDirty(); set('dirty'); });
   window.addEventListener('griffin:save-failed', () => set('failed'));
 }
 
 async function loadDesktopTemplates(): Promise<void> {
-  const result = await window.griffin?.listTemplates();
+  const result = await window.griffin?.listTemplates(getState().settings.storage);
   if (!result?.templates?.length) return;
   getState().userTemplates = result.templates;
 }
@@ -220,13 +221,20 @@ async function openLaunchDocumentIfAny(): Promise<void> {
   if (!api?.consumeLaunchDocument) return;
   try {
     const res = await api.consumeLaunchDocument();
-    if (res && !res.canceled && res.state) {
-      replaceState(res.state as ReturnType<typeof getState>);
+    const menu = res?.state && typeof res.state === 'object' && !Array.isArray(res.state)
+      ? (res.state as { menu?: unknown }).menu
+      : null;
+    if (res && !res.canceled && menu && typeof menu === 'object' && !Array.isArray(menu)) {
+      openMenu(menu as Parameters<typeof openMenu>[0]);
       window.dispatchEvent(new Event('griffin:loaded'));
       setWorkspace('editor');
+    } else if (res?.error) {
+      const { toast } = await import('./ui/toast');
+      toast(`Could not open the menu: ${res.error}`, { kind: 'error' });
     }
   } catch {
-    /* non-critical: fall back to the normal Home launch */
+    const { toast } = await import('./ui/toast');
+    toast('Could not open the menu supplied by Windows.', { kind: 'error' });
   }
 }
 
@@ -239,14 +247,16 @@ function initRecoveryLifecycle(): void {
   const api = window.griffin;
   if (!api?.writeRecovery) return;
   let timer = 0;
+  const recovery = getState().settings.recovery;
+  if (recovery?.enabled === false) return;
+  const intervalMs = Math.max(10, Math.min(300, recovery?.intervalSeconds ?? 30)) * 1000;
   const scheduleWrite = (): void => {
     window.clearTimeout(timer);
-    timer = window.setTimeout(() => void api.writeRecovery?.(getState()), 4000);
+    timer = window.setTimeout(() => void api.writeRecovery?.(getState(), getState().settings.storage), intervalMs);
   };
   on('editor', scheduleWrite);
   on('preview', scheduleWrite);
   window.addEventListener('griffin:saved', () => window.clearTimeout(timer));
-  window.addEventListener('pagehide', () => void api.markRecoverySessionClean?.());
 }
 
 /** After a crash, surface recovered snapshots in Home for the user to restore. */
@@ -254,7 +264,7 @@ async function checkRecoveryStatus(): Promise<void> {
   const api = window.griffin;
   if (!api?.recoveryStatus) return;
   try {
-    const status = await api.recoveryStatus();
+    const status = await api.recoveryStatus(getState().settings.storage);
     if (status.previousSessionCrashed && status.snapshots.length) {
       setRecoverySnapshots(status.snapshots);
     }
@@ -303,6 +313,12 @@ async function boot(): Promise<void> {
   initWorkspaces();
   initWindowPanels();
   initHelp();
+
+  window.griffin?.onCloseRequest(() => {
+    void confirmDocumentTransition().then((ok) => {
+      if (ok) void window.griffin?.confirmClose();
+    });
+  });
 
   renderRail();
   renderEditor();

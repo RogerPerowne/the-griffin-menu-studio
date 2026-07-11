@@ -134,6 +134,17 @@ export function replaceState(next: AppState): void {
   emit(['all']);
 }
 
+/** Open one native .menu without replacing the Home library or preferences. */
+export function openMenu(menu: Menu): void {
+  state.menus = state.menus.filter((candidate) => candidate.id !== menu.id);
+  state.menus.unshift(menu);
+  state.currentMenuId = menu.id;
+  normaliseMenuColumns(menu);
+  clearHistory();
+  persist();
+  emit(['all']);
+}
+
 export function emitAll(): void {
   emit(['all']);
 }

@@ -339,6 +339,8 @@ export interface PrintPreflight {
   info?: ProductionInfo;
 }
 
+export const PNG_EXPORT_DPI = 150;
+
 async function waitForFonts(timeoutMs = 2500): Promise<boolean> {
   if (!document.fonts) return true;
   if (document.fonts.status === 'loaded') return true;

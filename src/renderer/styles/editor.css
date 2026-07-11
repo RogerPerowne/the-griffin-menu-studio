@@ -521,10 +521,17 @@ body.moveMode .moveHint{display:block}
 @media print{
   html,body{margin:0 !important;padding:0 !important;background:#fff !important}
   body{overflow:visible !important}
-  .top,.main,.tabbar,.overlay,.menusPanel{display:none !important}
+  .app,.top,.menubar,.main,.workspace,.tabbar,.overlay,.menusPanel{display:none !important}
   #printRoot{display:block !important;margin:0 !important;padding:0 !important}
   #printRoot .page{background:#fff !important;box-shadow:none !important;margin:0 !important}
 }
+
+/* PNG export uses the canonical print DOM at a fixed 150 DPI. */
+body.png-export .app,
+body.png-export .tabbar,
+body.png-export .overlay{display:none !important}
+body.png-export #printRoot{display:block !important;position:fixed;left:0;top:0;visibility:visible;pointer-events:none;z-index:9999}
+body.png-export #printRoot .page{transform:scale(1.5625) !important;transform-origin:top left !important;box-shadow:none !important}
 
 /* ================= Release hardening - print fidelity, geometry and usability ================= */
 

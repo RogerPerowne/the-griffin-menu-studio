@@ -12,13 +12,19 @@ export interface GriffinDocument {
   version: number;
   savedAt: string | null;
   generator: Record<string, unknown>;
-  state: DocumentState;
+  state: MenuFileState;
 }
 
 /** Loose shape the format guarantees; the full model lives in types.ts. */
 export interface DocumentState {
   menus: Array<{ name: string; [key: string]: unknown }>;
   settings: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+/** Canonical on-disk payload: one editable menu, never the whole Home library. */
+export interface MenuFileState {
+  menu: Record<string, unknown>;
   [key: string]: unknown;
 }
 
@@ -49,15 +55,6 @@ export function migrateDocument(input: unknown): GriffinDocument {
 
   let document: Record<string, unknown> = input;
 
-  // Legacy raw-state files (menus + settings, no wrapper) get wrapped.
-  if (Array.isArray(document.menus) && document.settings) {
-    document = {
-      app: 'Griffin Menu Studio',
-      version: 1,
-      state: document,
-    };
-  }
-
   if (document.app !== 'Griffin Menu Studio') {
     throw new Error('File is not a Griffin Menu Studio document.');
   }
@@ -73,7 +70,7 @@ export function migrateDocument(input: unknown): GriffinDocument {
   }
 
   const migrated = clone(document) as unknown as GriffinDocument;
-  assertValidState(migrated.state);
+  assertValidMenuState(migrated.state);
   migrated.version = CURRENT_DOCUMENT_VERSION;
   migrated.savedAt = migrated.savedAt || null;
   migrated.generator = migrated.generator || {};
@@ -81,14 +78,27 @@ export function migrateDocument(input: unknown): GriffinDocument {
 }
 
 export function createDocument(state: unknown, metadata: DocumentMetadata = {}): GriffinDocument {
-  assertValidState(state);
+  const input = isPlainObject(state) ? state : null;
+  const menus = input && Array.isArray(input.menus) ? input.menus : [];
+  const selectedId = input && typeof input.currentMenuId === 'string' ? input.currentMenuId : undefined;
+  const menu = input && isPlainObject(input.menu)
+    ? input.menu
+    : (menus.find((candidate) => isPlainObject(candidate) && candidate.id === selectedId) || menus[0]);
+  if (!isPlainObject(menu) || typeof menu.name !== 'string') throw new Error('Document does not contain a valid menu.');
   return {
     app: 'Griffin Menu Studio',
     version: CURRENT_DOCUMENT_VERSION,
     savedAt: new Date().toISOString(),
     generator: metadata.generator || {},
-    state: clone(state) as DocumentState,
+    state: { menu: clone(menu) },
   };
+}
+
+function assertValidMenuState(state: unknown): state is MenuFileState {
+  if (!isPlainObject(state) || !isPlainObject(state.menu) || typeof state.menu.name !== 'string') {
+    throw new Error('Document is missing a valid menu.');
+  }
+  return true;
 }
 
 export function parseDocumentText(text: string): GriffinDocument {

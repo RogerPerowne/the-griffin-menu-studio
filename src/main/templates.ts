@@ -3,11 +3,13 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { MAX_TEMPLATE_BYTES, parseTemplateText, serializeTemplate, TEMPLATE_EXTENSION } from '../shared/template-format';
 import type { SaveResult, TemplateListResult } from '../shared/api';
-import type { Template } from '../shared/types';
+import type { StorageLocations, Template } from '../shared/types';
 import { atomicWriteFile, safeFileStem } from './file-storage';
 
-function userTemplatesDir(): string {
-  return path.join(app.getPath('userData'), 'templates', 'user');
+function userTemplatesDir(storage?: StorageLocations): string {
+  return storage?.templatesFolder && path.isAbsolute(storage.templatesFolder)
+    ? path.normalize(storage.templatesFolder)
+    : path.join(app.getPath('userData'), 'templates', 'user');
 }
 
 async function ensureDir(dir: string): Promise<void> {
@@ -67,15 +69,15 @@ function uniqueTemplateId(template: Template, usedIds: ReadonlySet<string>): Tem
   return { ...template, id };
 }
 
-export async function listUserTemplates(): Promise<TemplateListResult> {
-  const dir = userTemplatesDir();
+export async function listUserTemplates(storage?: StorageLocations): Promise<TemplateListResult> {
+  const dir = userTemplatesDir(storage);
   await ensureDir(dir);
   const { templates, errors } = await readTemplates(dir);
   return { templates, folderPath: dir, errors };
 }
 
-export async function saveUserTemplate(template: Template): Promise<SaveResult> {
-  const dir = userTemplatesDir();
+export async function saveUserTemplate(template: Template, storage?: StorageLocations): Promise<SaveResult> {
+  const dir = userTemplatesDir(storage);
   await ensureDir(dir);
   const userTemplate = { ...template, builtin: false };
   const filePath = path.join(dir, templateFileName(userTemplate));
@@ -84,16 +86,16 @@ export async function saveUserTemplate(template: Template): Promise<SaveResult> 
   return { canceled: false, filePath };
 }
 
-export async function importTemplate(win: BrowserWindow): Promise<TemplateListResult> {
+export async function importTemplate(win: BrowserWindow, storage?: StorageLocations): Promise<TemplateListResult> {
   const res = await dialog.showOpenDialog(win, {
     title: 'Import Griffin Template',
     properties: ['openFile', 'multiSelections'],
     filters: [{ name: 'Griffin Menu Studio Template', extensions: ['menu'] }],
   });
-  if (res.canceled) return listUserTemplates();
-  const dir = userTemplatesDir();
+  if (res.canceled) return listUserTemplates(storage);
+  const dir = userTemplatesDir(storage);
   await ensureDir(dir);
-  const current = await listUserTemplates();
+  const current = await listUserTemplates(storage);
   const usedIds = new Set(current.templates.map((template) => template.id));
   const errors = [...(current.errors || [])];
 
@@ -109,12 +111,12 @@ export async function importTemplate(win: BrowserWindow): Promise<TemplateListRe
       errors.push(`${path.basename(source)}: ${error instanceof Error ? error.message : 'Could not import template'}`);
     }
   }
-  const result = await listUserTemplates();
+  const result = await listUserTemplates(storage);
   return { ...result, errors: Array.from(new Set([...errors, ...(result.errors || [])])) };
 }
 
-export async function revealTemplatesFolder(): Promise<{ ok: boolean; folderPath: string }> {
-  const dir = userTemplatesDir();
+export async function revealTemplatesFolder(storage?: StorageLocations): Promise<{ ok: boolean; folderPath: string }> {
+  const dir = userTemplatesDir(storage);
   await ensureDir(dir);
   const error = await shell.openPath(dir);
   return { ok: !error, folderPath: dir };

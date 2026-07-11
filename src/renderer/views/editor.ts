@@ -23,6 +23,7 @@ import { commit, currentMenu, findDish, getState, persist, snapshot } from '../s
 import type { Scope } from '../store';
 import { fitPage } from '../layout-runtime';
 import { openDishPicker } from './dishpicker';
+import { toast } from '../ui/toast';
 
 const SCOPES_ALL: Scope[] = ['editor', 'preview', 'rail'];
 
@@ -639,7 +640,7 @@ export function deleteCurrentMenu(): void {
   commit(SCOPES_ALL);
 }
 
-export function saveLayoutAsTemplate(): void {
+export async function saveLayoutAsTemplate(): Promise<void> {
   const m = currentMenu();
   const name = window.prompt('Template name:', `${m.name} layout`);
   if (!name) return;
@@ -659,7 +660,13 @@ export function saveLayoutAsTemplate(): void {
     })),
   };
   getState().userTemplates.push(template);
-  void window.griffin?.saveTemplate(template);
+  const result = await window.griffin?.saveTemplate(template, getState().settings.storage);
+  if (result && (result.canceled || result.error)) {
+    getState().userTemplates = getState().userTemplates.filter((candidate) => candidate.id !== template.id);
+    persist();
+    toast(`Template could not be saved: ${result.error || 'operation cancelled.'}`, { kind: 'error' });
+    return;
+  }
   persist();
   window.alert(`Saved. “${name}” now appears in the New Menu gallery.`);
 }

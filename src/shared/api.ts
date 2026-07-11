@@ -7,7 +7,7 @@ export interface ExportPdfPayload {
 }
 
 export interface ExportPngPayload {
-  /** Bounds of the already-rendered white production page, in renderer DIPs. */
+  /** Bounds of the canonical 150-DPI white production page, in renderer DIPs. */
   rect: { x: number; y: number; width: number; height: number };
   defaultName?: string;
 }
@@ -95,25 +95,27 @@ export interface GriffinApi {
   exportPdf(payload: ExportPdfPayload): Promise<SaveResult>;
   exportPng(payload: ExportPngPayload): Promise<SaveResult>;
   print(payload: PrintDocumentPayload): Promise<PrintResult>;
-  saveDocument(state: unknown): Promise<SaveResult>;
-  saveDocumentAs(state: unknown): Promise<SaveResult>;
-  saveDocumentCopy(state: unknown): Promise<SaveResult>;
-  overwriteDocument(state: unknown): Promise<SaveResult>;
+  saveDocument(state: unknown, storage?: StorageLocations): Promise<SaveResult>;
+  saveDocumentAs(state: unknown, storage?: StorageLocations): Promise<SaveResult>;
+  saveDocumentCopy(state: unknown, storage?: StorageLocations): Promise<SaveResult>;
+  overwriteDocument(state: unknown, storage?: StorageLocations): Promise<SaveResult>;
   openDocument(): Promise<OpenResult>;
   consumeLaunchDocument(): Promise<OpenResult>;
   reloadDocument(): Promise<OpenResult>;
   newDocument(): Promise<{ ok: boolean }>;
+  onCloseRequest(handler: () => void): () => void;
+  confirmClose(): Promise<{ ok: boolean }>;
   newWindow(): Promise<{ ok: boolean }>;
-  listTemplates(): Promise<TemplateListResult>;
-  saveTemplate(template: Template): Promise<SaveResult>;
-  importTemplates(): Promise<TemplateListResult>;
-  revealTemplatesFolder(): Promise<{ ok: boolean; folderPath: string }>;
+  listTemplates(storage?: StorageLocations): Promise<TemplateListResult>;
+  saveTemplate(template: Template, storage?: StorageLocations): Promise<SaveResult>;
+  importTemplates(storage?: StorageLocations): Promise<TemplateListResult>;
+  revealTemplatesFolder(storage?: StorageLocations): Promise<{ ok: boolean; folderPath: string }>;
   chooseFolder(defaultPath?: string): Promise<FolderResult>;
-  recoveryStatus(): Promise<RecoveryStatus>;
-  writeRecovery(state: unknown): Promise<RecoveryWriteResult>;
-  listRecovery(): Promise<RecoveryListResult>;
-  readRecovery(id: string): Promise<RecoveryReadResult>;
-  discardRecovery(id: string): Promise<{ ok: boolean }>;
+  recoveryStatus(storage?: StorageLocations): Promise<RecoveryStatus>;
+  writeRecovery(state: unknown, storage?: StorageLocations): Promise<RecoveryWriteResult>;
+  listRecovery(storage?: StorageLocations): Promise<RecoveryListResult>;
+  readRecovery(id: string, storage?: StorageLocations): Promise<RecoveryReadResult>;
+  discardRecovery(id: string, storage?: StorageLocations): Promise<{ ok: boolean }>;
   markRecoverySessionClean(): Promise<{ ok: boolean }>;
 }
-import type { Template } from './types';
+import type { StorageLocations, Template } from './types';
