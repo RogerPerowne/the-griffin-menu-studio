@@ -18,6 +18,14 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 
+# Licensed brand fonts — bundled into builds locally, but NOT redistributed via
+# this public repo (see src/renderer/fonts/README.md). The .otf files must be
+# present on the build machine for the renderer to compile.
+src/renderer/fonts/*.otf
+src/renderer/fonts/*.ttf
+src/renderer/fonts/*.woff
+src/renderer/fonts/*.woff2
+
 # Env / secrets (Sanity tokens etc. — never commit)
 .env
 .env.*

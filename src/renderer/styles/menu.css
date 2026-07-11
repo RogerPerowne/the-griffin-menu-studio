@@ -86,6 +86,16 @@
   --desc-size: 1em;       --desc-weight: 300; --desc-align: center; --desc-caps: none; --desc-sa: 0; --desc-sb: 0;
   --key-size: 0.82em;     --key-weight: 300; --key-align: center; --key-caps: none; --key-sa: calc(2em * var(--dn, 1)); --key-sb: 0;
   --footer-size: 0.82em;  --footer-weight: 300; --footer-align: center; --footer-caps: none; --footer-sa: calc(2em * var(--dn, 1) * var(--footer-gap-scale, 1)); --footer-sb: 0;
+  /* Per-role font (griffin default). Title + section titles are Aviano Didone
+     Bold; everything else is Brandon Grotesque. Overridable per role via the
+     Typography Master (typographyVars emits --<role>-font). */
+  --title-font: 'Aviano Didone', 'Brandon', serif;
+  --section-font: 'Aviano Didone', 'Brandon', serif;
+  --dish-font: 'Brandon', ui-sans-serif, system-ui, sans-serif;
+  --price-font: 'Brandon', ui-sans-serif, system-ui, sans-serif;
+  --desc-font: 'Brandon', ui-sans-serif, system-ui, sans-serif;
+  --key-font: 'Brandon', ui-sans-serif, system-ui, sans-serif;
+  --footer-font: 'Brandon', ui-sans-serif, system-ui, sans-serif;
 }
 
 /* ---------- Menu page typography ---------- */
@@ -125,6 +135,7 @@
 }
 .m-title {
   font-size: var(--title-size);
+  font-family: var(--title-font);
   font-weight: var(--title-weight);
   text-align: var(--title-align);
   text-transform: var(--title-caps);
@@ -147,6 +158,7 @@
 }
 .m-sech {
   font-size: var(--section-size);
+  font-family: var(--section-font);
   font-weight: var(--section-weight);
   text-align: var(--section-align);
   text-transform: var(--section-caps);
@@ -172,6 +184,7 @@
 }
 .m-nm {
   font-size: var(--dish-size);
+  font-family: var(--dish-font);
   font-weight: var(--dish-weight);
   text-align: var(--dish-align);
   text-transform: var(--dish-caps);
@@ -180,6 +193,7 @@
 }
 .m-ds {
   font-size: var(--desc-size);
+  font-family: var(--desc-font);
   font-weight: var(--desc-weight);
   text-align: var(--desc-align);
   text-transform: var(--desc-caps);
@@ -198,6 +212,7 @@
 }
 .m-pr {
   font-size: var(--price-size);
+  font-family: var(--price-font);
   font-weight: var(--price-weight);
   text-align: var(--price-align);
   text-transform: var(--price-caps);
@@ -255,6 +270,7 @@
 .m-foot {
   padding-top: var(--footer-sa);
   font-size: var(--footer-size);
+  font-family: var(--footer-font);
   font-weight: var(--footer-weight);
   text-align: var(--footer-align);
   text-transform: var(--footer-caps);
@@ -266,6 +282,7 @@
 }
 .m-key {
   font-size: var(--key-size);
+  font-family: var(--key-font);
   font-weight: var(--key-weight);
   text-align: var(--key-align);
   text-transform: var(--key-caps);

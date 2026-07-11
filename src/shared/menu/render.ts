@@ -142,6 +142,9 @@ export function typographyVars(menu: Menu, settingsTypography?: TypographySettin
     if (merged.caps) out.push(`--${role}-caps:${CAPS_CSS[merged.caps]}`);
     if (merged.spaceAbove != null) out.push(`--${role}-sa:${merged.spaceAbove}px`);
     if (merged.spaceBelow != null) out.push(`--${role}-sb:${merged.spaceBelow}px`);
+    // Font family (Typography Master override). Sanitised + quoted to a single
+    // family name so it can't break out of the inline style declaration.
+    if (merged.font) out.push(`--${role}-font:'${String(merged.font).replace(/[^\w\s-]/g, '').slice(0, 60)}'`);
   }
   return out.join(';');
 }
