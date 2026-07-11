@@ -231,6 +231,10 @@ export function renderBookletWorkspace(): void {
           <button class="bk-seg ${side === 'inner' ? 'on' : ''}" data-bk-side="inner">Inner (pages)</button>
         </div>
         <button class="bk-seg bk-read-btn" data-bk-read title="Flip through the pages like a real folded booklet"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M12 6c-2-1.5-5-1.5-7 0v12c2-1.5 5-1.5 7 0m0-12c2-1.5 5-1.5 7 0v12c-2-1.5-5-1.5-7 0m0-12v12"/></svg>Read</button>
+        <div class="bk-focus" role="group" aria-label="Centre the zoom on a page" title="When zoomed in, centre on the left or right page">
+          <button class="bk-seg" data-bk-focus="left" aria-label="Centre left page">◧</button>
+          <button class="bk-seg" data-bk-focus="right" aria-label="Centre right page">◨</button>
+        </div>
         <span class="bk-fold-hint">${foldHint(side)}</span>
         <span class="sp"></span>
         <button class="abtn" data-bk-act="print">Print…</button>
@@ -358,6 +362,19 @@ function toggleReader(): void {
   else enterReader();
 }
 
+/** Scroll the booklet sheet so the centre of its left (25%) or right (75%) page
+ *  sits in the middle of the viewport — useful once zoomed past the window. */
+function focusSheetHalf(half: 'left' | 'right'): void {
+  const scroll = document.getElementById('bookletStageScroll');
+  const page = document.querySelector<HTMLElement>('#bookletPagewrap .page');
+  if (!scroll || !page) return;
+  const pr = page.getBoundingClientRect();
+  const sr = scroll.getBoundingClientRect();
+  const pageLeftInScroll = pr.left - sr.left + scroll.scrollLeft;
+  const targetX = pageLeftInScroll + pr.width * (half === 'left' ? 0.25 : 0.75);
+  scroll.scrollTo({ left: targetX - scroll.clientWidth / 2, behavior: 'smooth' });
+}
+
 /* ================= stage wiring (zoom / rulers) ================= */
 
 function bindBookletStage(): void {
@@ -469,6 +486,14 @@ function onFormClick(e: Event): void {
 
   if (target.closest('[data-bk-read]')) {
     toggleReader();
+    return;
+  }
+  const focusBtn = target.closest<HTMLElement>('[data-bk-focus]');
+  if (focusBtn?.dataset.bkFocus) {
+    focusSheetHalf(focusBtn.dataset.bkFocus === 'right' ? 'right' : 'left');
+    document
+      .querySelectorAll<HTMLElement>('[data-bk-focus]')
+      .forEach((b) => b.classList.toggle('on', b === focusBtn));
     return;
   }
   const flipBtn = target.closest<HTMLElement>('[data-bk-flip]');

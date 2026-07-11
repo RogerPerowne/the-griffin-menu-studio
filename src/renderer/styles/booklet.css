@@ -347,3 +347,6 @@
 /* Cover/back rendered as a standalone A5 page inside the reader */
 .bk-cover-page { background: var(--blush); }
 .bk-cover-page .inner { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.bk-focus { display: inline-flex; gap: 2px; margin-left: 4px; }
+.bk-focus .bk-seg { padding: 4px 9px; font-size: 13px; line-height: 1; }
+.bk-focus .bk-seg.on { background: var(--brand-green); color: var(--brand-pink); }
