@@ -56,8 +56,69 @@ export function ensureRootRules(m: Menu): Menu {
   return m;
 }
 
+/**
+ * Re-home any root rule whose `afterSectionId` no longer matches a section
+ * (e.g. its owning section was deleted) so it doesn't silently vanish from
+ * the render loop (`render.ts:289-308` never matches a set-but-unresolvable
+ * `afterSectionId`).
+ *
+ * `priorSectionIds` — the section id order *before* the mutation that
+ * orphaned the rule (e.g. captured just before a section is filtered out) —
+ * lets us tell whether the orphaned rule sat after the first section, the
+ * last section, or a surviving one in between. Callers with no such history
+ * (e.g. the generic normalise pass) can omit it; orphans are then promoted
+ * to the bottom, the same safe default as the "sections is empty" case.
+ */
+export function normaliseRootRules(m: Menu, priorSectionIds?: string[]): Menu {
+  const rules = (m.rootRules = m.rootRules || []);
+  const currentIds = (m.sections || []).map((s) => s.id);
+  const currentSet = new Set(currentIds);
+  const order = priorSectionIds ?? currentIds;
+
+  rules.forEach((r) => {
+    if (!r.afterSectionId || currentSet.has(r.afterSectionId)) return;
+    if (currentIds.length === 0) {
+      r.position = 'bottom';
+      r.afterSectionId = null;
+      return;
+    }
+    const idx = order.indexOf(r.afterSectionId);
+    if (idx === -1 || idx === order.length - 1) {
+      r.position = 'bottom';
+      r.afterSectionId = null;
+      return;
+    }
+    if (idx === 0) {
+      r.position = 'top';
+      r.afterSectionId = null;
+      return;
+    }
+    // Reattach to the nearest still-surviving neighbour, scanning outward
+    // from the deleted section's old position (preferring the earlier side).
+    for (let d = 1; d < order.length; d++) {
+      const before = order[idx - d];
+      if (before && currentSet.has(before)) {
+        r.position = 'between';
+        r.afterSectionId = before;
+        return;
+      }
+      const after = order[idx + d];
+      if (after && currentSet.has(after)) {
+        r.position = 'between';
+        r.afterSectionId = after;
+        return;
+      }
+    }
+    r.position = 'bottom';
+    r.afterSectionId = null;
+  });
+
+  return m;
+}
+
 export function normaliseMenuColumns(m: Menu): Menu {
   ensureRootRules(m);
   (m.sections || []).forEach(normaliseSectionColumns);
+  normaliseRootRules(m);
   return m;
 }

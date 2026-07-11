@@ -18,7 +18,7 @@
 
 import type { Dish, HeaderStyle, Menu, Paper, Rule, SectionItem, Template } from '@shared/types';
 import { newDish, newRule, newSection, T, todayISO, uid, newMenu } from '@shared/menu/factories';
-import { normaliseMenuColumns, normaliseSectionColumns } from '@shared/menu/normalize';
+import { normaliseMenuColumns, normaliseRootRules, normaliseSectionColumns } from '@shared/menu/normalize';
 import { commit, currentMenu, findDish, getState, persist, snapshot } from '../store';
 import type { Scope } from '../store';
 import { fitPage } from '../layout-runtime';
@@ -130,7 +130,7 @@ export function renderEditor(): void {
   const sc = el<HTMLElement>('edScroll');
   if (!sc) return;
 
-  let h = `<div class="rootdropzone edge" data-rootpos="top"></div>`;
+  let h = `<button class="addrootline" data-act="addrootrule" data-pos="top">+ ADD LINE AT TOP</button><div class="rootdropzone edge" data-rootpos="top"></div>`;
   (m.rootRules ?? []).filter((r) => r.position === 'top').forEach((r) => (h += rootRuleRow(r)));
 
   const selSecId = selectedSectionId ?? m.sections[0]?.id ?? null;
@@ -333,8 +333,12 @@ function onEdScrollClick(e: Event): void {
   if (act === 'addrootrule') {
     snapshot();
     m.rootRules = m.rootRules ?? [];
-    const after = b.dataset.after || null;
-    m.rootRules.push(newRule(after ? 'between' : 'bottom', after));
+    if (b.dataset.pos === 'top') {
+      m.rootRules.push(newRule('top', null));
+    } else {
+      const after = b.dataset.after || null;
+      m.rootRules.push(newRule(after ? 'between' : 'bottom', after));
+    }
     commit(SCOPES_ALL);
     return;
   }
@@ -350,7 +354,9 @@ function onEdScrollClick(e: Event): void {
     if (!s) return;
     if (s.items.length && !window.confirm(`Delete section “${s.name}” and its contents?`)) return;
     snapshot();
+    const priorSectionIds = m.sections.map((x) => x.id);
     m.sections = m.sections.filter((x) => x !== s);
+    normaliseRootRules(m, priorSectionIds);
     commit(SCOPES_ALL);
     return;
   }
