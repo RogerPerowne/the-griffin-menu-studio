@@ -5,7 +5,7 @@ import { getActiveBrand } from '../shared/brand';
 import { ensureMenuFileAssociation } from './file-association';
 import { registerIpc } from './ipc';
 import { beginRecoverySession, markRecoverySessionClean } from './recovery';
-import { stageLaunchDocument } from './documents';
+import { stageLaunchDocument, disposeDocumentWatch } from './documents';
 
 // The Squirrel Setup.exe launches the app with --squirrel-install / -updated /
 // -uninstall / -obsolete so it can create or remove Start-menu and desktop
@@ -148,6 +148,7 @@ function createMainWindow(options: { deferShow?: boolean } = {}): BrowserWindow 
   if (!options.deferShow) win.once('ready-to-show', () => win.show());
 
   win.on('closed', () => {
+    disposeDocumentWatch(win);
     if (mainWindow === win) {
       mainWindow = BrowserWindow.getAllWindows().find((candidate) => candidate !== splashWindow) ?? null;
     }

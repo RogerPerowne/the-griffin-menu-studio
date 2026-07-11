@@ -1,5 +1,6 @@
 import { app, BrowserWindow, dialog } from 'electron';
 import fs from 'node:fs/promises';
+import { watch, type FSWatcher } from 'node:fs';
 import path from 'node:path';
 import { DOCUMENT_EXTENSION, MAX_DOCUMENT_BYTES, parseDocumentText, serializeDocument } from '../shared/document-format';
 import type { DocumentConflict, OpenResult, SaveResult } from '../shared/api';
@@ -28,6 +29,67 @@ function defaultFileName(state: unknown): string {
 
 function currentSession(win: BrowserWindow): DocumentSession {
   return sessions.get(win) || { filePath: null, revision: null };
+}
+
+// Proactive external-change watching: while a menu is open, OneDrive (or another
+// app) may sync a newer version onto disk. Watch the file's DIRECTORY so an
+// atomic rename-replace is still observed, debounce OneDrive's multi-touch
+// syncs, and compare the content revision so our own saves never self-trigger.
+interface WatchState {
+  watcher: FSWatcher;
+  timer: ReturnType<typeof setTimeout> | null;
+}
+const watchers = new WeakMap<BrowserWindow, WatchState>();
+
+function stopWatch(win: BrowserWindow): void {
+  const state = watchers.get(win);
+  if (!state) return;
+  if (state.timer) clearTimeout(state.timer);
+  try {
+    state.watcher.close();
+  } catch {
+    // Already closed.
+  }
+  watchers.delete(win);
+}
+
+/** Set the window's document session and (re)arm its external-change watcher. */
+function setSession(win: BrowserWindow, session: DocumentSession): void {
+  sessions.set(win, session);
+  stopWatch(win);
+  if (!session.filePath) return;
+  const dir = path.dirname(session.filePath);
+  const base = path.basename(session.filePath);
+  let watcher: FSWatcher;
+  try {
+    watcher = watch(dir, { persistent: false }, (_event, filename) => {
+      if (filename && path.basename(filename.toString()) !== base) return;
+      const state = watchers.get(win);
+      if (state?.timer) clearTimeout(state.timer);
+      watchers.set(win, { watcher, timer: setTimeout(() => void checkExternalChange(win), 400) });
+    });
+  } catch {
+    return; // Watching is best-effort; save-time conflict detection still protects data.
+  }
+  watchers.set(win, { watcher, timer: null });
+}
+
+async function checkExternalChange(win: BrowserWindow): Promise<void> {
+  if (win.isDestroyed()) {
+    stopWatch(win);
+    return;
+  }
+  const session = currentSession(win);
+  if (!session.filePath || !session.revision) return;
+  const revision = await readFileRevision(session.filePath);
+  if (revision && revisionsMatch(session.revision, revision)) return; // our own save / no real change
+  const conflict = await detectConflict(session);
+  if (conflict) win.webContents.send('document:externalChange', conflict);
+}
+
+/** Stop watching when a window closes (called from main.ts). */
+export function disposeDocumentWatch(win: BrowserWindow): void {
+  stopWatch(win);
 }
 
 async function readDocument(filePath: string): Promise<{ state: unknown; revision: FileRevision }> {
@@ -118,7 +180,7 @@ async function writeDocument(win: BrowserWindow, state: unknown, mode: SaveMode,
     await atomicWriteFile(target, contents);
     const revision = await readFileRevision(target);
     if (!revision) throw new Error('The saved file could not be verified.');
-    if (mode !== 'saveCopy') sessions.set(win, { filePath: target, revision });
+    if (mode !== 'saveCopy') setSession(win, { filePath: target, revision });
     return { canceled: false, filePath: target };
   } catch (error) {
     return { canceled: true, error: error instanceof Error ? error.message : 'The menu could not be saved.' };
@@ -158,7 +220,7 @@ export async function openDocumentPath(win: BrowserWindow, filePath: string): Pr
   }
   try {
     const document = await readDocument(filePath);
-    sessions.set(win, { filePath, revision: document.revision });
+    setSession(win, { filePath, revision: document.revision });
     if (process.platform === 'win32') app.addRecentDocument(filePath);
     return { canceled: false, filePath, state: document.state };
   } catch (error) {
@@ -187,7 +249,7 @@ export async function reloadDocument(win: BrowserWindow): Promise<OpenResult> {
   if (!session.filePath) return { canceled: true, error: 'This menu has not been saved yet.' };
   try {
     const document = await readDocument(session.filePath);
-    sessions.set(win, { filePath: session.filePath, revision: document.revision });
+    setSession(win, { filePath: session.filePath, revision: document.revision });
     return { canceled: false, filePath: session.filePath, state: document.state };
   } catch (error) {
     return { canceled: true, filePath: session.filePath, error: error instanceof Error ? error.message : 'The menu could not be reloaded.' };
@@ -195,7 +257,7 @@ export async function reloadDocument(win: BrowserWindow): Promise<OpenResult> {
 }
 
 export function newDocument(win: BrowserWindow): { ok: boolean } {
-  sessions.set(win, { filePath: null, revision: null });
+  setSession(win, { filePath: null, revision: null });
   return { ok: true };
 }
 

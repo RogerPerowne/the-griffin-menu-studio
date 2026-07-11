@@ -106,6 +106,8 @@ export interface GriffinApi {
   onCloseRequest(handler: () => void): () => void;
   /** A second app launch handed this window a .menu to open (pull via consumeLaunchDocument). */
   onLaunchDocument(handler: () => void): () => void;
+  /** OneDrive or another app synced a newer version of the open file onto disk. */
+  onExternalChange(handler: (conflict: DocumentConflict) => void): () => void;
   confirmClose(): Promise<{ ok: boolean }>;
   newWindow(): Promise<{ ok: boolean }>;
   listTemplates(storage?: StorageLocations): Promise<TemplateListResult>;

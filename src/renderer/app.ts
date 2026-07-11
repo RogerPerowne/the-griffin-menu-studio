@@ -223,6 +223,29 @@ async function loadDesktopTemplates(): Promise<void> {
 }
 
 /** If Windows launched us by double-clicking a .menu file, open it in the Editor. */
+/** Reload the current document from disk, replacing the in-memory menu. */
+async function reloadFromDisk(): Promise<void> {
+  const api = window.griffin;
+  if (!api?.reloadDocument) return;
+  try {
+    const res = await api.reloadDocument();
+    const menu = res?.state && typeof res.state === 'object' && !Array.isArray(res.state)
+      ? (res.state as { menu?: unknown }).menu
+      : null;
+    if (res && !res.canceled && menu && typeof menu === 'object' && !Array.isArray(menu)) {
+      openMenu(menu as Parameters<typeof openMenu>[0]);
+      window.dispatchEvent(new Event('griffin:loaded'));
+      markDocumentSaved();
+    } else if (res?.error) {
+      const { toast } = await import('./ui/toast');
+      toast(`Could not reload the menu: ${res.error}`, { kind: 'error' });
+    }
+  } catch {
+    const { toast } = await import('./ui/toast');
+    toast('Could not reload the menu from disk.', { kind: 'error' });
+  }
+}
+
 async function openLaunchDocumentIfAny(): Promise<void> {
   const api = window.griffin;
   if (!api?.consumeLaunchDocument) return;
@@ -335,6 +358,20 @@ async function boot(): Promise<void> {
   window.griffin?.onLaunchDocument(() => {
     void confirmDocumentTransition().then((ok) => {
       if (ok) void openLaunchDocumentIfAny();
+    });
+  });
+
+  // The open file changed on disk (e.g. OneDrive synced a newer version).
+  window.griffin?.onExternalChange((conflict) => {
+    void import('./ui/toast').then(({ toast }) => {
+      if (conflict?.kind === 'missing') {
+        toast('The open menu file was removed on disk.', { kind: 'warn' });
+        return;
+      }
+      toast('This menu changed on disk (e.g. synced by OneDrive).', {
+        kind: 'warn',
+        action: { label: 'Reload', run: () => void reloadFromDisk() },
+      });
     });
   });
 
