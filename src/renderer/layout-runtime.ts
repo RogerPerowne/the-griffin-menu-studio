@@ -79,6 +79,16 @@ export function renderRulers(): void {
   drawRuler(right, 'y', pr.height, pr.top - sr.top, a5 ? 21 : 29.7);
 }
 
+let rulerRaf = 0;
+/** Coalesce high-frequency ruler redraws (e.g. trackpad scroll) into one frame. */
+export function scheduleRulers(): void {
+  if (rulerRaf) return;
+  rulerRaf = requestAnimationFrame(() => {
+    rulerRaf = 0;
+    renderRulers();
+  });
+}
+
 function drawRuler(canvas: HTMLCanvasElement, axis: 'x' | 'y', pageLenPx: number, pageStartPx: number, lenCm: number): void {
   const cssW = canvas.clientWidth;
   const cssH = canvas.clientHeight;
