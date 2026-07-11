@@ -17,6 +17,7 @@ import { initCommandDispatch, refreshCommandStates, runCommand, type CommandName
 import { openCommandPalette } from './command-palette';
 import { initContextMenus } from './features/context-menu';
 import { maybeShowFirstRun } from './features/welcome';
+import { initUpdateUI } from './features/update-ui';
 import { initWorkspaces, setRecoverySnapshots, setWorkspace } from './workspaces';
 import { initWindowPanels } from './panels/window-panels';
 import { mountAppShell } from './shell/app-shell';
@@ -376,16 +377,8 @@ async function boot(): Promise<void> {
     });
   });
 
-  // A newer app version downloaded in the background — offer a gentle restart.
-  window.griffin?.onUpdateDownloaded((info) => {
-    void import('./ui/toast').then(({ toast }) => {
-      toast(`Update ready${info?.releaseName ? ` (${info.releaseName})` : ''} — restart to apply.`, {
-        kind: 'info',
-        duration: 60000,
-        action: { label: 'Restart now', run: () => void window.griffin?.installUpdate() },
-      });
-    });
-  });
+  // Update experience: background notification + Settings Updates card.
+  initUpdateUI();
 
   renderRail();
   renderEditor();

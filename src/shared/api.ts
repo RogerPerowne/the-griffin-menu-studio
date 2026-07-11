@@ -89,6 +89,31 @@ export interface RecoveryWriteResult {
   error?: string;
 }
 
+export type UpdatePhase =
+  | 'idle' // not checked yet this session
+  | 'checking' // a check is in progress
+  | 'downloading' // a newer version was found and is downloading
+  | 'downloaded' // a newer version is downloaded and ready to install
+  | 'upToDate' // no newer version available
+  | 'error' // the check or download failed
+  | 'unsupported'; // dev build / not packaged — updates unavailable
+
+export type UpdateErrorCode = 'offline' | 'notFound' | 'rateLimited' | 'feedError' | 'unknown';
+
+export interface UpdateInfo {
+  phase: UpdatePhase;
+  currentVersion: string;
+  newVersion?: string;
+  title?: string; // release name / headline
+  notes?: string; // release description + change log ("what's in the update")
+  url?: string; // GitHub release page
+  publishedAt?: string;
+  errorCode?: UpdateErrorCode;
+  errorMessage?: string;
+  cancelled?: boolean; // user cancelled this update this session
+  deferred?: boolean; // user chose "Later"
+}
+
 export interface GriffinApi {
   readonly isDesktop: true;
   readonly platform: string;
@@ -108,10 +133,18 @@ export interface GriffinApi {
   onLaunchDocument(handler: () => void): () => void;
   /** OneDrive or another app synced a newer version of the open file onto disk. */
   onExternalChange(handler: (conflict: DocumentConflict) => void): () => void;
-  /** A newer app version has been downloaded in the background and is ready to apply. */
-  onUpdateDownloaded(handler: (info: { releaseName: string }) => void): () => void;
-  /** Apply the downloaded update and relaunch. */
+  /** Subscribe to update state changes (checking/downloading/downloaded/error/…). */
+  onUpdateState(handler: (info: UpdateInfo) => void): () => void;
+  /** Current update state (for rendering the Settings Updates card on demand). */
+  getUpdateInfo(): Promise<UpdateInfo>;
+  /** Manually check for updates now; resolves with the resulting state. */
+  checkForUpdates(): Promise<UpdateInfo>;
+  /** "Update Now" — apply the downloaded update and relaunch. */
   installUpdate(): Promise<{ ok: boolean }>;
+  /** "Later" — dismiss the prompt; the update applies when the app next starts. */
+  deferUpdate(): Promise<{ ok: boolean }>;
+  /** "Cancel" — skip this update's prompt for the rest of the session. */
+  cancelUpdate(): Promise<{ ok: boolean }>;
   /** Open the Documents/Griffin Menu Studio library folder in the file explorer. */
   revealLibraryFolder(): Promise<{ ok: boolean; folderPath: string }>;
   confirmClose(): Promise<{ ok: boolean }>;

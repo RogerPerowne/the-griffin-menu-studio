@@ -15,6 +15,7 @@ import type { RecoverySummary } from '@shared/api';
 import { escapeHtml as esc } from '../util/escape';
 import { trapFocus } from '../util/focus-trap';
 import { confirmDocumentTransition } from '../document-session';
+import { renderUpdatesCard } from '../features/update-ui';
 
 export type Workspace = 'home' | 'editor' | 'export';
 
@@ -379,6 +380,7 @@ function renderHomeMain(): string {
             <button class="abtn" data-cmd="help-shortcuts">Keyboard shortcuts</button>
           </div>
         </section>
+        ${renderUpdatesCard()}
       </div></section>`;
   }
   const cards = state.menus.map((menu) => renderMenuCard(menu, dietKey)).join('');

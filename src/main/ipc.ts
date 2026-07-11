@@ -6,7 +6,7 @@ import * as exp from './export-handlers';
 import * as recovery from './recovery';
 import * as templates from './templates';
 import { assertValidTemplate } from '../shared/template-format';
-import { quitAndInstallUpdate } from './updater';
+import { checkForUpdates, getUpdateInfo, installUpdateNow, deferUpdate, cancelUpdate } from './updater';
 import { griffinDocumentsRoot } from './app-paths';
 import type { StorageLocations } from '../shared/types';
 
@@ -133,9 +133,27 @@ export function registerIpc(createWindow: () => BrowserWindow): void {
     requireWin(e.sender);
     return recovery.markRecoverySessionClean();
   });
+  ipcMain.handle('update:info', (e) => {
+    requireWin(e.sender);
+    return getUpdateInfo();
+  });
+  ipcMain.handle('update:check', (e) => {
+    requireWin(e.sender);
+    return checkForUpdates();
+  });
   ipcMain.handle('update:install', (e) => {
     requireWin(e.sender);
-    quitAndInstallUpdate();
+    installUpdateNow();
+    return { ok: true };
+  });
+  ipcMain.handle('update:defer', (e) => {
+    requireWin(e.sender);
+    deferUpdate();
+    return { ok: true };
+  });
+  ipcMain.handle('update:cancel', (e) => {
+    requireWin(e.sender);
+    cancelUpdate();
     return { ok: true };
   });
   ipcMain.handle('app:revealLibrary', async (e) => {

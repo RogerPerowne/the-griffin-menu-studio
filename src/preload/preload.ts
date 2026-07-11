@@ -33,12 +33,16 @@ const api: GriffinApi = {
     ipcRenderer.on('document:externalChange', listener);
     return () => ipcRenderer.removeListener('document:externalChange', listener);
   },
-  onUpdateDownloaded: (handler) => {
+  onUpdateState: (handler) => {
     const listener = (_event: Electron.IpcRendererEvent, info: unknown) => handler(info as Parameters<typeof handler>[0]);
-    ipcRenderer.on('update:downloaded', listener);
-    return () => ipcRenderer.removeListener('update:downloaded', listener);
+    ipcRenderer.on('update:state', listener);
+    return () => ipcRenderer.removeListener('update:state', listener);
   },
+  getUpdateInfo: () => ipcRenderer.invoke('update:info'),
+  checkForUpdates: () => ipcRenderer.invoke('update:check'),
   installUpdate: () => ipcRenderer.invoke('update:install'),
+  deferUpdate: () => ipcRenderer.invoke('update:defer'),
+  cancelUpdate: () => ipcRenderer.invoke('update:cancel'),
   revealLibraryFolder: () => ipcRenderer.invoke('app:revealLibrary'),
   confirmClose: () => ipcRenderer.invoke('window:confirmClose'),
   newWindow: () => ipcRenderer.invoke('app:newWindow'),
