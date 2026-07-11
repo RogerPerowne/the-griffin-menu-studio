@@ -4,6 +4,14 @@ This file is the contract between the main-process/persistence work and the
 renderer work. All APIs below are exposed through the narrow `window.griffin`
 preload bridge and must be called through the command registry.
 
+## Engine Handoff Status
+
+The persistence, recovery, template, find/replace, export, and Windows file
+association engine modules are committed through `98cb4ae`. Renderer work can
+now be committed independently without staging any of those files. The shared
+`src/shared/types.ts` remains intentionally uncommitted because it contains
+Claude's additive renderer fields alongside the engine fields.
+
 ## Document Save Conflict Flow
 
 Every document-save call now returns `SaveResult`:
