@@ -381,10 +381,10 @@ input.idesc:focus{outline:none;box-shadow:0 1px 0 var(--copper)}
 .ruler-top{grid-column:1;grid-row:1;border-bottom:1px solid var(--line)}
 .ruler-right{grid-column:2;grid-row:2;border-left:1px solid var(--line)}
 .ruler-corner{grid-column:2;grid-row:1;background:#FBF8F2;border-bottom:1px solid var(--line);border-left:1px solid var(--line)}
-.stage-scroll{grid-column:1;grid-row:2;overflow:auto;min-height:0;min-width:0;padding:22px}
+.stage-scroll{grid-column:1;grid-row:2;overflow:auto;min-height:0;min-width:0;padding:22px;display:flex}
 /* Float the page over the stage like Acrobat/Word (live preview only — never the export page). */
 .stage-scroll .page{box-shadow:0 3px 22px rgba(27,26,30,.18)}
-.pagewrap{transform-origin:top left;margin:0 auto}
+.pagewrap{margin:auto}
 
 /* Bottom zoom bar with slider */
 .stage-zoombar{display:flex;align-items:center;gap:7px;padding:6px 14px;border-top:1px solid var(--line);background:#FBF8F2}
