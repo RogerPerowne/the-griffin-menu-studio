@@ -103,6 +103,11 @@ function drawRuler(canvas: HTMLCanvasElement, axis: 'x' | 'y', pageLenPx: number
   const thickness = axis === 'x' ? cssH : cssW;
   const along = axis === 'x' ? cssW : cssH;
   const pxPerCm = pageLenPx / lenCm;
+  // Shade the off-page region so the page extent reads clearly on the ruler (Word style).
+  const pageEndPx = pageStartPx + pageLenPx;
+  ctx.fillStyle = 'rgba(60,54,46,.08)';
+  if (pageStartPx > 0) axis === 'x' ? ctx.fillRect(0, 0, pageStartPx, cssH) : ctx.fillRect(0, 0, cssW, pageStartPx);
+  if (pageEndPx < along) axis === 'x' ? ctx.fillRect(pageEndPx, 0, cssW - pageEndPx, cssH) : ctx.fillRect(0, pageEndPx, cssW, cssH - pageEndPx);
   ctx.strokeStyle = 'rgba(60,54,46,.5)';
   ctx.fillStyle = 'rgba(60,54,46,.85)';
   ctx.lineWidth = 1;
