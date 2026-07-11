@@ -7,6 +7,7 @@ import { registerIpc } from './ipc';
 import { beginRecoverySession, markRecoverySessionClean } from './recovery';
 import { stageLaunchDocument, disposeDocumentWatch } from './documents';
 import { initAutoUpdate } from './updater';
+import { seedRealMenus } from './menus-seed';
 
 // The Squirrel Setup.exe launches the app with --squirrel-install / -updated /
 // -uninstall / -obsolete so it can create or remove Start-menu and desktop
@@ -196,6 +197,7 @@ async function startPrimaryWindow(argv: string[]): Promise<void> {
 
   const recoveryTask = startupTask('Checking recovery', beginRecoverySession, true);
   const associationTask = startupTask('Registering menu files', ensureMenuFileAssociation, false);
+  void startupTask('Preparing your menus', seedRealMenus, false);
 
   sendSplashStatus('Loading application shell');
   const win = createMainWindow({ deferShow: true });

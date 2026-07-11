@@ -29,6 +29,7 @@ export const griffin: BrandConfig = {
       { c: 'v', l: 'vegetarian' },
       { c: 've', l: 'vegan' },
       { c: 'gf', l: 'gluten free' },
+      { c: 'df', l: 'dairy free' },
       { c: 'n', l: 'nuts' },
       { c: 'se', l: 'sesame' },
     ],

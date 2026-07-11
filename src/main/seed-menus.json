@@ -1,0 +1,3156 @@
+[
+  {
+    "file": "Lunch Set Menu.menu",
+    "menu": {
+      "id": "m-a5-set-lunch-07-03-26",
+      "name": "Lunch Set Menu",
+      "date": "",
+      "style": {
+        "paper": "A5",
+        "header": "title",
+        "showKey": true,
+        "showPrices": true,
+        "sc": 1,
+        "dn": 1
+      },
+      "headerNote": "Two courses £20.00 | Three courses £25.00",
+      "footer": "Please let us know if you have any intolerances or allergies. (v) vegetarian (gf) gluten free (ve) vegan (n) nuts.",
+      "sections": [
+        {
+          "id": "s-a5-set-lunch-07-03-26-0",
+          "name": "To Start",
+          "prices": false,
+          "note": "",
+          "items": [
+            {
+              "id": "d-a5-set-lunch-07-03-26-0-0",
+              "name": "Jerusalem Artichoke & Hazelnut Soup",
+              "desc": "parsley pesto, truffle oil",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "ve",
+                  "r": 0
+                },
+                {
+                  "c": "n",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-a5-set-lunch-07-03-26-0-1",
+              "name": "Salmon & Hake Fishcake",
+              "desc": "smoked aioli, pickled kohlrabi salad",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-a5-set-lunch-07-03-26-0-2",
+              "name": "Tandoori Chicken Wings",
+              "desc": "crispy curry leaf, poppadom crumb, mint yogurt",
+              "price": "",
+              "tags": [],
+              "note": "gf on request",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "below"
+        },
+        {
+          "id": "s-a5-set-lunch-07-03-26-1",
+          "name": "To Follow",
+          "prices": false,
+          "note": "",
+          "items": [
+            {
+              "id": "d-a5-set-lunch-07-03-26-1-0",
+              "name": "King Oyster Mushroom Risotto",
+              "desc": "balsamic reduction, smoked seeds, red amaranth, truffle cream",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "v",
+                  "r": 0
+                }
+              ],
+              "note": "ve on request",
+              "hidden": false
+            },
+            {
+              "id": "d-a5-set-lunch-07-03-26-1-1",
+              "name": "Cider Battered Haddock",
+              "desc": "peas, potato rosti, tartare beurre blanc",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-a5-set-lunch-07-03-26-1-2",
+              "name": "Pork ‘Ribeye’",
+              "desc": "wild garlic & mustard sauce, paprika crisps",
+              "price": "",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "below"
+        },
+        {
+          "id": "s-a5-set-lunch-07-03-26-2",
+          "name": "Something Sweet…",
+          "prices": false,
+          "note": "",
+          "items": [
+            {
+              "id": "d-a5-set-lunch-07-03-26-2-0",
+              "name": "Eton Mess",
+              "desc": "blood orange curd, hazelnut, coconut crumb",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "n",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-a5-set-lunch-07-03-26-2-1",
+              "name": "Sticky Toffee Pudding",
+              "desc": "frosted pecan, fior di latte",
+              "price": "",
+              "tags": [
+                {
+                  "c": "v",
+                  "r": 0
+                },
+                {
+                  "c": "n",
+                  "r": 0
+                }
+              ],
+              "note": "gf on request",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "below"
+        }
+      ],
+      "rootRules": [],
+      "pos": {}
+    }
+  },
+  {
+    "file": "Lunch Set Menu (2).menu",
+    "menu": {
+      "id": "m-a5-set-lunch-21-05-26",
+      "name": "Lunch Set Menu",
+      "date": "",
+      "style": {
+        "paper": "A5",
+        "header": "title",
+        "showKey": true,
+        "showPrices": true,
+        "sc": 1,
+        "dn": 1
+      },
+      "headerNote": "",
+      "footer": "Please let us know if you have any intolerances or allergies. (v) vegetarian (gf) gluten free (ve) vegan (n) nuts.",
+      "sections": [
+        {
+          "id": "s-a5-set-lunch-21-05-26-0",
+          "name": "To Start",
+          "prices": false,
+          "note": "",
+          "items": [
+            {
+              "id": "d-a5-set-lunch-21-05-26-0-0",
+              "name": "Roasted Red Pepper & Sweet Potato Soup",
+              "desc": "seeded chilli oil",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "ve",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-a5-set-lunch-21-05-26-0-1",
+              "name": "Salmon & Hake Fishcake",
+              "desc": "wild garlic mayonnaise, pickled kohlrabi salad",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-a5-set-lunch-21-05-26-0-2",
+              "name": "Tandoori Chicken Wings",
+              "desc": "crispy curry leaf, poppadom crumb, mint yogurt",
+              "price": "",
+              "tags": [],
+              "note": "gf on request",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "below"
+        },
+        {
+          "id": "s-a5-set-lunch-21-05-26-1",
+          "name": "To Follow",
+          "prices": false,
+          "note": "",
+          "items": [
+            {
+              "id": "d-a5-set-lunch-21-05-26-1-0",
+              "name": "Pea & Broadbean Risotto",
+              "desc": "charred courgettes, ricotta",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "v",
+                  "r": 0
+                }
+              ],
+              "note": "ve on request",
+              "hidden": false
+            },
+            {
+              "id": "d-a5-set-lunch-21-05-26-1-1",
+              "name": "Cider Battered Haddock",
+              "desc": "peas, potato rosti, tartare beurre blanc",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-a5-set-lunch-21-05-26-1-2",
+              "name": "Pork Collar",
+              "desc": "white onion sauce, spring greens, pickled kohlrabi",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "below"
+        },
+        {
+          "id": "s-a5-set-lunch-21-05-26-2",
+          "name": "On the side",
+          "prices": true,
+          "note": "",
+          "items": [
+            {
+              "id": "d-a5-set-lunch-21-05-26-2-0",
+              "name": "Spring Greens",
+              "desc": "",
+              "price": "7",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "v",
+                  "r": 0
+                }
+              ],
+              "note": "ve on request",
+              "hidden": false
+            },
+            {
+              "id": "d-a5-set-lunch-21-05-26-2-1",
+              "name": "Badger’s Garden Salad",
+              "desc": "",
+              "price": "8",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "ve",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-a5-set-lunch-21-05-26-2-2",
+              "name": "Jersey Royals",
+              "desc": "",
+              "price": "7.5",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "ve on request",
+              "hidden": false
+            },
+            {
+              "id": "d-a5-set-lunch-21-05-26-2-3",
+              "name": "Skinny Fries",
+              "desc": "",
+              "price": "6.5",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "ve",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "inline"
+        },
+        {
+          "id": "s-a5-set-lunch-21-05-26-3",
+          "name": "Something Sweet…",
+          "prices": false,
+          "note": "",
+          "items": [
+            {
+              "id": "d-a5-set-lunch-21-05-26-3-0",
+              "name": "Sticky Toffee Pudding",
+              "desc": "fior di latte, caramel sauce, candied pecans",
+              "price": "",
+              "tags": [
+                {
+                  "c": "v",
+                  "r": 0
+                },
+                {
+                  "c": "n",
+                  "r": 0
+                }
+              ],
+              "note": "gf on request",
+              "hidden": false
+            },
+            {
+              "id": "d-a5-set-lunch-21-05-26-3-1",
+              "name": "Eton Mess",
+              "desc": "elderflower cream, strawberries",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "below"
+        }
+      ],
+      "rootRules": [],
+      "pos": {}
+    }
+  },
+  {
+    "file": "Lunch Set Menu (3).menu",
+    "menu": {
+      "id": "m-a5-set-lunch-sample-jan-26",
+      "name": "Lunch Set Menu",
+      "date": "",
+      "style": {
+        "paper": "A5",
+        "header": "title",
+        "showKey": true,
+        "showPrices": false,
+        "sc": 1,
+        "dn": 1
+      },
+      "headerNote": "",
+      "footer": "Please let us know if you have any intolerances or allergies. (v) vegetarian (gf) gluten free (ve) vegan (n) nuts.\nAll prices include VAT, and a discretionary 13% service charge will be added to your bill",
+      "sections": [
+        {
+          "id": "s-a5-set-lunch-sample-jan-26-0",
+          "name": "To Start",
+          "prices": false,
+          "note": "",
+          "items": [
+            {
+              "id": "d-a5-set-lunch-sample-jan-26-0-0",
+              "name": "Parsnip & Apple Soup",
+              "desc": "parsnip crisps, spiced hazelnuts",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "ve",
+                  "r": 0
+                },
+                {
+                  "c": "n",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-a5-set-lunch-sample-jan-26-0-1",
+              "name": "Tandoori Chicken Wings",
+              "desc": "poppadom crumb, crispy curry leaf",
+              "price": "",
+              "tags": [],
+              "note": "gf on request",
+              "hidden": false
+            },
+            {
+              "id": "d-a5-set-lunch-sample-jan-26-0-2",
+              "name": "‘The Griffin’ Fishcake",
+              "desc": "smoked aioli, pickled kohlrabi",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "below"
+        },
+        {
+          "id": "s-a5-set-lunch-sample-jan-26-1",
+          "name": "To Follow",
+          "prices": false,
+          "note": "",
+          "items": [
+            {
+              "id": "d-a5-set-lunch-sample-jan-26-1-0",
+              "name": "King Oyster Mushroom Risotto",
+              "desc": "balsamic reduction, smoked seeds, red amaranth, truffle cream",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "v",
+                  "r": 0
+                }
+              ],
+              "note": "ve on request",
+              "hidden": false
+            },
+            {
+              "id": "d-a5-set-lunch-sample-jan-26-1-1",
+              "name": "Pan Fried Stonebass",
+              "desc": "peas, potato rosti, tartare beurre blanc",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-a5-set-lunch-sample-jan-26-1-2",
+              "name": "Wagyu Smash Burger",
+              "desc": "fries, house baked bun, bbq chipotle sauce, pickle, smoked applewood, confit garlic mayo",
+              "price": "",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "below"
+        },
+        {
+          "id": "s-a5-set-lunch-sample-jan-26-2",
+          "name": "Something Sweet…",
+          "prices": false,
+          "note": "",
+          "items": [
+            {
+              "id": "d-a5-set-lunch-sample-jan-26-2-0",
+              "name": "Eton Mess",
+              "desc": "meringue, berry compote, coconut crumble, hazelnuts",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "n",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-a5-set-lunch-sample-jan-26-2-1",
+              "name": "Sticky Toffee Pudding",
+              "desc": "frosted pecan, gingerbread ice cream",
+              "price": "",
+              "tags": [
+                {
+                  "c": "n",
+                  "r": 0
+                },
+                {
+                  "c": "v",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "below"
+        }
+      ],
+      "rootRules": [],
+      "pos": {}
+    }
+  },
+  {
+    "file": "Buffet Menu.menu",
+    "menu": {
+      "id": "m-buffet-2026",
+      "name": "Buffet Menu",
+      "date": "",
+      "style": {
+        "paper": "A4",
+        "header": "title",
+        "showKey": true,
+        "showPrices": false,
+        "sc": 1,
+        "dn": 1
+      },
+      "headerNote": "",
+      "footer": "£35 per head\nAll prices include VAT\n&a discretionary 13% service charge will be added to your bill",
+      "sections": [
+        {
+          "id": "s-buffet-2026-0",
+          "name": "",
+          "prices": false,
+          "note": "",
+          "items": [
+            {
+              "id": "d-buffet-2026-0-0",
+              "name": "Freshly Baked Sourdough",
+              "desc": "seasonal butter",
+              "price": "",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-buffet-2026-0-1",
+              "name": "The Griffin Sausage Roll Lattice",
+              "desc": "smoked tomato & garlic chutney",
+              "price": "",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-buffet-2026-0-2",
+              "name": "Glazed Ham",
+              "desc": "honey & mustard",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-buffet-2026-0-3",
+              "name": "Smoked Salmon",
+              "desc": "capers & pickles",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-buffet-2026-0-4",
+              "name": "Grilled Tenderstem Broccoli Salad",
+              "desc": "tahini dressing, spring onion & parmesan",
+              "price": "",
+              "tags": [
+                {
+                  "c": "v",
+                  "r": 0
+                },
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-buffet-2026-0-5",
+              "name": "Roasted Butternut Squash Salad",
+              "desc": "harissa yoghurt & feta",
+              "price": "",
+              "tags": [
+                {
+                  "c": "v",
+                  "r": 0
+                },
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-buffet-2026-0-6",
+              "name": "Freshly Baked Brownie & Carrot Cake Petit Fours",
+              "desc": "",
+              "price": "",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "below"
+        }
+      ],
+      "rootRules": [],
+      "pos": {}
+    }
+  },
+  {
+    "file": "Canapé Menu.menu",
+    "menu": {
+      "id": "m-canape-2026",
+      "name": "Canapé Menu",
+      "date": "",
+      "style": {
+        "paper": "A4",
+        "header": "title",
+        "showKey": true,
+        "showPrices": false,
+        "sc": 1,
+        "dn": 1
+      },
+      "headerNote": "",
+      "footer": "4 for £20p.h | 5 for £25p.h | 6 for £30p.h\nAdditional £5p.h for Petit Fours\nA discretionary 13% service charge will be added to your bill.",
+      "sections": [
+        {
+          "id": "s-canape-2026-0",
+          "name": "",
+          "prices": false,
+          "note": "",
+          "items": [
+            {
+              "id": "d-canape-2026-0-0",
+              "name": "Potato Rosti topped with Baron Bigod Brie",
+              "desc": "truffle honey dressing",
+              "price": "",
+              "tags": [
+                {
+                  "c": "v",
+                  "r": 0
+                },
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-canape-2026-0-1",
+              "name": "Mushroom Tartlet",
+              "desc": "xo sauce",
+              "price": "",
+              "tags": [
+                {
+                  "c": "v",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-canape-2026-0-2",
+              "name": "Monkfish Tempura",
+              "desc": "lemon & parsley mayo",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-canape-2026-0-3",
+              "name": "Salt Cod Fritters",
+              "desc": "aioli",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-canape-2026-0-4",
+              "name": "Sausage Rolls",
+              "desc": "tomato & smoked garlic chutney",
+              "price": "",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-canape-2026-0-5",
+              "name": "Short Rib Croquette",
+              "desc": "mustard mayo",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "below"
+        },
+        {
+          "id": "s-canape-2026-1",
+          "name": "",
+          "prices": false,
+          "note": "",
+          "items": [
+            {
+              "id": "d-canape-2026-1-0",
+              "name": "Chocolate Brownie & Carrot Cake Petit Fours",
+              "desc": "from 'Ourdough' bakery",
+              "price": "",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "below"
+        }
+      ],
+      "rootRules": [],
+      "pos": {}
+    }
+  },
+  {
+    "file": "Childrens Menu.menu",
+    "menu": {
+      "id": "m-childrens-26",
+      "name": "Childrens Menu",
+      "date": "",
+      "style": {
+        "paper": "A4",
+        "header": "title",
+        "showKey": true,
+        "showPrices": true,
+        "sc": 1,
+        "dn": 1
+      },
+      "headerNote": "",
+      "footer": "(ve) vegan (v) vegetarian (n) nuts (gf) gluten free (se) sesame\nAll prices include VAT & a discretionary 12.5% service charge will be added to your bill.",
+      "sections": [
+        {
+          "id": "s-childrens-26-0",
+          "name": "To Start",
+          "prices": true,
+          "note": "",
+          "items": [
+            {
+              "id": "d-childrens-26-0-0",
+              "name": "'Ourdough Freshly Baked Sourdough",
+              "desc": "butter",
+              "price": "5",
+              "tags": [
+                {
+                  "c": "v",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "inline"
+        },
+        {
+          "id": "s-childrens-26-1",
+          "name": "To Follow",
+          "prices": true,
+          "note": "",
+          "items": [
+            {
+              "id": "d-childrens-26-1-0",
+              "name": "Penne Pasta, Tomato Sauce & Cheese",
+              "desc": "",
+              "price": "10",
+              "tags": [
+                {
+                  "c": "v",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-childrens-26-1-1",
+              "name": "Fish Goujons, Fries & Peas",
+              "desc": "",
+              "price": "10",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-childrens-26-1-2",
+              "name": "Sausages, Fries & Peas",
+              "desc": "",
+              "price": "10",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "inline"
+        },
+        {
+          "id": "s-childrens-26-2",
+          "name": "Only available on Sundays",
+          "prices": true,
+          "note": "",
+          "items": [
+            {
+              "id": "d-childrens-26-2-0",
+              "name": "Childs Roast Dinner",
+              "desc": "Any roast meat options available",
+              "price": "12",
+              "tags": [],
+              "note": "gf on request",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "below"
+        },
+        {
+          "id": "s-childrens-26-3",
+          "name": "Something Sweet",
+          "prices": true,
+          "note": "",
+          "items": [
+            {
+              "id": "d-childrens-26-3-0",
+              "name": "Ice-Cream",
+              "desc": "",
+              "price": "2.5",
+              "tags": [
+                {
+                  "c": "v",
+                  "r": 0
+                },
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-childrens-26-3-1",
+              "name": "Sorbet",
+              "desc": "",
+              "price": "2.5",
+              "tags": [
+                {
+                  "c": "v",
+                  "r": 0
+                },
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "inline"
+        }
+      ],
+      "rootRules": [],
+      "pos": {}
+    }
+  },
+  {
+    "file": "Dinner Menu 2026-06-19.menu",
+    "menu": {
+      "id": "m-dinner-19-06-26",
+      "name": "Dinner Menu",
+      "date": "2026-06-19",
+      "style": {
+        "paper": "A4",
+        "header": "title",
+        "showKey": true,
+        "showPrices": true,
+        "sc": 1,
+        "dn": 1
+      },
+      "headerNote": "",
+      "footer": "",
+      "sections": [
+        {
+          "id": "s-dinner-19-06-26-0",
+          "name": "Whilst you wait…",
+          "prices": true,
+          "note": "",
+          "items": [
+            {
+              "id": "d-dinner-19-06-26-0-0",
+              "name": "'Ourdough' Bakery Bread",
+              "desc": "tarragon & honey butter",
+              "price": "5",
+              "tags": [
+                {
+                  "c": "v",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "inline"
+        },
+        {
+          "id": "s-dinner-19-06-26-1",
+          "name": "Starters",
+          "prices": true,
+          "note": "",
+          "items": [
+            {
+              "id": "d-dinner-19-06-26-1-0",
+              "name": "Roasted Red Pepper & Sweet Potato Soup",
+              "desc": "seeded chilli oil",
+              "price": "9",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "ve",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-19-06-26-1-1",
+              "name": "Glazed Beetroot",
+              "desc": "sunflower seed sauce, crispy cavolo nero",
+              "price": "10",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "ve",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-19-06-26-1-2",
+              "name": "Crispy Wild Mushrooms",
+              "desc": "ginger & miso glaze, mushroom xo, sesame",
+              "price": "10",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "se",
+                  "r": 0
+                },
+                {
+                  "c": "ve",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-19-06-26-1-3",
+              "name": "Chalk Stream Trout Ceviche",
+              "desc": "pickled fennel, apple, crème fraiche, barley, lemon & mustard dressing",
+              "price": "11",
+              "tags": [],
+              "note": "gf on request",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-19-06-26-1-4",
+              "name": "Tuna Tartare",
+              "desc": "heritage tomatoes, pickled fennel, seaweed",
+              "price": "12.5",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-19-06-26-1-5",
+              "name": "Prawn Gyoza",
+              "desc": "asian bisque, pickled radish, crispy shallots",
+              "price": "13",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-19-06-26-1-6",
+              "name": "Lamb Croquette",
+              "desc": "kohlrabi & yoghurt slaw, harissa dressing",
+              "price": "11",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-19-06-26-1-7",
+              "name": "Baked Bagborough Brie Pie (to share)",
+              "desc": "leaf salad, truffle honey, carrot & apricot chutney",
+              "price": "19.5",
+              "tags": [
+                {
+                  "c": "v",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "inline"
+        },
+        {
+          "id": "s-dinner-19-06-26-2",
+          "name": "Mains",
+          "prices": true,
+          "note": "",
+          "items": [
+            {
+              "id": "d-dinner-19-06-26-2-0",
+              "name": "Pea & Broadbean Risotto",
+              "desc": "charred courgettes, ricotta, old winchester",
+              "price": "20",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "v",
+                  "r": 0
+                }
+              ],
+              "note": "ve on request",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-19-06-26-2-1",
+              "name": "Heritage Carrot Gnocchi Parisienne",
+              "desc": "spring greens, pickled carrot, hazelnut crumb",
+              "price": "20",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "n",
+                  "r": 0
+                },
+                {
+                  "c": "v",
+                  "r": 0
+                }
+              ],
+              "note": "ve on request",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-19-06-26-2-2",
+              "name": "Pan Fried Stonebass",
+              "desc": "prawns, seaweed & samphire butter",
+              "price": "32",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-19-06-26-2-3",
+              "name": "Seared Tuna",
+              "desc": "pickled carrot, choi sum, kombu dashi",
+              "price": "34",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-19-06-26-2-4",
+              "name": "Chicken Kiev",
+              "desc": "chorizo & garlic butter, caprese salad",
+              "price": "28",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-19-06-26-2-5",
+              "name": "Pork Collar",
+              "desc": "white onion sauce, spring greens, pickled kohlrabi",
+              "price": "26",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-19-06-26-2-6",
+              "name": "38 Day Aged Hereford Ribeye (8oz)",
+              "desc": "stout & miso glaze, crispy onions, fries, truffled peppercorn",
+              "price": "38",
+              "tags": [],
+              "note": "gf on request",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-19-06-26-2-7",
+              "name": "53 Day Aged Hereford Beef Tomahawk (42oz)",
+              "desc": "two to three people to share – spring greens, fries, leaf salad, truffled peppercorn sauce, chimichurri, crispy onions",
+              "price": "130",
+              "tags": [],
+              "note": "gf on request",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "inline"
+        },
+        {
+          "id": "s-dinner-19-06-26-3",
+          "name": "Sides",
+          "prices": true,
+          "note": "",
+          "items": [
+            {
+              "id": "d-dinner-19-06-26-3-0",
+              "name": "Badger's Garden Salad",
+              "desc": "lemon dressing",
+              "price": "8",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "ve",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-19-06-26-3-1",
+              "name": "Spring Greens",
+              "desc": "xo sauce, smoked seeds",
+              "price": "7",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "v",
+                  "r": 0
+                }
+              ],
+              "note": "ve on request",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-19-06-26-3-2",
+              "name": "Jersey Royals",
+              "desc": "mint & parsley pesto, old winchester",
+              "price": "7.5",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "v",
+                  "r": 0
+                }
+              ],
+              "note": "ve on request",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-19-06-26-3-3",
+              "name": "Skinny Fries",
+              "desc": "xo mayo",
+              "price": "6.5",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "ve",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "inline"
+        }
+      ],
+      "rootRules": [],
+      "pos": {}
+    }
+  },
+  {
+    "file": "Set Menu.menu",
+    "menu": {
+      "id": "m-dinner-set-march-26",
+      "name": "Set Menu",
+      "date": "",
+      "style": {
+        "paper": "A4",
+        "header": "title",
+        "showKey": true,
+        "showPrices": false,
+        "sc": 1,
+        "dn": 1
+      },
+      "headerNote": "",
+      "footer": "All our menus are seasonal, and thus subject to availability. Please let us know if you have any intolerances or allergies. (v) vegetarian (gf) gluten free (ve) vegan (n) nuts. All prices include VAT, and a discretionary 13% service charge will be added to your bill.",
+      "sections": [
+        {
+          "id": "s-dinner-set-march-26-0",
+          "name": "To Start",
+          "prices": false,
+          "note": "",
+          "items": [
+            {
+              "id": "d-dinner-set-march-26-0-0",
+              "name": "Spiced Cauliflower Soup",
+              "desc": "parsley pesto, crispy shallots",
+              "price": "",
+              "tags": [
+                {
+                  "c": "ve",
+                  "r": 0
+                },
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-set-march-26-0-1",
+              "name": "Crispy Wild Mushroom",
+              "desc": "ginger & miso glaze, mushroom xo, sesame",
+              "price": "",
+              "tags": [
+                {
+                  "c": "ve",
+                  "r": 0
+                },
+                {
+                  "c": "se",
+                  "r": 0
+                },
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-set-march-26-0-2",
+              "name": "Fjord Trout Ceviche",
+              "desc": "pickled fennel, rhubarb, crème fraiche & puffed barley",
+              "price": "",
+              "tags": [],
+              "note": "gf on request",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-set-march-26-0-3",
+              "name": "Seasonal Croquette",
+              "desc": "celeriac remoulade, burnt apple ketchup",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "inline"
+        },
+        {
+          "id": "s-dinner-set-march-26-1",
+          "name": "To Follow",
+          "prices": false,
+          "note": "All mains accompanied by Hispi Cabbage & Skinny Fries",
+          "items": [
+            {
+              "id": "d-dinner-set-march-26-1-0",
+              "name": "Heritage Carrot Gnocchi Parisienne",
+              "desc": "hazelnut & brown butter crumb, cavolo nero",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "v",
+                  "r": 0
+                }
+              ],
+              "note": "ve on request",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-set-march-26-1-1",
+              "name": "Seasonal Fish",
+              "desc": "cavolo nero, shitake butter emulsion, pickled cucumber",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-set-march-26-1-2",
+              "name": "Barbecued Chicken Breast",
+              "desc": "chorizo & judion bean fabada, serrano crumb",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-set-march-26-1-3",
+              "name": "Blythburgh Pork Schnitzel",
+              "desc": "rainbow chard slaw, salsa verde",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-set-march-26-1-4",
+              "name": "38 Day Aged Hereford Ribeye",
+              "desc": "stout & miso glaze, peppercorn, fries",
+              "price": "",
+              "tags": [],
+              "note": "gf on request, £7 supplement",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "inline"
+        },
+        {
+          "id": "s-dinner-set-march-26-2",
+          "name": "Desserts",
+          "prices": false,
+          "note": "",
+          "items": [
+            {
+              "id": "d-dinner-set-march-26-2-0",
+              "name": "Sticky Toffee Pudding",
+              "desc": "fior di latte gelato, caramelised pecans, caramel sauce",
+              "price": "",
+              "tags": [
+                {
+                  "c": "v",
+                  "r": 0
+                },
+                {
+                  "c": "n",
+                  "r": 0
+                }
+              ],
+              "note": "gf on request",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-set-march-26-2-1",
+              "name": "Coconut & Chocolate Cremeux",
+              "desc": "coconut crunch, honeycomb, coconut sorbet",
+              "price": "",
+              "tags": [
+                {
+                  "c": "ve",
+                  "r": 0
+                },
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-dinner-set-march-26-2-2",
+              "name": "Cheese Board",
+              "desc": "Baron Bigod Brie, Rachel Goats, Highmoor, Beauvale Blue, smoked seeds, quince jelly, fig chutney, grape mustard, crackers",
+              "price": "",
+              "tags": [
+                {
+                  "c": "n",
+                  "r": 0
+                }
+              ],
+              "note": "£5 supplement",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "inline"
+        }
+      ],
+      "rootRules": [],
+      "pos": {}
+    }
+  },
+  {
+    "file": "Lunch Menu 2026-05-21.menu",
+    "menu": {
+      "id": "m-lunch-21-05-26",
+      "name": "Lunch Menu",
+      "date": "2026-05-21",
+      "style": {
+        "paper": "A4",
+        "header": "title",
+        "showKey": true,
+        "showPrices": true,
+        "sc": 1,
+        "dn": 1
+      },
+      "headerNote": "",
+      "footer": "All our menus are seasonal and thus subject to availability. Please let us know if you have any intolerances or allergies. (v) vegetarian (gf) gluten free (ve) vegan (n) nuts (se) sesame All prices include VAT and a discretionary 13% service charge will be added to your bill.",
+      "sections": [
+        {
+          "id": "s-lunch-21-05-26-0",
+          "name": "Whilst you wait…",
+          "prices": true,
+          "note": "",
+          "items": [
+            {
+              "id": "d-lunch-21-05-26-0-0",
+              "name": "'Ourdough' Bakery Bread",
+              "desc": "tarragon & honey butter",
+              "price": "5",
+              "tags": [
+                {
+                  "c": "v",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "inline"
+        },
+        {
+          "id": "s-lunch-21-05-26-1",
+          "name": "Starters",
+          "prices": true,
+          "note": "",
+          "items": [
+            {
+              "id": "d-lunch-21-05-26-1-0",
+              "name": "Roasted Red Pepper & Sweet Potato Soup",
+              "desc": "seeded chilli oil",
+              "price": "9",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "ve",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-lunch-21-05-26-1-1",
+              "name": "Glazed Beetroot",
+              "desc": "sunflower seed sauce, crispy cavolo nero",
+              "price": "10",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "ve",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-lunch-21-05-26-1-2",
+              "name": "Crispy Wild Mushrooms",
+              "desc": "ginger & miso glaze, mushroom xo, sesame",
+              "price": "10",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "se",
+                  "r": 0
+                },
+                {
+                  "c": "ve",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-lunch-21-05-26-1-3",
+              "name": "Salmon & Hake Fishcake",
+              "desc": "wild garlic mayonnaise, pickled kohlrabi salad",
+              "price": "10.5",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-lunch-21-05-26-1-4",
+              "name": "Chalk Stream Trout Ceviche",
+              "desc": "fennel, apple, crème fraiche, puffed barley, lemon & mustard dressing",
+              "price": "11",
+              "tags": [],
+              "note": "gf on request",
+              "hidden": false
+            },
+            {
+              "id": "d-lunch-21-05-26-1-5",
+              "name": "Tandoori Chicken Wings",
+              "desc": "poppadom crumb, crispy curry leaf, mint yogurt",
+              "price": "10",
+              "tags": [],
+              "note": "gf on request",
+              "hidden": false
+            },
+            {
+              "id": "d-lunch-21-05-26-1-6",
+              "name": "Lamb Croquette",
+              "desc": "kohlrabi & yoghurt slaw, harissa dressing",
+              "price": "11",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "inline"
+        },
+        {
+          "id": "s-lunch-21-05-26-2",
+          "name": "Seasonal",
+          "prices": true,
+          "note": "",
+          "items": [
+            {
+              "id": "d-lunch-21-05-26-2-0",
+              "name": "Pea & Broadbean Risotto",
+              "desc": "charred courgettes, ricotta, old winchester",
+              "price": "20",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "v",
+                  "r": 0
+                }
+              ],
+              "note": "ve on request",
+              "hidden": false
+            },
+            {
+              "id": "d-lunch-21-05-26-2-1",
+              "name": "Heritage Carrot Gnocchi Parisienne",
+              "desc": "spring greens, hazelnut crumb, pickled carrots",
+              "price": "19",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "n",
+                  "r": 0
+                }
+              ],
+              "note": "ve on request",
+              "hidden": false
+            },
+            {
+              "id": "d-lunch-21-05-26-2-2",
+              "name": "Baked Bagborough Brie Pie",
+              "desc": "carrot & apricot chutney, truffle honey, leaf salad",
+              "price": "19.5",
+              "tags": [
+                {
+                  "c": "v",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-lunch-21-05-26-2-3",
+              "name": "Seared Tuna",
+              "desc": "pickled carrot, choi sum, kombu dashi",
+              "price": "34",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "inline"
+        },
+        {
+          "id": "s-lunch-21-05-26-3",
+          "name": "Classic",
+          "prices": true,
+          "note": "",
+          "items": [
+            {
+              "id": "d-lunch-21-05-26-3-0",
+              "name": "Pork Collar",
+              "desc": "white onion sauce, spring greens, pickled kohlrabi",
+              "price": "26",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-lunch-21-05-26-3-1",
+              "name": "Pan Fried Stonebass",
+              "desc": "prawns, seaweed & samphire butter",
+              "price": "32",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-lunch-21-05-26-3-2",
+              "name": "Wagyu Smash Burger",
+              "desc": "fries, house baked bun, bbq chipotle sauce, smoked applewood, confit garlic mayo",
+              "price": "20",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-lunch-21-05-26-3-3",
+              "name": "38 Day Aged Hereford Ribeye (8oz)",
+              "desc": "stout & miso glaze, fries, chimichurri",
+              "price": "38",
+              "tags": [],
+              "note": "gf on request",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "inline"
+        },
+        {
+          "id": "s-lunch-21-05-26-4",
+          "name": "On the side",
+          "prices": true,
+          "note": "",
+          "items": [
+            {
+              "id": "d-lunch-21-05-26-4-0",
+              "name": "Spring Greens",
+              "desc": "xo sauce, smoked seeds",
+              "price": "7",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "v",
+                  "r": 0
+                }
+              ],
+              "note": "ve on request",
+              "hidden": false
+            },
+            {
+              "id": "d-lunch-21-05-26-4-1",
+              "name": "Badger's Garden Salad",
+              "desc": "lemon dressing",
+              "price": "8",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "ve",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-lunch-21-05-26-4-2",
+              "name": "Jersey Royals",
+              "desc": "mint & parsley pesto, old winchester",
+              "price": "7.5",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "ve on request",
+              "hidden": false
+            },
+            {
+              "id": "d-lunch-21-05-26-4-3",
+              "name": "Skinny Fries",
+              "desc": "xo mayo",
+              "price": "6.5",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "ve",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "inline"
+        }
+      ],
+      "rootRules": [],
+      "pos": {}
+    }
+  },
+  {
+    "file": "Sharing Menu.menu",
+    "menu": {
+      "id": "m-sharing-april-26",
+      "name": "Sharing Menu",
+      "date": "",
+      "style": {
+        "paper": "A4",
+        "header": "title",
+        "showKey": true,
+        "showPrices": false,
+        "sc": 1,
+        "dn": 1
+      },
+      "headerNote": "",
+      "footer": "All our menus are seasonal, and thus subject to availability. Please let us know if you have any intolerances or allergies. (v) vegetarian (gf) gluten free (ve) vegan (n) nuts. All prices include VAT, and a discretionary 13% service charge will be added to your bill.",
+      "sections": [
+        {
+          "id": "s-sharing-april-26-0",
+          "name": "Whilst you wait…",
+          "prices": false,
+          "note": "",
+          "items": [
+            {
+              "id": "d-sharing-april-26-0-0",
+              "name": "'Ourdough' Freshly Baked Bread",
+              "desc": "flavoured butter",
+              "price": "",
+              "tags": [
+                {
+                  "c": "v",
+                  "r": 0
+                },
+                {
+                  "c": "n",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "inline"
+        },
+        {
+          "id": "s-sharing-april-26-1",
+          "name": "To Start",
+          "prices": false,
+          "note": "",
+          "items": [
+            {
+              "id": "d-sharing-april-26-1-0",
+              "name": "Loaded Potato Rosti",
+              "desc": "truffle honey, baked brie",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-sharing-april-26-1-1",
+              "name": "Fjord Trout Ceviche",
+              "desc": "pickled fennel, rhubarb, crème fraiche & puffed barley",
+              "price": "",
+              "tags": [],
+              "note": "gf on request",
+              "hidden": false
+            },
+            {
+              "id": "d-sharing-april-26-1-2",
+              "name": "Seasonal Croquette",
+              "desc": "celeriac remoulade, burnt apple ketchup",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "inline"
+        },
+        {
+          "id": "s-sharing-april-26-2",
+          "name": "To Follow",
+          "prices": false,
+          "note": "Vegetarian options also available. All mains accompanied by Hispi Cabbage & Skinny Fries.",
+          "items": [
+            {
+              "id": "d-sharing-april-26-2-0",
+              "name": "45 Day Aged Hereford Tomahawk",
+              "desc": "stout & miso glaze, peppercorn sauce, crispy onions",
+              "price": "",
+              "tags": [],
+              "note": "gf on request",
+              "hidden": false
+            },
+            {
+              "id": "d-sharing-april-26-2-1",
+              "name": "Seasonal Fish",
+              "desc": "salsa verde, lemon",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "inline"
+        },
+        {
+          "id": "s-sharing-april-26-3",
+          "name": "Sharing Desserts",
+          "prices": false,
+          "note": "",
+          "items": [
+            {
+              "id": "d-sharing-april-26-3-0",
+              "name": "Coconut & Chocolate Cremeux",
+              "desc": "coconut crunch, honeycomb, coconut sorbet",
+              "price": "",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "ve",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-sharing-april-26-3-1",
+              "name": "Sticky Toffee Pudding",
+              "desc": "fior di latte gelato, caramelised pecans, caramel sauce",
+              "price": "",
+              "tags": [
+                {
+                  "c": "n",
+                  "r": 0
+                }
+              ],
+              "note": "gf on request",
+              "hidden": false
+            },
+            {
+              "id": "d-sharing-april-26-3-2",
+              "name": "Cheese Board",
+              "desc": "Baron Bigod Brie, Rachel Goats, Beauvale Blue, smoked seeds, pear & pink peppercorn chutney, grape mustard, crackers",
+              "price": "",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "inline"
+        }
+      ],
+      "rootRules": [],
+      "pos": {}
+    }
+  },
+  {
+    "file": "Summer Barbecue Menu.menu",
+    "menu": {
+      "id": "m-skewers",
+      "name": "Summer Barbecue Menu",
+      "date": "",
+      "style": {
+        "paper": "A4",
+        "header": "title",
+        "showKey": true,
+        "showPrices": true,
+        "sc": 1,
+        "dn": 1
+      },
+      "headerNote": "Every Saturday | 12pm - 6pm",
+      "footer": "(gf) gluten free (v) vegetarian (ve) vegan (n) nuts. This event is weather dependent. In the event of bad weather, dependent on capacity, we will try to seat you inside instead. All bookings affected will be notified accordingly.",
+      "sections": [
+        {
+          "id": "s-skewers-0",
+          "name": "Barbecued Skewers",
+          "prices": true,
+          "note": "3 per portion",
+          "items": [
+            {
+              "id": "d-skewers-0-0",
+              "name": "Courgette, Pepper & Aubergine",
+              "desc": "tahini dressing",
+              "price": "12",
+              "tags": [
+                {
+                  "c": "ve",
+                  "r": 0
+                },
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-skewers-0-1",
+              "name": "Cornish Monkfish",
+              "desc": "zhug",
+              "price": "15",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-skewers-0-2",
+              "name": "Chicken Thigh",
+              "desc": "chipotle sauce",
+              "price": "13.5",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-skewers-0-3",
+              "name": "Lamb Kofta",
+              "desc": "green yoghurt",
+              "price": "13.5",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "below"
+        },
+        {
+          "id": "s-skewers-1",
+          "name": "Flatbread",
+          "prices": true,
+          "note": "",
+          "items": [
+            {
+              "id": "d-skewers-1-0",
+              "name": "Manouche & Za'atar",
+              "desc": "",
+              "price": "5",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "below"
+        },
+        {
+          "id": "s-skewers-2",
+          "name": "On the Side",
+          "prices": true,
+          "note": "",
+          "items": [
+            {
+              "id": "d-skewers-2-0",
+              "name": "Badger's Garden Salad",
+              "desc": "",
+              "price": "8",
+              "tags": [
+                {
+                  "c": "ve",
+                  "r": 0
+                },
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "below"
+        },
+        {
+          "id": "s-skewers-3",
+          "name": "",
+          "prices": true,
+          "note": "",
+          "items": [
+            {
+              "id": "d-skewers-3-0",
+              "name": "Skewers, Flatbread & Salad",
+              "desc": "",
+              "price": "25",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "below"
+        }
+      ],
+      "rootRules": [],
+      "pos": {}
+    }
+  },
+  {
+    "file": "Sunday Menu 2026-05-17.menu",
+    "menu": {
+      "id": "m-sunday-17-05-26",
+      "name": "Sunday Menu",
+      "date": "2026-05-17",
+      "style": {
+        "paper": "A4",
+        "header": "title",
+        "showKey": true,
+        "showPrices": true,
+        "sc": 1,
+        "dn": 1
+      },
+      "headerNote": "",
+      "footer": "All prices include VAT & a discretionary 13% service charge will be added to your bill. (n) nuts (gf) gluten free (v) vegetarian (ve) vegan",
+      "sections": [
+        {
+          "id": "s-sunday-17-05-26-0",
+          "name": "To Start",
+          "prices": true,
+          "note": "",
+          "items": [
+            {
+              "id": "d-sunday-17-05-26-0-0",
+              "name": "Roasted Red Pepper & Sweet Potato Soup",
+              "desc": "seeded chilli oil",
+              "price": "9",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "ve",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-17-05-26-0-1",
+              "name": "Crispy Wild Mushrooms",
+              "desc": "ginger & miso glaze, mushroom xo, sesame",
+              "price": "10",
+              "tags": [
+                {
+                  "c": "ve",
+                  "r": 0
+                },
+                {
+                  "c": "se",
+                  "r": 0
+                },
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-17-05-26-0-2",
+              "name": "Glazed Beetroot",
+              "desc": "sunflower seed sauce, apple, crispy cavolo nero",
+              "price": "10",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "ve",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-17-05-26-0-3",
+              "name": "Salmon & Hake Fishcake",
+              "desc": "smoked aioli, pickled kohlrabi salad",
+              "price": "10.5",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-17-05-26-0-4",
+              "name": "Prawn Gyoza",
+              "desc": "asian bisque, pickled radish, crispy shallots",
+              "price": "13",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-17-05-26-0-5",
+              "name": "Tuna Tartare",
+              "desc": "heratige tomatoes, pickled fennel, seaweed",
+              "price": "12.5",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-17-05-26-0-6",
+              "name": "Lamb Croquette",
+              "desc": "kohlrabi & yoghurt slaw, harissa dressing",
+              "price": "11",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-17-05-26-0-7",
+              "name": "Lamb Kofta",
+              "desc": "bulgar wheat, pommegranate, green yoghurt",
+              "price": "11",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "inline"
+        },
+        {
+          "id": "s-sunday-17-05-26-1",
+          "name": "To Follow",
+          "prices": true,
+          "note": "All served with roast potatoes, buttered spring greens & mixed seeds, caraway glazed carrots, cauliflower cheese & yorkshire pudding (gluten free yorkshire pudding available)",
+          "items": [
+            {
+              "id": "d-sunday-17-05-26-1-0",
+              "name": "Roast Suckling Pig",
+              "desc": "chorizo & apple jam",
+              "price": "28",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-17-05-26-1-1",
+              "name": "Roast Aged Ribeye & Slow Cooked Beef Rib",
+              "desc": "horseradish cream",
+              "price": "29",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-17-05-26-1-2",
+              "name": "Roast Leg of Lamb & Slow Cooked Shoulder",
+              "desc": "mint sauce",
+              "price": "28",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-17-05-26-1-3",
+              "name": "Roast Chicken & Herb Stuffing",
+              "desc": "red currant & port jelly",
+              "price": "27",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-17-05-26-1-4",
+              "name": "Veggie Roast",
+              "desc": "bagborough brie pie, seasonal vegetables",
+              "price": "25",
+              "tags": [
+                {
+                  "c": "v",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-17-05-26-1-5",
+              "name": "Pan Fried Stonebass",
+              "desc": "prawns, seaweed & samphire butter",
+              "price": "32",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "below"
+        },
+        {
+          "id": "s-sunday-17-05-26-2",
+          "name": "Something Sweet...",
+          "prices": true,
+          "note": "",
+          "items": [
+            {
+              "id": "d-sunday-17-05-26-2-0",
+              "name": "Peach Melba",
+              "desc": "raspberries, toasted almonds, vanilla ice cream",
+              "price": "11",
+              "tags": [
+                {
+                  "c": "v",
+                  "r": 0
+                },
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "n",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-17-05-26-2-1",
+              "name": "Crème Brûlée",
+              "desc": "hazlenut shortbread",
+              "price": "10.5",
+              "tags": [
+                {
+                  "c": "n",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-17-05-26-2-2",
+              "name": "Sticky Toffee Pudding",
+              "desc": "candied pecans, caramel sauce, fior di latte",
+              "price": "10",
+              "tags": [
+                {
+                  "c": "v",
+                  "r": 0
+                },
+                {
+                  "c": "n",
+                  "r": 0
+                }
+              ],
+              "note": "gf on request",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-17-05-26-2-3",
+              "name": "Pavlova",
+              "desc": "elderflower cream, strawberries, toasted pistachio",
+              "price": "11",
+              "tags": [
+                {
+                  "c": "v",
+                  "r": 0
+                },
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "n",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-17-05-26-2-4",
+              "name": "Coconut Chocolate Cremeux",
+              "desc": "coconut crunch, honeycomb, coconut sorbet",
+              "price": "11",
+              "tags": [
+                {
+                  "c": "ve",
+                  "r": 0
+                },
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-17-05-26-2-5",
+              "name": "Apricot & Almond Tart",
+              "desc": "creme anglaise",
+              "price": "11.5",
+              "tags": [
+                {
+                  "c": "v",
+                  "r": 0
+                },
+                {
+                  "c": "n",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "inline"
+        },
+        {
+          "id": "s-sunday-17-05-26-3",
+          "name": "British Cheese",
+          "prices": true,
+          "note": "",
+          "items": [
+            {
+              "id": "d-sunday-17-05-26-3-0",
+              "name": "Baron Bigod Brie, Highmoor, Redlap Goats, Cropwell Bishop",
+              "desc": "smoked seeds, quince jelly, carrot & apricot chutney, grape mustard, crackers",
+              "price": "13",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "below"
+        }
+      ],
+      "rootRules": [],
+      "pos": {}
+    }
+  },
+  {
+    "file": "Sunday Menu 2026-03-29.menu",
+    "menu": {
+      "id": "m-sunday-update-29-03-26",
+      "name": "Sunday Menu",
+      "date": "2026-03-29",
+      "style": {
+        "paper": "A4",
+        "header": "title",
+        "showKey": true,
+        "showPrices": true,
+        "sc": 1,
+        "dn": 1
+      },
+      "headerNote": "",
+      "footer": "All prices include VAT & a discretionary 13% service charge will be added to your bill. (n) nuts (gf) gluten free (v) vegetarian (ve) vegan",
+      "sections": [
+        {
+          "id": "s-sunday-update-29-03-26-0",
+          "name": "To Start",
+          "prices": true,
+          "note": "",
+          "items": [
+            {
+              "id": "d-sunday-update-29-03-26-0-0",
+              "name": "Crispy Wild Mushrooms",
+              "desc": "ginger & miso glaze, mushroom xo, sesame",
+              "price": "10",
+              "tags": [
+                {
+                  "c": "ve",
+                  "r": 0
+                },
+                {
+                  "c": "se",
+                  "r": 0
+                },
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-update-29-03-26-0-1",
+              "name": "The Griffin Fishcake",
+              "desc": "smoked aioli, pickled kohlrabi salad",
+              "price": "10.5",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-update-29-03-26-0-2",
+              "name": "Chalkstream Trout Ceviche",
+              "desc": "plum vinaigrette, granola, smoked creme fraiche, pickled kohlrabi",
+              "price": "11",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-update-29-03-26-0-3",
+              "name": "Tandoori Chicken Wings",
+              "desc": "poppadom crumb, crispy curry leaf",
+              "price": "10",
+              "tags": [],
+              "note": "gf on request",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-update-29-03-26-0-4",
+              "name": "Pig's Cheek Croquette",
+              "desc": "fennel slaw, burnt apple ketchup",
+              "price": "11",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "inline"
+        },
+        {
+          "id": "s-sunday-update-29-03-26-1",
+          "name": "To Follow",
+          "prices": true,
+          "note": "All served with roast potatoes, buttered savoy cabbage & mixed seeds, caraway glazed carrots, cheesy leeks, yorkshire pudding & roasting juices",
+          "items": [
+            {
+              "id": "d-sunday-update-29-03-26-1-0",
+              "name": "Roast Suckling Pig",
+              "desc": "chorizo & apple jam",
+              "price": "28",
+              "tags": [],
+              "note": "gf on request",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-update-29-03-26-1-1",
+              "name": "Roast Leg of Lamb & Slow Cooked Shoulder",
+              "desc": "house mint sauce",
+              "price": "28",
+              "tags": [],
+              "note": "gf on request",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-update-29-03-26-1-2",
+              "name": "Veggie Roast",
+              "desc": "bagborough brie pie, seasonal vegetables",
+              "price": "25",
+              "tags": [
+                {
+                  "c": "v",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-update-29-03-26-1-3",
+              "name": "Roast Aged Ribeye & Slow Cooked Beef Rib",
+              "desc": "horseradish cream",
+              "price": "29",
+              "tags": [],
+              "note": "gf on request",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-update-29-03-26-1-4",
+              "name": "Roast Chicken Breast & Thyme Stuffed Thigh",
+              "desc": "redcurrants & port jelly",
+              "price": "27",
+              "tags": [],
+              "note": "gf on request",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-update-29-03-26-1-5",
+              "name": "Fish Pie",
+              "desc": "old winchester, mash, leeks, peas",
+              "price": "28",
+              "tags": [],
+              "note": "gf on request",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "below"
+        },
+        {
+          "id": "s-sunday-update-29-03-26-2",
+          "name": "Something Sweet...",
+          "prices": true,
+          "note": "",
+          "items": [
+            {
+              "id": "d-sunday-update-29-03-26-2-0",
+              "name": "Strawberry Pavlova",
+              "desc": "champagne strawberries, whipped cream, pistachio, sherbet",
+              "price": "10.5",
+              "tags": [
+                {
+                  "c": "n",
+                  "r": 0
+                },
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-update-29-03-26-2-1",
+              "name": "Sticky Toffee Pudding",
+              "desc": "caramelised pecans, caramel sauce, fior di latte",
+              "price": "10",
+              "tags": [
+                {
+                  "c": "v",
+                  "r": 0
+                },
+                {
+                  "c": "n",
+                  "r": 0
+                }
+              ],
+              "note": "gf on request",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-update-29-03-26-2-2",
+              "name": "Creme Brulee",
+              "desc": "beurre noisette shortbread",
+              "price": "10.5",
+              "tags": [
+                {
+                  "c": "gf",
+                  "r": 0
+                },
+                {
+                  "c": "v",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-sunday-update-29-03-26-2-3",
+              "name": "Coconut & Chocolate Cremeux",
+              "desc": "coconut crunch, honeycomb, coconut sorbet",
+              "price": "10",
+              "tags": [
+                {
+                  "c": "ve",
+                  "r": 0
+                },
+                {
+                  "c": "n",
+                  "r": 0
+                },
+                {
+                  "c": "gf",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "inline"
+        },
+        {
+          "id": "s-sunday-update-29-03-26-3",
+          "name": "British Cheese",
+          "prices": true,
+          "note": "",
+          "items": [
+            {
+              "id": "d-sunday-update-29-03-26-3-0",
+              "name": "Baron Bigod Brie, Ashcombe, Katherine Goats, Beauvale Blue",
+              "desc": "smoked seeds, pickled shallots, pear & pink peppercorn chutney, grape mustard, crackers",
+              "price": "13",
+              "tags": [
+                {
+                  "c": "n",
+                  "r": 0
+                }
+              ],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "below"
+        }
+      ],
+      "rootRules": [],
+      "pos": {}
+    }
+  },
+  {
+    "file": "Wake Menu.menu",
+    "menu": {
+      "id": "m-wake-35pp",
+      "name": "Wake Menu",
+      "date": "",
+      "style": {
+        "paper": "A4",
+        "header": "title",
+        "showKey": true,
+        "showPrices": false,
+        "sc": 1,
+        "dn": 1
+      },
+      "headerNote": "Celebration of Life",
+      "footer": "£35 p.h. All prices include Filter tea, coffee & juices. Please note a discretionary 13% service charge will be added to your bill.",
+      "sections": [
+        {
+          "id": "s-wake-35pp-0",
+          "name": "Sandwiches",
+          "prices": false,
+          "note": "all served on our freshly baked sourdough",
+          "items": [
+            {
+              "id": "d-wake-35pp-0-0",
+              "name": "Grilled Chicken & Avocado",
+              "desc": "",
+              "price": "",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-wake-35pp-0-1",
+              "name": "Cheese & Tomato",
+              "desc": "",
+              "price": "",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-wake-35pp-0-2",
+              "name": "Tuna & Cucumber",
+              "desc": "",
+              "price": "",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "below"
+        },
+        {
+          "id": "s-wake-35pp-1",
+          "name": "Canapés",
+          "prices": false,
+          "note": "",
+          "items": [
+            {
+              "id": "d-wake-35pp-1-0",
+              "name": "BarIzzo Sausage Rolls",
+              "desc": "smoked tomato & garlic chutney",
+              "price": "",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-wake-35pp-1-1",
+              "name": "Smoked Trout Parfait",
+              "desc": "on brioche with pickles",
+              "price": "",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-wake-35pp-1-2",
+              "name": "Potato Rosti topped with Baron Bigod Brie",
+              "desc": "truffle honey dressing",
+              "price": "",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "below"
+        },
+        {
+          "id": "s-wake-35pp-2",
+          "name": "Petit Fours",
+          "prices": false,
+          "note": "",
+          "items": [
+            {
+              "id": "d-wake-35pp-2-0",
+              "name": "Freshly Baked Brownies",
+              "desc": "salted caramel & marshmallow",
+              "price": "",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            },
+            {
+              "id": "d-wake-35pp-2-1",
+              "name": "Freshly Baked Carrot Cake",
+              "desc": "cream cheese frosting",
+              "price": "",
+              "tags": [],
+              "note": "",
+              "hidden": false
+            }
+          ],
+          "cols": 1,
+          "columnNames": [],
+          "descMode": "below"
+        }
+      ],
+      "rootRules": [],
+      "pos": {}
+    }
+  }
+]
