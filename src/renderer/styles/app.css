@@ -44,7 +44,10 @@ body {
 }
 
 /* Custom draggable title bar; native window buttons sit in the overlay on the
-   right, so leave room for them. */
+   right, so leave room for them.
+   NOTE: dead code — no element in the app markup uses .titlebar; the actual
+   top bar is .top in editor.css, which now carries the drag-region rules
+   itself (see #19 fix plan). Left in place pending cleanup. */
 .titlebar {
   height: 40px;
   flex: 0 0 40px;
