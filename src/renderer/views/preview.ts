@@ -92,8 +92,8 @@ export function renderPreview(): void {
 }
 
 /* ================= inline editing ================= */
-// Paths: menu.name / menu.headerNote / menu.footer / sec:<id>.<field> /
-// item:<id>.<field> / col:<sid>.<index> — ported exactly from the mockup's
+// Paths: menu.name / menu.headerNote / menu.footer / menu.dietKeyText /
+// sec:<id>.<field> / item:<id>.<field> / col:<sid>.<index> — ported exactly from the mockup's
 // applyEdit, adjusted for the new model (findDish instead of findItem,
 // section/dish objects instead of raw item records).
 
@@ -111,6 +111,10 @@ function applyEdit(path: string, rawVal: string): void {
   }
   if (path === 'menu.footer') {
     menu.footer = val;
+    return;
+  }
+  if (path === 'menu.dietKeyText') {
+    menu.dietKeyText = val;
     return;
   }
   if (path.startsWith('sec:')) {

@@ -19,6 +19,7 @@
 import type { Dish, HeaderStyle, Menu, Paper, Rule, SectionItem, Template } from '@shared/types';
 import { newDish, newRule, newSection, T, todayISO, uid, newMenu } from '@shared/menu/factories';
 import { normaliseMenuColumns, normaliseRootRules, normaliseSectionColumns } from '@shared/menu/normalize';
+import { usedCodes } from '@shared/menu/tags';
 import { commit, currentMenu, findDish, getState, persist, snapshot } from '../store';
 import type { Scope } from '../store';
 import { fitPage } from '../layout-runtime';
@@ -176,7 +177,7 @@ export function renderEditor(): void {
   (m.rootRules ?? [])
     .filter((r) => !r.afterSectionId && r.position !== 'top')
     .forEach((r) => (h += rootRuleRow(r)));
-  h += `<div class="root-actions"><button class="addsec" id="btnAddSec">+ ADD SECTION</button><button class="addrootline" data-act="addrootrule">+ ADD LINE AT END</button></div><div class="foot-ed"><div class="cap">FOOTER - PRINTED AT THE BOTTOM OF THE PAGE</div><textarea id="edFooter" placeholder="Footer lines…">${esc(m.footer || '')}</textarea><label class="chkline"><input type="checkbox" id="edShowPrices" ${m.style.showPrices !== false ? 'checked' : ''}> Show prices on the menu</label><label class="chkline"><input type="checkbox" id="edShowKey" ${m.style.showKey ? 'checked' : ''}> Print the dietary key automatically (only the codes used on this menu)</label></div>`;
+  h += `<div class="root-actions"><button class="addsec" id="btnAddSec">+ ADD SECTION</button><button class="addrootline" data-act="addrootrule">+ ADD LINE AT END</button></div><div class="foot-ed"><div class="cap">FOOTER - PRINTED AT THE BOTTOM OF THE PAGE</div><textarea id="edFooter" placeholder="Footer lines…">${esc(m.footer || '')}</textarea><label class="chkline"><input type="checkbox" id="edShowPrices" ${m.style.showPrices !== false ? 'checked' : ''}> Show prices on the menu</label><label class="chkline"><input type="checkbox" id="edShowKey" ${m.style.showKey ? 'checked' : ''}> Print the dietary key automatically (only the codes used on this menu) — turn off to write the key yourself</label></div>`;
 
   sc.innerHTML = h;
 }
@@ -248,7 +249,13 @@ function onEdScrollChange(e: Event): void {
   const target = e.target as HTMLElement;
   if (target.id === 'edShowKey') {
     snapshot();
-    currentMenu().style.showKey = (target as HTMLInputElement).checked;
+    const menu = currentMenu();
+    const checked = (target as HTMLInputElement).checked;
+    menu.style.showKey = checked;
+    if (!checked && !menu.dietKeyText) {
+      const used = usedCodes(menu, getState().settings.dietKey);
+      menu.dietKeyText = used.map((k) => `(${k.c}) ${k.l}`).join('  ');
+    }
     commit(); // preview + rail; the checkbox itself already shows the new state
   } else if (target.id === 'edShowPrices') {
     snapshot();

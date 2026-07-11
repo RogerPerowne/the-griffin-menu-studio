@@ -331,6 +331,13 @@ export function renderMenuHTML(menu: Menu, opts: RenderOptions): string {
       const text = used.map((k) => `(${k.c}) ${k.l}`).join('  ');
       foot += block('key', `<div class="m-key">${escapeHtml(text)}</div>`, edit, pos);
     }
+  } else {
+    foot += block(
+      'key',
+      `<div class="m-key">${editableSpan(edit, 'menu.dietKeyText', menu.dietKeyText || '')}</div>`,
+      edit,
+      pos,
+    );
   }
   foot += block(
     'footer',

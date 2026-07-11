@@ -275,7 +275,7 @@ function typographyBody(): string {
         <input type="range" data-type-dn min="80" max="130" step="1" value="${dn}">
         <small>Vertical density between lines</small>
       </label>
-      <label class="tool-check"><input type="checkbox" data-type-showkey ${st.showKey ? 'checked' : ''}> Show dietary key on the menu</label>
+      <label class="tool-check"><input type="checkbox" data-type-showkey ${st.showKey ? 'checked' : ''}> Show dietary key on the menu — turn off to write the key yourself</label>
       <button class="dock-action" data-type-reset>Reset text size &amp; spacing</button>
       <p class="dock-note">Text size and spacing also change when you use Shrink to fit.</p>
     </div>`;

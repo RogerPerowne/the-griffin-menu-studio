@@ -80,6 +80,8 @@ export interface Menu {
   style: MenuStyle;
   headerNote: string;
   footer: string;
+  /** Manually-written dietary key text, used when `style.showKey` is off. */
+  dietKeyText?: string;
   sections: Section[];
   rootRules: Rule[];
   /** Free-drag "Arrange" positions, keyed by element id. */
