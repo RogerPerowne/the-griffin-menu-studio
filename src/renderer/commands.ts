@@ -40,7 +40,7 @@ export type CommandName =
   | 'new-blank' | 'new-template' | 'new-window' | 'open'
   | 'save' | 'save-as' | 'save-template'
   | 'duplicate' | 'delete-menu' | 'backup' | 'restore'
-  | 'print' | 'export-pdf' | 'export-png' | 'settings'
+  | 'print' | 'print-now' | 'export-pdf' | 'export-png' | 'settings'
   | 'undo' | 'redo'
   | 'insert-subtitle' | 'insert-section' | 'insert-dish' | 'insert-rule' | 'bulk-add-dishes' | 'copy-dish'
   | 'arrange-toggle'
@@ -333,6 +333,7 @@ export const COMMANDS: Command[] = [
   { id: 'backup', label: 'Back up all menus…', group: 'File', keywords: 'export library archive', run: () => downloadBackup() },
   { id: 'restore', label: 'Restore from backup…', group: 'File', keywords: 'import library', run: () => openRestoreDialog() },
   { id: 'print', label: 'Print…', group: 'File', hint: 'Ctrl+P', keywords: 'paper printer', enabled: hasMenu, run: () => setWorkspace('export') },
+  { id: 'print-now', label: 'Print now', group: 'File', keywords: 'print system dialog printer', enabled: hasMenu, run: () => void printMenu() },
   { id: 'export-pdf', label: 'Export as PDF…', group: 'File', hint: 'Ctrl+E', keywords: 'pdf share', enabled: hasMenu, run: () => void exportPdf() },
   { id: 'export-png', label: 'Export as PNG…', group: 'File', keywords: 'png image', enabled: hasMenu, run: () => void exportPng() },
   { id: 'settings', label: 'Settings…', group: 'File', keywords: 'preferences options defaults storage', run: () => goHomePane('settings') },

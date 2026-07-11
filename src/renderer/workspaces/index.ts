@@ -655,7 +655,7 @@ function renderExportSettings(menu: Menu): string {
     <p class="export-kicker">Output</p>
     <h1>Print</h1>
     <p class="export-copy">Check the menu, then open the system print dialog.</p>
-    <button class="print-primary" id="printButton" data-cmd="print">
+    <button class="print-primary" id="printButton" data-cmd="print-now">
       <span class="primary-icon"><svg viewBox="0 0 24 24"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></svg></span>
       <span class="primary-copy"><strong>Print</strong><small>Open system print dialog</small></span>
       <span class="primary-arrow"><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></span>
