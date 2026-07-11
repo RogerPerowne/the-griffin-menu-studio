@@ -6,6 +6,7 @@
 import { newDish, newRule, newSection } from '@shared/menu/factories';
 import { fmtDate } from './views/rail';
 import { canRedo, canUndo, commit, currentMenu, getState, persist, redo, snapshot, undo } from './store';
+import { getEditTarget } from './edit-target';
 import { openDishPicker } from './views/dishpicker';
 import { downloadBackup, openRestoreDialog } from './views/backup';
 import { deleteCurrentMenu, duplicateMenu, getSelectedSectionId, saveLayoutAsTemplate, startAddSubtitle } from './views/editor';
@@ -291,8 +292,10 @@ function insertSubtitle(): void {
 }
 
 function insertSection(): void {
-  const menu = currentMenu();
-  snapshot();
+  // Through the edit-target so it lands on the inside menu in booklet mode.
+  const t = getEditTarget();
+  const menu = t.menu();
+  t.snapshot();
   const selectedId = getSelectedSectionId();
   const idx = selectedId ? menu.sections.findIndex((s) => s.id === selectedId) : -1;
   const section = newSection('New Section', []);
@@ -301,23 +304,25 @@ function insertSection(): void {
   } else {
     menu.sections.splice(idx + 1, 0, section);
   }
-  commit(['all']);
+  t.commit(['all']);
 }
 
 function insertDish(): void {
-  const menu = currentMenu();
-  snapshot();
+  const t = getEditTarget();
+  const menu = t.menu();
+  t.snapshot();
   if (!menu.sections.length) menu.sections.push(newSection('New Section', []));
   const selectedId = getSelectedSectionId();
   const target = menu.sections.find((s) => s.id === selectedId) ?? menu.sections[menu.sections.length - 1];
   target.items.push(newDish());
-  commit(['all']);
+  t.commit(['all']);
 }
 
 function insertRule(): void {
-  snapshot();
-  currentMenu().rootRules.push(newRule('bottom'));
-  commit(['all']);
+  const t = getEditTarget();
+  t.snapshot();
+  t.menu().rootRules.push(newRule('bottom'));
+  t.commit(['all']);
 }
 
 function runAutoSize(): void {
@@ -344,9 +349,11 @@ export const COMMANDS: Command[] = [
   { id: 'open', label: 'Open…', group: 'File', hint: 'Ctrl+O', keywords: 'file document menu', run: () => void openDocumentFromDisk() },
   { id: 'save', label: 'Save', group: 'File', hint: 'Ctrl+S', keywords: 'store document', enabled: hasMenu, run: () => void saveDocument(false) },
   { id: 'save-as', label: 'Save As…', group: 'File', hint: 'Ctrl+Shift+S', keywords: 'copy document', enabled: hasMenu, run: () => void saveDocument(true) },
-  { id: 'save-template', label: 'Save Layout as Template…', group: 'File', keywords: 'reuse layout menu template', enabled: hasMenu, run: () => saveLayoutAsTemplate() },
-  { id: 'duplicate', label: 'Duplicate Menu', group: 'File', keywords: 'copy clone', enabled: hasMenu, run: () => { duplicateMenu(); toast('Menu duplicated.', { kind: 'success' }); } },
-  { id: 'delete-menu', label: 'Delete Menu…', group: 'File', keywords: 'remove trash', enabled: hasMenu, run: () => deleteCurrentMenu() },
+  // Library operations act on the store menu — disable in booklet mode, where the
+  // editor targets the booklet's inside menu (otherwise they'd mutate the store).
+  { id: 'save-template', label: 'Save Layout as Template…', group: 'File', keywords: 'reuse layout menu template', enabled: () => hasMenu() && !isBookletMode(), run: () => saveLayoutAsTemplate() },
+  { id: 'duplicate', label: 'Duplicate Menu', group: 'File', keywords: 'copy clone', enabled: () => hasMenu() && !isBookletMode(), run: () => { duplicateMenu(); toast('Menu duplicated.', { kind: 'success' }); } },
+  { id: 'delete-menu', label: 'Delete Menu…', group: 'File', keywords: 'remove trash', enabled: () => hasMenu() && !isBookletMode(), run: () => deleteCurrentMenu() },
   { id: 'backup', label: 'Back up all menus…', group: 'File', keywords: 'export library archive', run: () => downloadBackup() },
   { id: 'restore', label: 'Restore from backup…', group: 'File', keywords: 'import library', run: () => openRestoreDialog() },
   { id: 'print', label: 'Print…', group: 'File', hint: 'Ctrl+P', keywords: 'paper printer', enabled: hasMenu, run: () => { if (isBookletMode()) void printMenu(); else setWorkspace('export'); } },
@@ -364,8 +371,11 @@ export const COMMANDS: Command[] = [
   { id: 'insert-section', label: 'Add Section', group: 'Insert', keywords: 'new course heading', enabled: hasMenu, run: insertSection },
   { id: 'insert-dish', label: 'Add Dish', group: 'Insert', keywords: 'new item food', enabled: hasMenu, run: insertDish },
   { id: 'insert-rule', label: 'Add Divider Rule', group: 'Insert', keywords: 'line separator', enabled: hasMenu, run: insertRule },
-  { id: 'bulk-add-dishes', label: 'Add Dishes in Bulk…', group: 'Insert', hint: 'Ctrl+Shift+D', keywords: 'paste list multiple quick fast bulk import dishes', enabled: hasMenu, run: () => openBulkAddDishes() },
-  { id: 'copy-dish', label: 'Copy a Dish from another Menu…', group: 'Insert', keywords: 'reuse find dish', enabled: hasMenu, run: () => openDishPicker(currentMenu().sections[0]?.id ?? '') },
+  // These two dialog flows aren't edit-target-aware yet (they add to the store
+  // menu), so disable them in booklet mode. The editor's own +Dish + routed
+  // Insert commands cover inside-menu editing. TODO: make them target-aware.
+  { id: 'bulk-add-dishes', label: 'Add Dishes in Bulk…', group: 'Insert', hint: 'Ctrl+Shift+D', keywords: 'paste list multiple quick fast bulk import dishes', enabled: () => hasMenu() && !isBookletMode(), run: () => openBulkAddDishes() },
+  { id: 'copy-dish', label: 'Copy a Dish from another Menu…', group: 'Insert', keywords: 'reuse find dish', enabled: () => hasMenu() && !isBookletMode(), run: () => openDishPicker(currentMenu().sections[0]?.id ?? '') },
 
   // Arrange
   { id: 'arrange-toggle', label: 'Arrange Mode', group: 'Arrange', keywords: 'move position free drag', checked: isArrangeMode, run: () => toggleMoveMode() },

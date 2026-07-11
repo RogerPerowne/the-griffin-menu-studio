@@ -5,20 +5,24 @@
 // views/preview.ts, but self-contained: it never touches the menu store, only
 // the booklet-session module.
 //
-// The inside menu(s) use a deliberately SIMPLIFIED editor (name / sections /
-// dishes: name·desc·price) rather than reusing the full menu editor
-// (views/editor.ts) — that editor is bound to the store's `currentMenu()` and
-// is out of scope to rewire for this pass. Tags, columns, dietary key, divider
-// rules and free-drag arrange are therefore not editable on the inside menu yet
-// (they still RENDER via renderMenuHTML if present). See the return notes.
+// The Inside tab reuses the REAL menu editor (views/editor.ts) — the same
+// `<section class="editor">` node the menu workspace uses — bound to the active
+// inside Menu through the edit-target seam (edit-target.ts). Full parity: tags,
+// columns, dietary key, divider rules and free-drag arrange all work on the
+// inside menu. In two-menu mode a Left/Right sub-toggle picks which inside menu
+// the editor targets. The old simplified inside editor has been removed.
 
-import type { Booklet, BookletPanel, Dish, HeaderStyle, Menu } from '@shared/types';
-import { newBooklet, newDish, newSection, newMenu } from '@shared/menu/factories';
+import type { Booklet, BookletPanel, HeaderStyle, Menu } from '@shared/types';
+import { newBooklet, newMenu } from '@shared/menu/factories';
 import { renderBookletHTML, type SheetSide } from '@shared/menu/booklet';
 import { getActiveBrand } from '@shared/brand';
 import { assetUrl } from '../brand-assets';
 import { escapeHtml as esc } from '../util/escape';
 import { getState } from '../store';
+import type { Scope } from '../store';
+import { getEditTarget, resetEditTarget, setEditTarget, type EditTarget } from '../edit-target';
+import { renderEditor, cancelDebouncedCommit } from './editor';
+import { refreshDocks } from '../panels/dock-render';
 import { toast } from '../ui/toast';
 import {
   BOOKLET_STAGE,
@@ -41,6 +45,7 @@ import {
   markBookletSaved,
   onBookletChange,
   openBooklet,
+  requireBooklet,
   setBookletFilePath,
   setDirty,
   snapshotBooklet,
@@ -51,14 +56,70 @@ const ASSETS = { crest: assetUrl(brand.assetKeys.crest), lockup: assetUrl(brand.
 
 type Tab = 'cover' | 'inside' | 'back';
 let activeTab: Tab = 'cover';
+/** Which inside menu the reused editor targets while in two-menu mode. */
+let insideSide: 'left' | 'right' = 'left';
+
+/* ================= inside menu ↔ real editor seam ================= */
+
+/** The inside Menu the editor should edit, given the booklet + current side. */
+function activeInsideMenu(booklet: Booklet): Menu {
+  const inside = booklet.inside;
+  if (inside.mode === 'single') return inside.menu;
+  return insideSide === 'right' ? inside.right : inside.left;
+}
+
+/** Edit target that binds the real editor to the active inside menu and routes
+ *  its commits/snapshots through the booklet session instead of the store. */
+const insideTarget: EditTarget = {
+  menu: () => activeInsideMenu(requireBooklet()),
+  snapshot: () => snapshotBooklet(),
+  commit: (scopes?: Scope[]) => {
+    setDirty();
+    refreshDirtyChip();
+    renderBookletPreviewOnly();
+    // A structural edit asks for the 'editor' scope — re-render the editor body
+    // (the store never fires here, so we drive renderEditor directly). Text-field
+    // edits ask only for preview/rail, so the focused input survives.
+    if (!scopes || scopes.includes('editor') || scopes.includes('all')) renderEditor();
+  },
+  persist: () => {
+    setDirty();
+    refreshDirtyChip();
+  },
+};
+
+/** Park the real editor node back in its hidden home and drop the inside target.
+ *  Called before wiping the booklet workspace DOM (so the node + its listeners
+ *  survive) and when leaving booklet mode (so menu editing targets the store). */
+function parkEditor(): void {
+  cancelDebouncedCommit(); // don't let a pending keystroke commit fire post-switch
+  if (getEditTarget() === insideTarget) resetEditTarget();
+  const editor = document.querySelector<HTMLElement>('.editor');
+  const home = document.getElementById('panelHome');
+  if (editor && home && editor.parentElement !== home) home.appendChild(editor);
+}
+
+/** Mount the real editor into the Inside tab, bound to the active inside menu. */
+function mountInsideEditor(): void {
+  const host = document.getElementById('bkInsideHost');
+  const editor = document.querySelector<HTMLElement>('.editor');
+  if (!host || !editor) return;
+  cancelDebouncedCommit(); // flush pending store commit before re-targeting
+  setEditTarget(insideTarget);
+  host.appendChild(editor);
+  renderEditor();
+}
+
+/** Leaving booklet mode: reset to the store target, re-render the editor with the
+ *  store's current menu, then refresh the docks so the Edit Menu panel re-adopts
+ *  the editor node into its dock cell (parkEditor only returns it to #panelHome). */
+function restoreMenuEditorToDock(): void {
+  parkEditor();
+  renderEditor();
+  refreshDocks();
+}
 
 /* ================= render helpers ================= */
-
-function menuFromKey(booklet: Booklet, key: 'single' | 'left' | 'right'): Menu | null {
-  const inside = booklet.inside;
-  if (inside.mode === 'single') return key === 'single' ? inside.menu : null;
-  return key === 'left' ? inside.left : key === 'right' ? inside.right : null;
-}
 
 /** Shared render options for renderBookletHTML — mirrors preview.ts's renderArgs. */
 function renderOpts(side: SheetSide) {
@@ -88,57 +149,29 @@ function panelFields(role: 'cover' | 'back', panel: BookletPanel): string {
   </div>`;
 }
 
-function miniMenuEditor(menu: Menu, key: 'single' | 'left' | 'right'): string {
-  const sections = menu.sections
-    .map((s) => {
-      const dishes = (s.items as Dish[])
-        .filter((it) => (it as { type?: string }).type !== 'rule')
-        .map(
-          (d) => `<div class="bk-dish" data-dish="${esc(d.id)}">
-            <input class="bk-dish-name" data-bk-dish-field="name" value="${esc(d.name)}" placeholder="Dish name">
-            <input class="bk-dish-price" data-bk-dish-field="price" value="${esc(d.price)}" placeholder="£" inputmode="decimal">
-            <input class="bk-dish-desc" data-bk-dish-field="desc" value="${esc(d.desc)}" placeholder="description">
-            <button class="bk-icon danger" data-bk-act="del-dish" title="Delete dish">✕</button>
-          </div>`,
-        )
-        .join('');
-      return `<div class="bk-section" data-section="${esc(s.id)}">
-        <div class="bk-section-head">
-          <input class="bk-section-name" data-bk-section-field="name" value="${esc(s.name)}" placeholder="Section name">
-          <button class="bk-icon danger" data-bk-act="del-section" title="Delete section">✕</button>
-        </div>
-        <div class="bk-dishes">${dishes}</div>
-        <button class="bk-add" data-bk-act="add-dish">+ Dish</button>
-      </div>`;
-    })
-    .join('');
-  return `<div class="bk-menu-editor" data-menu-key="${key}">
-    <label class="bk-menu-name">Menu title <input data-bk-menu-field="name" value="${esc(menu.name)}" placeholder="Inside menu title"></label>
-    ${sections}
-    <button class="bk-add bk-add-section" data-bk-act="add-section">+ Section</button>
-  </div>`;
-}
-
 function insideForm(booklet: Booklet): string {
   const inside = booklet.inside;
   const modeBtn = (mode: 'single' | 'two', l: string): string =>
     `<button type="button" class="bk-seg ${inside.mode === mode ? 'on' : ''}" data-bk-mode="${mode}">${l}</button>`;
-  let body: string;
+  let controls: string;
   if (inside.mode === 'single') {
-    body = `<label class="bk-check"><input type="checkbox" data-bk-two-pages ${inside.allowTwoPages ? 'checked' : ''}> Allow the inside menu to run onto the second inside page</label>
-      ${miniMenuEditor(inside.menu, 'single')}`;
+    controls = `<label class="bk-check"><input type="checkbox" data-bk-two-pages ${inside.allowTwoPages ? 'checked' : ''}> Allow the inside menu to run onto the second inside page</label>`;
   } else {
-    body = `<div class="bk-two-cols">
-      <div><h3>Inside left</h3>${miniMenuEditor(inside.left, 'left')}</div>
-      <div><h3>Inside right</h3>${miniMenuEditor(inside.right, 'right')}</div>
+    const sideBtn = (side: 'left' | 'right', l: string): string =>
+      `<button type="button" class="bk-seg ${insideSide === side ? 'on' : ''}" data-bk-inside-side="${side}">${l}</button>`;
+    controls = `<div class="bk-seg-row" role="group" aria-label="Which inside menu to edit">
+      <span>Editing</span>${sideBtn('left', 'Inside left')}${sideBtn('right', 'Inside right')}
     </div>`;
   }
+  // #bkInsideHost receives the REAL editor node (mounted by mountInsideEditor
+  // after this HTML is written); its contents here are only a fallback.
   return `<div class="bk-panel-form" data-panel="inside">
     <h2>Inside</h2>
     <div class="bk-seg-row" role="group" aria-label="Inside layout">
       <span>Inside is</span>${modeBtn('single', 'One menu')}${modeBtn('two', 'Two menus')}
     </div>
-    ${body}
+    ${controls}
+    <div class="bk-inside-host" id="bkInsideHost"></div>
   </div>`;
 }
 
@@ -163,6 +196,9 @@ export function renderBookletWorkspace(): void {
   const root = document.getElementById('bookletWorkspace');
   const booklet = getBooklet();
   if (!root || !booklet) return;
+  // Move the real editor node to safety BEFORE replacing root's HTML, so its
+  // listeners survive; it is re-mounted below when the Inside tab is active.
+  parkEditor();
   const side = getSide();
 
   root.innerHTML = `<div class="bk-room">
@@ -214,6 +250,7 @@ export function renderBookletWorkspace(): void {
 
   renderBookletPreviewOnly();
   bindBookletStage();
+  if (activeTab === 'inside') mountInsideEditor();
 }
 
 /** Re-render only the landscape preview sheet + refit (used after live typing). */
@@ -286,12 +323,11 @@ export function openBookletWorkspace(): void {
 }
 
 /* ================= event delegation ================= */
-
-function currentMenuElKey(target: Element): 'single' | 'left' | 'right' | null {
-  const menuEl = target.closest<HTMLElement>('.bk-menu-editor');
-  const key = menuEl?.dataset.menuKey;
-  return key === 'single' || key === 'left' || key === 'right' ? key : null;
-}
+// NOTE: the reused menu editor is mounted inside this workspace and has its OWN
+// delegated listeners (on #edScroll + head controls). Its input/change/click
+// events bubble up here too, but they carry `data-f` / `data-act` markers — not
+// the `bkName` / `data-bk-*` markers these handlers key off — so they fall
+// through untouched. Only the booklet's own controls are handled below.
 
 function onFormInput(e: Event): void {
   const booklet = getBooklet();
@@ -306,46 +342,12 @@ function onFormInput(e: Event): void {
     return;
   }
 
-  const panelField = (target as HTMLElement).dataset.bkField;
+  const panelField = target.dataset.bkField;
   if (panelField && panelField !== 'header') {
     const panel = activeTab === 'back' ? booklet.back : booklet.cover;
     const value = (target as HTMLInputElement | HTMLTextAreaElement).value;
     (panel as unknown as Record<string, string>)[panelField] = value;
     debPreview();
-    return;
-  }
-
-  const menuKey = currentMenuElKey(target);
-  if (!menuKey) return;
-  const menu = menuFromKey(booklet, menuKey);
-  if (!menu) return;
-  const value = (target as HTMLInputElement).value;
-
-  if ((target as HTMLElement).dataset.bkMenuField === 'name') {
-    menu.name = value;
-    debPreview();
-    return;
-  }
-  const sectionEl = target.closest<HTMLElement>('.bk-section');
-  const section = sectionEl ? menu.sections.find((s) => s.id === sectionEl.dataset.section) : null;
-  if (!section) return;
-  if ((target as HTMLElement).dataset.bkSectionField === 'name') {
-    section.name = value;
-    debPreview();
-    return;
-  }
-  const dishEl = target.closest<HTMLElement>('.bk-dish');
-  const dishField = (target as HTMLElement).dataset.bkDishField;
-  if (dishEl && dishField) {
-    const dish = (section.items as Dish[]).find((d) => d.id === dishEl.dataset.dish);
-    if (dish && (dishField === 'name' || dishField === 'desc' || dishField === 'price')) {
-      dish[dishField] = value;
-      if (dishField === 'price' && value.trim()) {
-        section.prices = true;
-        menu.style.showPrices = true;
-      }
-      debPreview();
-    }
   }
 }
 
@@ -409,6 +411,22 @@ function onFormClick(e: Event): void {
     return;
   }
 
+  // Two-menu mode: pick which inside menu the reused editor targets. Re-point the
+  // target and re-render the editor body in place (no full workspace rebuild, so
+  // the preview + zoom survive).
+  const insideSideBtn = target.closest<HTMLElement>('[data-bk-inside-side]');
+  if (insideSideBtn?.dataset.bkInsideSide) {
+    const next = insideSideBtn.dataset.bkInsideSide === 'right' ? 'right' : 'left';
+    if (next !== insideSide) {
+      insideSide = next;
+      document
+        .querySelectorAll<HTMLElement>('[data-bk-inside-side]')
+        .forEach((b) => b.classList.toggle('on', b.dataset.bkInsideSide === insideSide));
+      mountInsideEditor();
+    }
+    return;
+  }
+
   const actBtn = target.closest<HTMLElement>('[data-bk-act]');
   if (!actBtn) return;
   const act = actBtn.dataset.bkAct;
@@ -431,45 +449,6 @@ function onFormClick(e: Event): void {
   }
   if (act === 'print') {
     void printCurrentBooklet();
-    return;
-  }
-
-  const menuKey = currentMenuElKey(target);
-  const menu = menuKey ? menuFromKey(booklet, menuKey) : null;
-  if (act === 'add-section' && menu) {
-    snapshotBooklet();
-    menu.sections.push(newSection('New Section', []));
-    commitBooklet();
-    return;
-  }
-  if (act === 'add-dish' && menu) {
-    const sectionEl = actBtn.closest<HTMLElement>('.bk-section');
-    const section = sectionEl ? menu.sections.find((s) => s.id === sectionEl.dataset.section) : null;
-    if (section) {
-      snapshotBooklet();
-      section.items.push(newDish());
-      commitBooklet();
-    }
-    return;
-  }
-  if (act === 'del-section' && menu) {
-    const sectionEl = actBtn.closest<HTMLElement>('.bk-section');
-    if (sectionEl) {
-      snapshotBooklet();
-      menu.sections = menu.sections.filter((s) => s.id !== sectionEl.dataset.section);
-      commitBooklet();
-    }
-    return;
-  }
-  if (act === 'del-dish' && menu) {
-    const sectionEl = actBtn.closest<HTMLElement>('.bk-section');
-    const dishEl = actBtn.closest<HTMLElement>('.bk-dish');
-    const section = sectionEl ? menu.sections.find((s) => s.id === sectionEl.dataset.section) : null;
-    if (section && dishEl) {
-      snapshotBooklet();
-      section.items = section.items.filter((d) => d.id !== dishEl.dataset.dish);
-      commitBooklet();
-    }
   }
 }
 
@@ -485,6 +464,7 @@ function setInsideMode(booklet: Booklet, mode: 'single' | 'two'): void {
     const menu = inside.mode === 'two' ? inside.left : newMenu('Inside', { paper: 'A5' });
     booklet.inside = { mode: 'single', menu, allowTwoPages: false };
   }
+  insideSide = 'left';
   commitBooklet();
 }
 
@@ -609,6 +589,9 @@ export async function printCurrentBooklet(): Promise<void> {
 /** Leave booklet mode and return to the editor workspace. */
 export function exitBookletWorkspace(): void {
   closeBooklet();
+  // Return the reused editor node to its dock cell and reset the edit target to
+  // the store, so the menu workspace edits its own menu again.
+  restoreMenuEditorToDock();
   const app = document.getElementById('app');
   // Restore the editor workspace (setWorkspace lives in workspaces/index.ts and
   // is not imported here to avoid a cycle; the go-editor command drives it, but
@@ -646,7 +629,10 @@ export function initBookletEditor(): void {
   const app = document.getElementById('app');
   if (app) {
     new MutationObserver(() => {
-      if (isBookletMode() && app.getAttribute('data-workspace') !== 'booklet') closeBooklet();
+      if (isBookletMode() && app.getAttribute('data-workspace') !== 'booklet') {
+        closeBooklet();
+        restoreMenuEditorToDock();
+      }
     }).observe(app, { attributes: true, attributeFilter: ['data-workspace'] });
   }
 

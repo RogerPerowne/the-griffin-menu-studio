@@ -21,13 +21,32 @@ import { newDish, newRootNote, newRule, newSection, T, todayISO, uid, newMenu } 
 import { normaliseMenuColumns, normaliseRootRules, normaliseSectionColumns } from '@shared/menu/normalize';
 import { appendOrder, rootAfter, rootBottom, rootTop, type RootEntry } from '@shared/menu/root-order';
 import { usedCodes } from '@shared/menu/tags';
-import { commit, currentMenu, findDish, getState, persist, snapshot } from '../store';
+import { findDish, getState } from '../store';
 import type { Scope } from '../store';
+import { getEditTarget } from '../edit-target';
 import { fitPage } from '../layout-runtime';
 import { openDishPicker } from './dishpicker';
 import { toast } from '../ui/toast';
 
 const SCOPES_ALL: Scope[] = ['editor', 'preview', 'rail'];
+
+// Menu reads/writes flow through the edit-target seam rather than the store
+// directly. The default target IS the store, so normal menu editing is
+// unchanged; booklet mode swaps the target to an inside menu (see edit-target.ts
+// and views/booklet-editor.ts). These thin wrappers keep every call site below
+// byte-identical to the original store-backed code.
+function currentMenu(): Menu {
+  return getEditTarget().menu();
+}
+function commit(scopes?: Scope[]): void {
+  getEditTarget().commit(scopes);
+}
+function snapshot(): void {
+  getEditTarget().snapshot();
+}
+function persist(): void {
+  getEditTarget().persist();
+}
 
 /** The editor's "current section" — mirrors `selectedMoveKey` in
  *  window-panels.ts:49. Drives the `.sec.selected` highlight; defaults to the
@@ -232,6 +251,13 @@ let debounceTimer: number | undefined;
 function debPreview(): void {
   window.clearTimeout(debounceTimer);
   debounceTimer = window.setTimeout(() => commit(['preview', 'rail']), 160);
+}
+
+/** Cancel any pending debounced commit — call before switching the edit target,
+ *  so a keystroke's deferred commit can't fire on the wrong document. The field
+ *  write itself already landed synchronously on the correct menu object. */
+export function cancelDebouncedCommit(): void {
+  window.clearTimeout(debounceTimer);
 }
 
 function onEdScrollInput(e: Event): void {
