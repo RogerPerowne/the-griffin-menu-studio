@@ -1,6 +1,7 @@
 // The app's floating tool windows, built on the Photoshop-style window manager
-// in float-windows.ts. Seven intelligently-separated windows:
-//   Menus · Dishes · Find & Reuse · Colour & Spacing · Typography · Dietary Key · Arrange
+// in float-windows.ts. Eight intelligently-separated windows:
+//   Menus · Dishes · Find & Replace · Reuse · Colour & Spacing · Typography ·
+//   Dietary Key · Arrange
 // Each window's body is plain HTML; all interaction is delegated on #floatLayer
 // so re-rendering a body never drops a handler.
 
@@ -16,6 +17,7 @@ import {
   type ReplacePreview,
 } from '@shared/menu/find-replace';
 import { commit, currentMenu, getState, on, persist, snapshot } from '../store';
+import { getSelectedSectionId } from '../views/editor';
 import { renderPreview } from '../views/preview';
 import { toast } from '../ui/toast';
 import { confirmDialog } from '../ui/confirm';
@@ -35,7 +37,8 @@ import {
 export type WindowPanel =
   | 'menus'
   | 'dishes'
-  | 'finder'
+  | 'find-replace'
+  | 'reuse'
   | 'colour'
   | 'typography'
   | 'dietkey'
@@ -182,14 +185,19 @@ function replacePreviewHtml(): string {
     .join('');
 }
 
-function finderBody(): string {
+function reuseBody(): string {
   return `<div class="finder-tabs">
       <section>
         <h4>Reuse from another menu</h4>
         <input class="dock-search" id="reuseSearch" placeholder="Search reusable dishes">
-        <p class="dock-note">Drag a dish onto a section in the editor to copy it in.</p>
+        <p class="dock-note">Click a dish to add it to the selected section, or drag it onto a section in the editor.</p>
         <div class="finder-list" id="reuseList">${reusableDishList()}</div>
       </section>
+    </div>`;
+}
+
+function findReplaceBody(): string {
+  return `<div class="finder-tabs">
       <section>
         <h4>Find across menus</h4>
         <input class="dock-search" id="findMenusQuery" placeholder="Find dish text across menus">
@@ -321,6 +329,7 @@ const I = {
   menus: '<svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>',
   dishes: '<svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>',
   finder: '<svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><path d="m14.5 14.5 5 5"/></svg>',
+  reuse: '<svg viewBox="0 0 24 24"><rect x="4" y="4" width="12" height="12" rx="1"/><path d="M9 16v2a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-2"/></svg>',
   colour: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="9" r="1.4"/><circle cx="15" cy="9" r="1.4"/><circle cx="9.5" cy="15" r="1.4"/></svg>',
   typography: '<svg viewBox="0 0 24 24"><path d="M4 7V5h16v2M9 5v14M7 19h4"/></svg>',
   dietkey: '<svg viewBox="0 0 24 24"><path d="M12 2s6 3 6 9-6 11-6 11-6-5-6-11 6-9 6-9Z"/></svg>',
@@ -330,7 +339,8 @@ const I = {
 function registerAll(): void {
   registerFloatWindow({ id: 'menus', title: 'Menus', icon: I.menus, defaultW: 260, defaultH: 320, body: menuList });
   registerFloatWindow({ id: 'dishes', title: 'Dishes', icon: I.dishes, defaultW: 280, defaultH: 360, body: () => currentDishList(currentMenu()) });
-  registerFloatWindow({ id: 'finder', title: 'Find & Reuse', icon: I.finder, defaultW: 340, defaultH: 460, minW: 300, body: finderBody });
+  registerFloatWindow({ id: 'find-replace', title: 'Find & Replace', icon: I.finder, defaultW: 340, defaultH: 400, minW: 300, body: findReplaceBody });
+  registerFloatWindow({ id: 'reuse', title: 'Reuse', icon: I.reuse, defaultW: 300, defaultH: 380, minW: 260, body: reuseBody });
   registerFloatWindow({ id: 'colour', title: 'Colour & Spacing', icon: I.colour, defaultW: 290, defaultH: 460, body: colourSpacingBody });
   registerFloatWindow({ id: 'typography', title: 'Typography', icon: I.typography, defaultW: 280, defaultH: 340, body: typographyBody });
   registerFloatWindow({ id: 'dietkey', title: 'Dietary Key', icon: I.dietkey, defaultW: 300, defaultH: 320, body: dietkeyBody });
@@ -413,7 +423,7 @@ function runFind(root: ParentNode): void {
   const query = root.querySelector<HTMLInputElement>('#findMenusQuery')?.value ?? '';
   finderResults = findAcrossMenus(getState(), { query, fields: selectedFindFields(root) });
   replacePreviews = [];
-  refreshWindow('finder');
+  refreshWindow('find-replace');
 }
 
 function reviewReplace(root: ParentNode): void {
@@ -430,7 +440,7 @@ function reviewReplace(root: ParentNode): void {
       mode: root.querySelector<HTMLInputElement>('#replaceMatchingText')?.checked ? 'matching-text' : 'whole-field',
     },
   );
-  refreshWindow('finder');
+  refreshWindow('find-replace');
 }
 
 async function applyReviewedReplace(root: ParentNode): Promise<void> {
@@ -507,6 +517,21 @@ function onLayerClick(e: MouseEvent): void {
   const align = t.closest<HTMLElement>('[data-align]');
   if (align?.dataset.align) {
     alignSelectedMove(align.dataset.align as AlignMode);
+    return;
+  }
+  const reuseDish = t.closest<HTMLElement>('[data-reuse-index]');
+  if (reuseDish?.dataset.reuseIndex) {
+    const source = reuseCache[Number(reuseDish.dataset.reuseIndex)];
+    const menu = currentMenu();
+    const sections = menu?.sections ?? [];
+    const section = sections.find((s: Section) => s.id === getSelectedSectionId()) ?? sections[sections.length - 1];
+    if (source && section) {
+      const dish = cloneDish(source);
+      snapshot();
+      section.items.push(dish);
+      commit(['all']);
+      toast(`Copied “${dish.name || 'dish'}” into ${section.name}.`, { kind: 'success' });
+    }
     return;
   }
   if (t.closest('[data-find-run]')) return runFind(document);
@@ -650,7 +675,8 @@ export function initWindowPanels(): void {
   });
   on('all', () => {
     if (isOpen('dishes')) refreshWindow('dishes');
-    if (isOpen('finder')) refreshWindow('finder');
+    if (isOpen('find-replace')) refreshWindow('find-replace');
+    if (isOpen('reuse')) refreshWindow('reuse');
     if (isOpen('typography')) refreshWindow('typography');
     if (isOpen('colour')) refreshWindow('colour');
   });

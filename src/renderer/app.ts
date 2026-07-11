@@ -171,7 +171,7 @@ function initKeyboard(): void {
       o: 'open',
       p: 'print',
       e: 'export-pdf',
-      f: 'toggle-finder-panel',
+      f: 'toggle-find-replace-panel',
       '0': 'actual-size',
       '=': 'zoom-in',
       '+': 'zoom-in',

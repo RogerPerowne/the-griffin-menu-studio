@@ -43,7 +43,7 @@ const appShellMarkup = String.raw`
         <button class="mi" data-cmd="undo">Undo</button>
         <button class="mi" data-cmd="redo">Redo</button>
         <hr>
-        <button class="mi" data-cmd="toggle-finder-panel">Find across Menus…</button>
+        <button class="mi" data-cmd="toggle-find-replace-panel">Find across Menus…</button>
       </div>
     </div>
     <div class="more topmenu">
@@ -56,7 +56,7 @@ const appShellMarkup = String.raw`
         <button class="mi" data-cmd="insert-rule">Add Divider Rule</button>
         <hr>
         <button class="mi" data-cmd="copy-dish">Copy a Dish from another Menu…</button>
-        <button class="mi" data-cmd="toggle-finder-panel">Reuse from another Menu…</button>
+        <button class="mi" data-cmd="toggle-reuse-panel">Reuse from another Menu…</button>
       </div>
     </div>
     <div class="more topmenu">
@@ -97,7 +97,8 @@ const appShellMarkup = String.raw`
       <div class="pop">
         <button class="mi" data-cmd="toggle-menus-panel">Menus</button>
         <button class="mi" data-cmd="toggle-dishes-panel">Dishes</button>
-        <button class="mi" data-cmd="toggle-finder-panel">Find &amp; Reuse</button>
+        <button class="mi" data-cmd="toggle-find-replace-panel">Find &amp; Replace</button>
+        <button class="mi" data-cmd="toggle-reuse-panel">Reuse</button>
         <button class="mi" data-cmd="toggle-colour-panel">Colour &amp; Spacing</button>
         <button class="mi" data-cmd="toggle-typography-panel">Typography</button>
         <button class="mi" data-cmd="toggle-dietkey-panel">Dietary Key</button>

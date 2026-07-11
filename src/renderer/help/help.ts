@@ -17,7 +17,7 @@ const TOOLS: ToolItem[] = [
   { label: 'Print', detail: 'Preflight the menu and open the system print dialog.', command: 'print', keywords: 'print printer paper' },
   { label: 'Settings', detail: 'Dietary key, preview colour and advanced layout sliders.', command: 'settings', keywords: 'settings dietary colour spacing typography' },
   { label: 'Arrange Mode', detail: 'Move titles, logos, rules and text blocks on the page.', command: 'arrange-toggle', keywords: 'arrange move align position' },
-  { label: 'Find across menus', detail: 'Search dishes across menus, copy them, and review replacements.', command: 'toggle-finder-panel', keywords: 'find replace dishes reuse search copy' },
+  { label: 'Find across menus', detail: 'Search dishes across menus and review replacements.', command: 'toggle-find-replace-panel', keywords: 'find replace dishes search' },
   { label: 'Menus Window', detail: 'Toggle the floating menus utility window.', command: 'toggle-menus-panel', keywords: 'menus window panel' },
   { label: 'Fit Preview', detail: 'Fit the menu preview to the available width.', command: 'fit-width', keywords: 'zoom fit preview page' },
 ];

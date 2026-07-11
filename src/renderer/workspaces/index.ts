@@ -343,7 +343,7 @@ function renderHomeMain(): string {
           <div class="home-empty-actions"><button class="abtn primary" data-cmd="new-template">New from Template</button></div>
         </div></section>`;
     }
-    return `<section class="home-pane"><div class="start-head"><h1>Dishes</h1><button class="abtn" data-cmd="toggle-finder-panel">Find across menus</button></div>
+    return `<section class="home-pane"><div class="start-head"><h1>Dishes</h1><button class="abtn" data-cmd="toggle-find-replace-panel">Find across menus</button></div>
       <input class="home-search" id="homeDishSearch" placeholder="Search dishes, descriptions, menus or sections">
       <div class="home-dish-list" id="homeDishList">${rows}</div></section>`;
   }
