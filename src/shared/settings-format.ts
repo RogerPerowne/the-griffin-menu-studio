@@ -191,6 +191,7 @@ function typography(value: unknown): Settings['typography'] {
       if (r.caps === 'none' || r.caps === 'upper' || r.caps === 'title') st.caps = r.caps;
       if (typeof r.spaceAbove === 'number') st.spaceAbove = Math.max(0, Math.min(80, r.spaceAbove));
       if (typeof r.spaceBelow === 'number') st.spaceBelow = Math.max(0, Math.min(80, r.spaceBelow));
+      if (typeof r.font === 'string' && r.font.trim()) st.font = r.font.trim().slice(0, 80);
       if (Object.keys(st).length) (roles as Record<string, unknown>)[key] = st;
     }
   }

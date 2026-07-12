@@ -16,7 +16,7 @@
 // in-panel previews update together. settings.typography supplies defaults only.
 
 import type { Menu, MenuTypoRoleStyle, TypoRole } from '@shared/types';
-import { BRAND_FONTS, SYSTEM_FONTS, fontByFamily } from '@shared/typography/font-catalog';
+import { BRAND_FONTS, allSystemFonts, fontByFamily, loadInstalledFonts, installedFontsLoaded, type FontOption } from '@shared/typography/font-catalog';
 import { commit, currentMenu, getState, snapshot } from '../store';
 import { escapeHtml as esc } from '../util/escape';
 
@@ -134,9 +134,13 @@ function opt(value: string, label: string, on: boolean): string {
 }
 
 function fontOptions(cur?: string): string {
-  const grp = (fonts: typeof BRAND_FONTS, label: string): string =>
-    `<optgroup label="${label}">${fonts.map((f) => opt(f.family, f.label, cur === f.family)).join('')}</optgroup>`;
-  return `${opt('', 'Default (from font set)', !cur)}${grp(BRAND_FONTS, 'Griffin fonts')}${grp(SYSTEM_FONTS, 'System fonts')}`;
+  const grp = (fonts: FontOption[], label: string): string =>
+    fonts.length ? `<optgroup label="${label}">${fonts.map((f) => opt(f.family, f.label, cur === f.family)).join('')}</optgroup>` : '';
+  // If the current font isn't in any group (e.g. an enumerated font not yet
+  // loaded on this mount), keep it selectable so the value round-trips.
+  const known = cur && [...BRAND_FONTS, ...allSystemFonts()].some((f) => f.family === cur);
+  const orphan = cur && !known ? `<optgroup label="Current">${opt(cur, cur, true)}</optgroup>` : '';
+  return `${opt('', 'Default (from font set)', !cur)}${grp(BRAND_FONTS, 'Brand fonts')}${grp(allSystemFonts(), 'System fonts')}${orphan}`;
 }
 
 function rolesListHtml(menu: Menu): string {
@@ -453,9 +457,24 @@ export function renderTypographyMaster(host: HTMLElement): () => void {
   };
   const pagewrap = document.getElementById('pagewrap');
 
+  // First time the user opens the font dropdown, enumerate every installed font
+  // (needs this gesture for the Local Font Access API) and refill the options in
+  // place — without a full rebuild, so the just-opened dropdown isn't disturbed.
+  const onFontPointerDown = (e: Event): void => {
+    const t = e.target;
+    if (!(t instanceof HTMLSelectElement) || t.dataset.tmFont === undefined) return;
+    if (installedFontsLoaded()) return;
+    void loadInstalledFonts().then(() => {
+      const sel = host.querySelector<HTMLSelectElement>('select[data-tm-font]');
+      const menu = currentMenu();
+      if (sel && menu) sel.innerHTML = fontOptions(menuRole(menu, selectedRole).font);
+    });
+  };
+
   host.addEventListener('input', onInput);
   host.addEventListener('change', onChange);
   host.addEventListener('click', onClick);
+  host.addEventListener('pointerdown', onFontPointerDown);
   host.addEventListener('toggle', onToggle, true);
   pagewrap?.addEventListener('click', onPreviewClick);
 
@@ -463,6 +482,7 @@ export function renderTypographyMaster(host: HTMLElement): () => void {
     host.removeEventListener('input', onInput);
     host.removeEventListener('change', onChange);
     host.removeEventListener('click', onClick);
+    host.removeEventListener('pointerdown', onFontPointerDown);
     host.removeEventListener('toggle', onToggle, true);
     pagewrap?.removeEventListener('click', onPreviewClick);
     host.classList.remove('typography-master');

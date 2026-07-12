@@ -228,6 +228,9 @@ export interface TypoRoleStyle {
   caps?: 'none' | 'upper' | 'title';
   spaceAbove?: number; // px
   spaceBelow?: number; // px
+  /** Font family token (from the font catalog or an enumerated installed font);
+   *  emitted as `--<role>-font`. Settable per-menu and as a settings default. */
+  font?: string;
 }
 
 /** Global + per-role typography defaults (the Typography Master panel edits these). */

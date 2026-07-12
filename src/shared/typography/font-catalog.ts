@@ -36,7 +36,73 @@ export const FONT_CATALOG: FontOption[] = [
 export const BRAND_FONTS = FONT_CATALOG.filter((f) => f.source === 'brand');
 export const SYSTEM_FONTS = FONT_CATALOG.filter((f) => f.source === 'system');
 
-/** Look up a catalog entry by its `family` token (as stored on a role). */
+// ---- Installed-font enumeration (Local Font Access API) --------------------
+// The curated SYSTEM_FONTS above are the safe, always-present Windows fonts.
+// On a user gesture we can additionally enumerate EVERY installed font via
+// `queryLocalFonts()` (Chromium/Electron) and merge them in, so the user can
+// pick any font on their machine. The result is cached for the session.
+
+let installed: FontOption[] = [];
+let installedLoaded = false;
+
+/** Fonts enumerated from the machine so far (empty until `loadInstalledFonts`). */
+export function installedFonts(): FontOption[] {
+  return installed;
+}
+
+/** True once enumeration has run (whether it found anything or not). */
+export function installedFontsLoaded(): boolean {
+  return installedLoaded;
+}
+
+/** Curated system fonts plus any enumerated installed fonts, de-duplicated. */
+export function allSystemFonts(): FontOption[] {
+  return [...SYSTEM_FONTS, ...installed];
+}
+
+/**
+ * Enumerate installed fonts via the Local Font Access API and cache them.
+ * Must be called from a user gesture (the API requires transient activation).
+ * Safe to call repeatedly — it only queries once, and silently no-ops when the
+ * API is unavailable (non-Electron/headless) or permission is denied, leaving
+ * the curated SYSTEM_FONTS as the fallback.
+ */
+export async function loadInstalledFonts(): Promise<FontOption[]> {
+  if (installedLoaded) return installed;
+  const query = (globalThis as { queryLocalFonts?: () => Promise<Array<{ family: string }>> }).queryLocalFonts;
+  if (typeof query !== 'function') {
+    installedLoaded = true;
+    return installed;
+  }
+  try {
+    const known = new Set(FONT_CATALOG.map((f) => f.family.toLowerCase()));
+    const seen = new Set<string>();
+    const found: FontOption[] = [];
+    for (const face of await query()) {
+      const family = face.family;
+      const key = family.toLowerCase();
+      if (!family || known.has(key) || seen.has(key)) continue;
+      seen.add(key);
+      found.push({
+        label: family,
+        family,
+        source: 'system',
+        kind: 'sans',
+        stack: `'${family.replace(/['\\]/g, '')}', system-ui, sans-serif`,
+      });
+    }
+    found.sort((a, b) => a.label.localeCompare(b.label));
+    installed = found;
+  } catch {
+    // Permission denied / unsupported — keep the curated list.
+  }
+  installedLoaded = true;
+  return installed;
+}
+
+/** Look up a catalog entry by its `family` token (as stored on a role). Searches
+ *  the curated catalog first, then any enumerated installed fonts. */
 export function fontByFamily(family?: string): FontOption | undefined {
-  return family ? FONT_CATALOG.find((f) => f.family === family) : undefined;
+  if (!family) return undefined;
+  return FONT_CATALOG.find((f) => f.family === family) ?? installed.find((f) => f.family === family);
 }

@@ -16,6 +16,7 @@ import { escapeHtml as esc } from '../util/escape';
 import { trapFocus } from '../util/focus-trap';
 import { confirmDocumentTransition } from '../document-session';
 import { renderUpdatesCard } from '../features/update-ui';
+import { BRAND_FONTS, allSystemFonts, loadInstalledFonts, installedFontsLoaded } from '@shared/typography/font-catalog';
 
 export type Workspace = 'home' | 'editor' | 'export';
 
@@ -68,6 +69,10 @@ function roleInline(st: import('@shared/types').TypoRoleStyle): string {
   if (st.weight) s += `font-weight:${st.weight};`;
   if (st.align) s += `text-align:${st.align};display:block;`;
   if (st.caps) s += `text-transform:${st.caps === 'upper' ? 'uppercase' : st.caps === 'title' ? 'capitalize' : 'none'};`;
+  if (st.font) {
+    const stack = [...BRAND_FONTS, ...allSystemFonts()].find((f) => f.family === st.font)?.stack;
+    s += `font-family:${stack ?? `'${st.font.replace(/['\\]/g, '')}', serif`};`;
+  }
   return s;
 }
 
@@ -79,6 +84,17 @@ function typoRole(role: TypoRoleKey, sample: string): string {
 }
 
 /** The "Selected role" controls (mockup section 3) for the chosen role. */
+/** <option>s for a per-role font picker: Default + Brand + (curated & enumerated)
+ *  System fonts, keeping the current value selectable even before enumeration. */
+function typoFontOptions(cur?: string): string {
+  const o = (v: string, l: string, on: boolean): string => `<option value="${esc(v)}" ${on ? 'selected' : ''}>${esc(l)}</option>`;
+  const grp = (fonts: { family: string; label: string }[], label: string): string =>
+    fonts.length ? `<optgroup label="${label}">${fonts.map((f) => o(f.family, f.label, cur === f.family)).join('')}</optgroup>` : '';
+  const known = cur && [...BRAND_FONTS, ...allSystemFonts()].some((f) => f.family === cur);
+  const orphan = cur && !known ? `<optgroup label="Current">${o(cur, cur, true)}</optgroup>` : '';
+  return `${o('', 'Default (from font set)', !cur)}${grp(BRAND_FONTS, 'Brand fonts')}${grp(allSystemFonts(), 'System fonts')}${orphan}`;
+}
+
 function typoRoleControls(): string {
   const role = selectedTypoRole;
   const st = roleStyle(role);
@@ -91,6 +107,7 @@ function typoRoleControls(): string {
   const capsBtn = (v: string, l: string): string => `<button type="button" class="seg-btn ${caps === v ? 'on' : ''}" data-typo-caps="${v}">${l}</button>`;
   return `<div class="typo-block"><span class="typo-step">3</span><b>Selected: ${esc(TYPO_ROLE_LABELS[role])}</b></div>
     <div class="typo-ctrls">
+      <label>Font <select data-typo-ctrl="font">${typoFontOptions(st.font)}</select></label>
       <label>Size <span class="range-row"><input type="range" min="8" max="40" value="${size}" data-typo-ctrl="size"><span class="range-val" data-typo-ctrl-val="size">${size}px</span></span></label>
       <label>Weight <select data-typo-ctrl="weight">${wopt(400, 'Regular')}${wopt(500, 'Medium')}${wopt(600, 'Semi Bold')}${wopt(700, 'Bold')}</select></label>
       <div class="typo-ctrl-line"><span>Alignment</span><div class="seg">${alignBtn('left', '⟝')}${alignBtn('center', '≡')}${alignBtn('right', '⟞')}</div></div>
@@ -572,6 +589,16 @@ async function discardRecovery(id: string): Promise<void> {
 }
 
 function initHomeWorkspace(): void {
+  // First time the default-typography font dropdown is opened, enumerate every
+  // installed font (needs this gesture) and refill the options in place.
+  document.getElementById('homeWorkspace')?.addEventListener('pointerdown', (e) => {
+    const t = e.target;
+    if (!(t instanceof HTMLSelectElement) || t.dataset.typoCtrl !== 'font' || installedFontsLoaded()) return;
+    void loadInstalledFonts().then(() => {
+      const sel = document.querySelector<HTMLSelectElement>('select[data-typo-ctrl="font"]');
+      if (sel) sel.innerHTML = typoFontOptions(roleStyle(selectedTypoRole).font);
+    });
+  });
   document.getElementById('homeWorkspace')?.addEventListener('click', (e) => {
     const target = e.target;
     if (!(target instanceof Element)) return;
@@ -723,12 +750,22 @@ function initHomeWorkspace(): void {
         commit(['preview']);
         return;
       }
-      const typoCtrl = input.dataset.typoCtrl as 'size' | 'weight' | undefined;
+      const typoCtrl = input.dataset.typoCtrl as 'size' | 'weight' | 'font' | undefined;
       if (typoCtrl) {
-        setRoleStyle(typoCtrl, Number(input.value));
-        if (typoCtrl === 'size') {
-          const valEl = document.querySelector('[data-typo-ctrl-val="size"]');
-          if (valEl) valEl.textContent = `${input.value}px`;
+        if (typoCtrl === 'font') {
+          if (input.value) {
+            setRoleStyle('font', input.value);
+          } else {
+            const st = getState().settings.typography?.roles?.[selectedTypoRole];
+            if (st) delete st.font;
+            commit(['preview']);
+          }
+        } else {
+          setRoleStyle(typoCtrl, Number(input.value));
+          if (typoCtrl === 'size') {
+            const valEl = document.querySelector('[data-typo-ctrl-val="size"]');
+            if (valEl) valEl.textContent = `${input.value}px`;
+          }
         }
         const sampleEl = document.querySelector<HTMLElement>(`.typo-role[data-typo-role="${selectedTypoRole}"] .typo-sample`);
         if (sampleEl) sampleEl.setAttribute('style', roleInline(roleStyle(selectedTypoRole)));
