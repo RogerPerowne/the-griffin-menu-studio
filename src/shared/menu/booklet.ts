@@ -162,15 +162,21 @@ export interface BookletRenderOptions extends RenderOptions {
   resolveImage?: (id: string) => string;
 }
 
-/** Renders a light cover/back panel (title / subtitle / note / optional image). */
+/** Renders a cover/back panel as a full A5 `.page` — same structure + typography as
+ *  a menu, with the crest/lockup logo per `panel.header`, so it matches the inside
+ *  pages (which reuse renderMenuHTML) instead of looking like a bare pink slab. */
 function renderPanelCell(panel: BookletPanel, opts: BookletRenderOptions): string {
-  const bits: string[] = [];
+  const assets = opts.assets ?? { crest: '', lockup: '' };
+  let head = '';
+  if (panel.header === 'crest' && assets.crest) head += `<img class="m-crest" src="${escapeHtml(assets.crest)}" alt="">`;
+  if (panel.header === 'lockup' && assets.lockup) head += `<img class="m-lockup" src="${escapeHtml(assets.lockup)}" alt="">`;
   const img = panel.image && opts.resolveImage ? opts.resolveImage(panel.image) : '';
-  if (img) bits.push(`<img class="bk-cover-img" src="${escapeHtml(img)}" alt="">`);
-  if (panel.title) bits.push(`<div class="bk-cover-title">${escapeHtml(panel.title)}</div>`);
-  if (panel.subtitle) bits.push(`<div class="bk-cover-sub">${escapeHtml(panel.subtitle)}</div>`);
-  if (panel.note) bits.push(`<div class="bk-cover-note">${escapeHtml(panel.note)}</div>`);
-  return `<div class="bk-cover">${bits.join('')}</div>`;
+  if (img) head += `<img class="bk-cover-img" src="${escapeHtml(img)}" alt="">`;
+  if (panel.header !== 'lockup' && panel.title) head += `<div class="m-title">${escapeHtml(panel.title)}</div>`;
+  if (panel.subtitle) head += `<div class="m-hnote">${escapeHtml(panel.subtitle)}</div>`;
+  if (panel.note) head += `<div class="bk-cover-note">${escapeHtml(panel.note)}</div>`;
+  const fontClass = opts.fontSet ? ` font-${opts.fontSet}` : '';
+  return `<div class="page A5 bk-cover-page${fontClass}"><div class="inner"><div class="bk-cover">${head}</div></div></div>`;
 }
 
 /** Renders one INNER A5 cell by reusing the normal menu renderer. */
@@ -209,23 +215,18 @@ export function renderBookletHTML(booklet: Booklet, opts: BookletRenderOptions):
   return `<div class="page sheet booklet" data-side="${opts.side}">${cells}</div>`;
 }
 
-/** Each cover/back panel wrapped as a standalone A5 `.page` (so the flip reader
- *  can show it beside the inside menus, which are already A5 `.page`s). */
-function coverPage(inner: string): string {
-  return `<div class="page A5 bk-cover-page"><div class="inner">${inner}</div></div>`;
-}
-
 /**
  * The four booklet pages as standalone A5 `.page` HTML strings, in READING order
  * — [front cover, inside-left, inside-right, back] — for the page-flip reader.
- * Cover/back are light panels; the inside cells reuse the normal menu renderer.
+ * Cover/back and inside cells are all full A5 `.page`s (renderPanelCell /
+ * renderMenuHTML), so the reader shows consistent pages.
  */
 export function renderBookletPages(booklet: Booklet, opts: BookletRenderOptions): string[] {
   const imp = imposeBooklet(booklet);
   return [
-    coverPage(renderPanelCell(booklet.cover, opts)),
+    renderPanelCell(booklet.cover, opts),
     renderPageCell(imp.inner[0], opts, opts.insideSplit),
     renderPageCell(imp.inner[1], opts, opts.insideSplit),
-    coverPage(renderPanelCell(booklet.back, opts)),
+    renderPanelCell(booklet.back, opts),
   ];
 }

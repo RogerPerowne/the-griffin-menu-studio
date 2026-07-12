@@ -295,11 +295,13 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 20mm 16mm;
+  gap: 6mm;
   box-sizing: border-box;
   text-align: center;
 }
+/* The cover's crest sits a touch larger + centred, like a title page. */
+.bk-cover-page .m-crest { height: 30mm; margin: 0 0 4mm; }
+.bk-cover-page .m-lockup { height: 34mm; margin: 0 0 4mm; }
 .bk-cover-img {
   max-width: 46mm;
   max-height: 46mm;
