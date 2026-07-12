@@ -103,7 +103,6 @@ const appShellMarkup = String.raw`
         <hr>
         <button class="mi" data-cmd="toggle-colour-panel">Colour &amp; Spacing</button>
         <button class="mi" data-cmd="toggle-typography-panel">Typography</button>
-        <button class="mi" data-cmd="toggle-page-panel">Page</button>
         <button class="mi" data-cmd="toggle-dietkey-panel">Dietary Key</button>
         <button class="mi" data-cmd="toggle-arrange-panel">Arrange</button>
         <hr>

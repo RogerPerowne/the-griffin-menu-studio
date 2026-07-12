@@ -42,7 +42,6 @@ import { editMenuPanel } from './defs/edit-menu';
 import { dishesPanel } from './defs/dishes';
 import { colourPanel } from './defs/colour';
 import { typographyPanel } from './defs/typography';
-import { pagePanel } from './defs/page';
 import { dietkeyPanel } from './defs/dietkey';
 import { arrangePanel } from './defs/arrange';
 import { findReplacePanel } from './defs/find-replace';
@@ -389,7 +388,6 @@ function registerDockPanels(): void {
     dishesPanel,
     colourPanel,
     typographyPanel,
-    pagePanel,
     dietkeyPanel,
     arrangePanel,
     findReplacePanel,

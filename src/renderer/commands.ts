@@ -66,7 +66,7 @@ export type CommandName =
   | 'toggle-tipbar'
   | 'toggle-menus-panel' | 'toggle-editmenu-panel' | 'toggle-dishes-panel'
   | 'toggle-find-replace-panel' | 'toggle-reuse-panel'
-  | 'toggle-colour-panel' | 'toggle-typography-panel' | 'toggle-page-panel'
+  | 'toggle-colour-panel' | 'toggle-typography-panel'
   | 'toggle-dietkey-panel' | 'toggle-arrange-panel' | 'toggle-previewctl-panel'
   | 'reset-window-layout' | 'layout-writing' | 'layout-styling' | 'layout-preview'
   | 'go-home' | 'go-editor' | 'go-export'
@@ -409,7 +409,6 @@ export const COMMANDS: Command[] = [
   { id: 'toggle-reuse-panel', label: 'Reuse', group: 'Window', keywords: 'reuse dish copy clone across menus', checked: () => isPanelDocked('reuse'), run: () => activatePanel('reuse') },
   { id: 'toggle-colour-panel', label: 'Colour & Spacing', group: 'Window', keywords: 'paper blush tint gap layout print sliders lines', checked: () => isPanelDocked('colour'), run: () => activatePanel('colour') },
   { id: 'toggle-typography-panel', label: 'Typography', group: 'Window', keywords: 'font text size header', checked: () => isPanelDocked('typography'), run: () => activatePanel('typography') },
-  { id: 'toggle-page-panel', label: 'Page', group: 'Window', keywords: 'paper size a4 a5 margins booklet', checked: () => isPanelDocked('page'), run: () => activatePanel('page') },
   { id: 'toggle-dietkey-panel', label: 'Dietary Key', group: 'Window', keywords: 'allergen vegetarian codes', checked: () => isPanelDocked('dietkey'), run: () => activatePanel('dietkey') },
   { id: 'toggle-arrange-panel', label: 'Arrange', group: 'Window', keywords: 'align position move', checked: () => isPanelDocked('arrange'), run: () => activatePanel('arrange') },
   { id: 'toggle-previewctl-panel', label: 'Preview Controls', group: 'Window', keywords: 'zoom fit width rulers page background', checked: () => isPanelDocked('preview-controls'), run: () => activatePanel('preview-controls') },
