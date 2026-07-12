@@ -164,6 +164,16 @@ function columnMinWidth(col: DockColumn): number {
   return min;
 }
 
+/** A stack cell is at least MIN_CELL_PX tall, growing to its tallest panel's minH. */
+function cellMinHeight(cell: Cell): number {
+  let min = MIN_CELL_PX;
+  for (const id of renderablePanels(cell.group)) {
+    const p = getPanel(id);
+    if (p?.minH) min = Math.max(min, p.minH);
+  }
+  return min;
+}
+
 function disposeHost(host: HTMLElement): void {
   const list = hostDisposers.get(host);
   if (list) {
@@ -378,9 +388,13 @@ function startStackResize(above: { el: HTMLElement; cell: Cell }, below: { el: H
   const bStart = below.el.offsetHeight;
   const pairPx = aStart + bStart;
   const pairGrow = Math.max(1, above.cell.heightPct) + Math.max(1, below.cell.heightPct);
+  // Clamp to each panel's real minimum so a drag can't squeeze one below its
+  // content and make the panels overlap.
+  const aMin = cellMinHeight(above.cell);
+  const bMin = Math.min(cellMinHeight(below.cell), Math.max(0, pairPx - aMin));
 
   const move = (ev: PointerEvent): void => {
-    const aPx = Math.max(MIN_CELL_PX, Math.min(pairPx - MIN_CELL_PX, aStart + (ev.clientY - startY)));
+    const aPx = Math.max(aMin, Math.min(pairPx - bMin, aStart + (ev.clientY - startY)));
     const aGrow = pairGrow * (aPx / pairPx);
     above.el.style.flex = `${aGrow} 1 0`;
     below.el.style.flex = `${pairGrow - aGrow} 1 0`;
