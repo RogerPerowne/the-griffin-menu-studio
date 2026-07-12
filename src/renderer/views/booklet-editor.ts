@@ -13,8 +13,9 @@
 // the editor targets. The old simplified inside editor has been removed.
 
 import type { Booklet, BookletPanel, HeaderStyle, Menu } from '@shared/types';
-import { newBooklet, newMenu } from '@shared/menu/factories';
+import { newBooklet, newDessertBooklet, newMenu } from '@shared/menu/factories';
 import { renderBookletHTML, renderBookletPages, type SheetSide } from '@shared/menu/booklet';
+import { renderMenuHTML } from '@shared/menu/render';
 import { mountBookletFlip, type BookletFlipHandle } from './booklet-flip';
 import { getActiveBrand } from '@shared/brand';
 import { assetUrl } from '../brand-assets';
@@ -134,7 +135,69 @@ function renderOpts(side: SheetSide) {
     // A booklet panel `image` is a brand-asset id; resolve best-effort (an unknown
     // id resolves to '' and the image is simply omitted by the renderer).
     resolveImage: (id: string): string => assetUrl(id),
+    ...(currentInsideSplit ? { insideSplit: currentInsideSplit } : {}),
   };
+}
+
+/* ---- single-menu overflow: split its sections across the two inside pages ---- */
+let currentInsideSplit: [Menu, Menu | null] | undefined;
+let splitScratch: HTMLElement | null = null;
+
+function insideSplitScratch(): HTMLElement {
+  if (!splitScratch) {
+    splitScratch = document.createElement('div');
+    splitScratch.style.cssText = 'position:fixed;left:-10000px;top:0;visibility:hidden;pointer-events:none;z-index:-1';
+    document.body.appendChild(splitScratch);
+  }
+  return splitScratch;
+}
+
+/** Section-level overflow split: render the single inside menu into an A5 scratch
+ *  page, find the first section that runs past the usable height, and put the
+ *  remaining sections on page 2. Returns undefined when it fits on one page. */
+function computeInsideSplit(menu: Menu): [Menu, Menu | null] | undefined {
+  if (menu.sections.length < 2) return undefined; // can't section-split a single section
+  const scratch = insideSplitScratch();
+  scratch.innerHTML = renderMenuHTML(menu, {
+    edit: false,
+    dietKey: getState().settings.dietKey,
+    assets: ASSETS,
+    fontSet: getState().settings.typography?.fontSet,
+  });
+  applyReleaseSettings();
+  const page = scratch.querySelector<HTMLElement>('.page');
+  const inner = scratch.querySelector<HTMLElement>('.inner');
+  const foot = scratch.querySelector<HTMLElement>('.print-footer-zone');
+  if (!page || !inner) return undefined;
+  const cs = getComputedStyle(inner);
+  // Measure against the FIXED A5 height (page grows past it with overflow content,
+  // so its own rect can't reveal the overflow) — width × A5 aspect.
+  const a5Height = page.offsetWidth * (210 / 148);
+  if (a5Height < 50) return undefined; // scratch not laid out — don't split spuriously
+  const usableBottom =
+    page.getBoundingClientRect().top + a5Height - (parseFloat(cs.paddingBottom) || 0) - (foot?.getBoundingClientRect().height ?? 0);
+  const secEls = [...page.querySelectorAll<HTMLElement>('.m-sec')];
+  let firstOverflow = -1;
+  for (let i = 0; i < secEls.length && i < menu.sections.length; i++) {
+    if (secEls[i].getBoundingClientRect().bottom > usableBottom) {
+      firstOverflow = i;
+      break;
+    }
+  }
+  if (firstOverflow < 0) return undefined; // fits on one page
+  const splitIdx = Math.min(menu.sections.length - 1, Math.max(1, firstOverflow));
+  return [
+    { ...menu, sections: menu.sections.slice(0, splitIdx) },
+    { ...menu, sections: menu.sections.slice(splitIdx) },
+  ];
+}
+
+/** Recompute the overflow split for the current booklet (single + allowTwoPages). */
+function refreshInsideSplit(): void {
+  const booklet = getBooklet();
+  const inside = booklet?.inside;
+  currentInsideSplit =
+    inside && inside.mode === 'single' && inside.allowTwoPages ? computeInsideSplit(inside.menu) : undefined;
 }
 
 function panelFields(role: 'cover' | 'back', panel: BookletPanel): string {
@@ -272,6 +335,7 @@ function renderBookletPreviewOnly(): void {
   const wrap = document.getElementById('bookletPagewrap');
   const booklet = getBooklet();
   if (!wrap || !booklet) return;
+  refreshInsideSplit();
   wrap.innerHTML = renderBookletHTML(booklet, renderOpts(getSide()));
   applyReleaseSettings();
   wrap.querySelectorAll('img').forEach((img) => {
@@ -336,6 +400,7 @@ function enterReader(): void {
   if (!booklet || !host || !sheet) return;
   sheet.hidden = true;
   host.hidden = false;
+  refreshInsideSplit();
   readerHandle = mountBookletFlip(host, renderBookletPages(booklet, renderOpts(getSide())), { onChange: updatePageInd });
   applyReleaseSettings();
   toggleReaderControls(true);
@@ -758,5 +823,11 @@ export function initBookletEditor(): void {
 /** Create a new blank booklet and open it for editing. */
 export function createBooklet(): void {
   openBooklet(newBooklet('New Booklet'));
+  openBookletWorkspace();
+}
+
+/** New → Dessert Booklet: a two-menu inside (desserts | dessert drinks). */
+export function createDessertBooklet(): void {
+  openBooklet(newDessertBooklet());
   openBookletWorkspace();
 }

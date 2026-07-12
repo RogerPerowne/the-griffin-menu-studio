@@ -114,3 +114,37 @@ export function newBooklet(name = 'New Booklet'): Booklet {
     style: { paper: 'A5', sc: 1, dn: 1 },
   };
 }
+
+/** A ready-made dessert booklet: left page = desserts, right page = dessert drinks
+ *  (a drinks list specifically for dessert). A common real use of the folded A5. */
+export function newDessertBooklet(): Booklet {
+  const dish = (name: string, desc: string, price: string): Dish => ({ ...newDish(), name, desc, price });
+  const desserts = newMenu('Desserts', { paper: 'A5' });
+  desserts.sections = [
+    newSection('Desserts', [
+      dish('Sticky Toffee Pudding', 'Medjool date sponge, salted caramel, clotted cream', '9'),
+      dish('Dark Chocolate Delice', 'Honeycomb, crème fraîche', '9.5'),
+      dish('Lemon Posset', 'Shortbread, raspberry', '8'),
+      dish('Affogato', 'Vanilla ice cream, hot espresso', '7'),
+    ]),
+    newSection('Cheese', [dish('British Cheese Plate', 'Three cheeses, quince, crackers', '12')]),
+  ];
+  const drinks = newMenu('Dessert Drinks', { paper: 'A5' });
+  drinks.sections = [
+    newSection('Dessert Wines', [
+      dish('Sauternes', 'Château, 75ml', '9'),
+      dish('Tawny Port, 10yr', '50ml', '7.5'),
+      dish('Pedro Ximénez', '50ml', '7'),
+    ]),
+    newSection('Coffee & Liqueurs', [
+      dish('Espresso Martini', '', '11'),
+      dish('Irish Coffee', '', '8.5'),
+      dish('Cognac VSOP', '25ml', '8'),
+    ]),
+  ];
+  const b = newBooklet('Dessert Booklet');
+  b.cover = { ...newBookletPanel(), title: 'Desserts', subtitle: 'The Griffin' };
+  b.back = { ...newBookletPanel(), note: 'Thank you' };
+  b.inside = { mode: 'two', left: desserts, right: drinks };
+  return b;
+}
