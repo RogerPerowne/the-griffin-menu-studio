@@ -44,8 +44,7 @@ import {
   undoBooklet,
 } from './booklet-session';
 import {
-  createBooklet,
-  createDessertBooklet,
+  createBooklet,
   exportBookletPdf,
   openBookletFromDisk,
   printCurrentBooklet,
@@ -54,7 +53,7 @@ import {
 
 export type CommandName =
   | 'new-blank' | 'new-template' | 'new-window' | 'open'
-  | 'new-booklet' | 'new-dessert-booklet' | 'open-booklet'
+  | 'new-booklet' | 'open-booklet'
   | 'save' | 'save-as' | 'save-template'
   | 'duplicate' | 'delete-menu' | 'backup' | 'restore'
   | 'print' | 'print-now' | 'export-pdf' | 'export-png' | 'settings'
@@ -346,7 +345,6 @@ export const COMMANDS: Command[] = [
   { id: 'new-blank', label: 'New Blank Menu', group: 'File', hint: 'Ctrl+N', keywords: 'create empty', run: () => void createBlankMenu() },
   { id: 'new-template', label: 'New from Template…', group: 'File', keywords: 'create layout gallery', run: () => goHomePane('new') },
   { id: 'new-booklet', label: 'New Booklet', group: 'File', keywords: 'folded a5 cover back inside landscape', run: () => createBooklet() },
-  { id: 'new-dessert-booklet', label: 'New Dessert Booklet', group: 'File', keywords: 'dessert drinks folded a5 two menu template', run: () => createDessertBooklet() },
   { id: 'open-booklet', label: 'Open Booklet…', group: 'File', keywords: 'folded booklet file document', run: () => void openBookletFromDisk() },
   { id: 'new-window', label: 'New Window', group: 'File', hint: 'Ctrl+Shift+N', keywords: 'app window second', run: () => void window.griffin?.newWindow() },
   { id: 'open', label: 'Open…', group: 'File', hint: 'Ctrl+O', keywords: 'file document menu', run: () => void openDocumentFromDisk() },

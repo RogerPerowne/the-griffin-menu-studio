@@ -390,9 +390,10 @@ function renderHomeMain(): string {
   const dietKey = state.settings.dietKey;
   if (homePane === 'new') {
     const templates = allTemplates().map((t) => renderTemplateCard(t, dietKey)).join('');
-    return `<section class="home-pane"><div class="start-head"><h1>New menu</h1></div>
+    return `<section class="home-pane"><div class="start-head"><h1>New</h1></div>
       <div class="home-action-row">
-        <button class="home-action-card" data-cmd="new-blank"><b>Blank menu</b><span>Start with empty starter, main and dessert sections.</span></button>
+        <button class="home-action-card" data-cmd="new-blank"><b>Blank Menu</b><span>Start with empty starter, main and dessert sections.</span></button>
+        <button class="home-action-card" data-cmd="new-booklet"><b>Blank Booklet</b><span>A folded A5 booklet — cover, inside and back.</span></button>
       </div>
       <h2 class="home-section-title">Choose a template</h2><div class="start-grid">${templates}</div></section>`;
   }

@@ -18,7 +18,6 @@ const appShellMarkup = String.raw`
         <button class="mi" data-cmd="new-blank">New Blank Menu</button>
         <button class="mi" data-cmd="new-template">New from Template…</button>
         <button class="mi" data-cmd="new-booklet">New Booklet</button>
-        <button class="mi" data-cmd="new-dessert-booklet">New Dessert Booklet</button>
         <button class="mi" data-cmd="new-window">New Window</button>
         <button class="mi" data-cmd="open">Open…</button>
         <button class="mi" data-cmd="open-booklet">Open Booklet…</button>

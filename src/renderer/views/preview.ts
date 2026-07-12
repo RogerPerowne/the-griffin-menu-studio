@@ -347,36 +347,41 @@ export function autoSizeToFit(): boolean {
     return info.over || info.footerCollision;
   };
 
+  // 1) GROW — only when it already fits: ease density back toward normal, then
+  //    enlarge the type, reverting the instant it would tip over one page.
   let guard = 0;
-  if (over()) {
-    // SHRINK — spacing first, type size last (unchanged from the proven method).
-    while (over() && guard++ < 200) {
-      if (style.dn > 0.78) style.dn = round2(style.dn - 0.02);
-      else if (style.sc > 0.86) style.sc = round2(style.sc - 0.01);
-      else break;
-    }
-  } else {
-    // GROW — the mirror image: first ease spacing back to normal, then enlarge
-    // the type, reverting the last step the moment it would tip over one page.
-    while (style.dn < 1 && guard++ < 60) {
+  if (!over()) {
+    while (style.dn < 1 && guard++ < 80) {
       const prev = style.dn;
-      const next = round2(Math.min(1, style.dn + 0.02));
-      style.dn = next;
+      style.dn = round2(Math.min(1, style.dn + 0.02));
       if (over()) {
         style.dn = prev;
         break;
       }
-      if (next >= 1) break;
+      if (style.dn >= 1) break;
     }
     guard = 0;
-    while (style.sc < 1.6 && guard++ < 160) {
+    while (style.sc < 1.6 && guard++ < 200) {
       const prev = style.sc;
-      style.sc = round2(style.sc + 0.01);
+      style.sc = round2(style.sc + 0.02);
       if (over()) {
         style.sc = prev;
         break;
       }
     }
+  }
+
+  // 2) SHRINK safety-net — ALWAYS run: density first, then type size, until the
+  //    page no longer overflows AND text no longer reaches the footer. Lower
+  //    floors than before so auto-size can genuinely clear a footer collision
+  //    (the old 0.86/0.78 floors bailed while still overlapping). Only a menu
+  //    that cannot fit even at these floors is left over — and the warning is
+  //    overridable. This guarantees auto-size never ends with text on the footer.
+  guard = 0;
+  while (over() && guard++ < 400) {
+    if (style.dn > 0.7) style.dn = round2(style.dn - 0.02);
+    else if (style.sc > 0.6) style.sc = round2(style.sc - 0.01);
+    else break;
   }
 
   commit(['editor', 'preview', 'rail']);
