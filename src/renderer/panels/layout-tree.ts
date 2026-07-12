@@ -47,6 +47,42 @@ export function defaultLayout(): WorkspaceLayout {
   };
 }
 
+function cell(heightPct: number, g: PanelGroup): { heightPct: number; group: PanelGroup } {
+  return { heightPct, group: g };
+}
+function col(widthPct: number, ...cells: { heightPct: number; group: PanelGroup }[]): DockColumn {
+  return { widthPct, stack: { cells } };
+}
+
+/** A few built-in layouts the user can switch between (keep it simple — no saving
+ *  named custom workspaces). Reset Window Layout restores 'default'. */
+export const LAYOUT_PRESETS: { id: string; label: string; build: () => WorkspaceLayout }[] = [
+  { id: 'default', label: 'Default (Edit + Preview)', build: defaultLayout },
+  {
+    id: 'writing',
+    label: 'Writing the menu',
+    build: () => ({
+      left: { columns: [col(28, cell(100, group(['edit-menu'])))] },
+      right: { columns: [col(22, cell(100, group(['dishes'])))] },
+      floating: [],
+    }),
+  },
+  {
+    id: 'styling',
+    label: 'Styling',
+    build: () => ({
+      left: { columns: [col(26, cell(100, group(['edit-menu'])))] },
+      right: { columns: [col(28, cell(58, group(['colour', 'typography'])), cell(42, group(['dietkey'])))] },
+      floating: [],
+    }),
+  },
+  {
+    id: 'preview',
+    label: 'Preview only',
+    build: () => ({ left: { columns: [] }, right: { columns: [] }, floating: [] }),
+  },
+];
+
 /* ============================ tolerant validation ============================ */
 
 function isObj(v: unknown): v is Record<string, unknown> {

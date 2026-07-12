@@ -35,7 +35,7 @@ import {
 } from './float-windows';
 import type { Panel } from './registry';
 import { registerPanel } from './registry';
-import { loadLayout, resetLayout, saveLayout } from './layout-tree';
+import { LAYOUT_PRESETS, loadLayout, resetLayout, saveLayout } from './layout-tree';
 import { refreshDocks, renderDocks, setDockLayout } from './dock-render';
 import { menusPanel } from './defs/menus';
 import { editMenuPanel } from './defs/edit-menu';
@@ -494,6 +494,17 @@ export function resetDockLayout(): void {
   dockLayout = resetLayout(getState().settings);
   setDockLayout(dockLayout);
   resetWindowLayout();
+  window.dispatchEvent(new Event('resize'));
+}
+
+/** Switch to one of the built-in preset layouts (Default / Writing / Styling / Preview). */
+export function applyLayoutPreset(id: string): void {
+  const preset = LAYOUT_PRESETS.find((p) => p.id === id);
+  if (!preset) return;
+  dockLayout = preset.build();
+  setDockLayout(dockLayout);
+  saveLayout(dockLayout, getState().settings);
+  refreshDocks();
   window.dispatchEvent(new Event('resize'));
 }
 

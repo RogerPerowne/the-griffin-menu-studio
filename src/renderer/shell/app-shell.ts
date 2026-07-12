@@ -112,7 +112,10 @@ const appShellMarkup = String.raw`
         <button class="mi" data-cmd="toggle-reuse-panel">Reuse</button>
         <button class="mi" data-cmd="toggle-previewctl-panel">Preview Controls</button>
         <hr>
-        <button class="mi" data-cmd="reset-window-layout">Reset Window Layout</button>
+        <button class="mi" data-cmd="layout-writing">Layout: Writing the menu</button>
+        <button class="mi" data-cmd="layout-styling">Layout: Styling</button>
+        <button class="mi" data-cmd="layout-preview">Layout: Preview only</button>
+        <button class="mi" data-cmd="reset-window-layout">Reset Window Layout (Default)</button>
         <button class="mi" data-cmd="new-window">New App Window</button>
       </div>
     </div>

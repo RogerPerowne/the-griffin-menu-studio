@@ -22,6 +22,7 @@ import { createBlankMenu, getWorkspace, goHomePane, setWorkspace } from './works
 import {
   activatePanel,
   alignSelectedMove,
+  applyLayoutPreset,
   isPanelDocked,
   resetDockLayout,
   resetSelectedMove,
@@ -68,7 +69,7 @@ export type CommandName =
   | 'toggle-find-replace-panel' | 'toggle-reuse-panel'
   | 'toggle-colour-panel' | 'toggle-typography-panel' | 'toggle-page-panel'
   | 'toggle-dietkey-panel' | 'toggle-arrange-panel' | 'toggle-previewctl-panel'
-  | 'reset-window-layout'
+  | 'reset-window-layout' | 'layout-writing' | 'layout-styling' | 'layout-preview'
   | 'go-home' | 'go-editor' | 'go-export'
   | 'help-tutorial' | 'help-tips' | 'help-shortcuts' | 'help-saving' | 'help-tools' | 'tool-search' | 'about';
 
@@ -415,6 +416,9 @@ export const COMMANDS: Command[] = [
   { id: 'toggle-arrange-panel', label: 'Arrange', group: 'Window', keywords: 'align position move', checked: () => isPanelDocked('arrange'), run: () => activatePanel('arrange') },
   { id: 'toggle-previewctl-panel', label: 'Preview Controls', group: 'Window', keywords: 'zoom fit width rulers page background', checked: () => isPanelDocked('preview-controls'), run: () => activatePanel('preview-controls') },
   { id: 'reset-window-layout', label: 'Reset Window Layout', group: 'Window', keywords: 'default panels position dock workspace', run: () => { resetDockLayout(); toast('Panels reset to their default layout.'); } },
+  { id: 'layout-writing', label: 'Layout: Writing the menu', group: 'Window', keywords: 'preset panels dishes', run: () => { applyLayoutPreset('writing'); toast('Writing layout.'); } },
+  { id: 'layout-styling', label: 'Layout: Styling', group: 'Window', keywords: 'preset panels colour typography dietary', run: () => { applyLayoutPreset('styling'); toast('Styling layout.'); } },
+  { id: 'layout-preview', label: 'Layout: Preview only', group: 'Window', keywords: 'preset panels maximise preview clean', run: () => { applyLayoutPreset('preview'); toast('Preview-only layout.'); } },
 
   // Go
   { id: 'go-home', label: 'Home', group: 'Go', keywords: 'start backstage', checked: () => getWorkspace() === 'home', run: () => setWorkspace('home') },
